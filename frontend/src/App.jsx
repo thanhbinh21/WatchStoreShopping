@@ -1,16 +1,5 @@
 import { useState } from "react";
-import { Button } from "./components/ui/button";
-import { toast } from "sonner";
-import { Toaster } from "./components/ui/sonner";
-import {
-  IconClock,
-  IconHeart,
-  IconSearch,
-  IconShoppingCart,
-  IconUser,
-} from "@tabler/icons-react";
-import { Route, Routes } from "react-router";
-import DraftContainer from "./pages/draft";
+import { Routes } from "react-router";
 
 function App() {
   const [count, setCount] = useState(0);
@@ -47,9 +36,7 @@ function App() {
         <i className="las la-user text-xl cursor-pointer"></i>
         <i className="las la-heart text-xl cursor-pointer text-red-500"></i>
       </nav> */}
-      <Routes>
-        <Route path="draft/*" element={<DraftContainer />}></Route>
-      </Routes>
+      <Routes></Routes>
     </>
   );
 }
