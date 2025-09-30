@@ -66,7 +66,7 @@ npm install
 - frontend:
 
 ```bash
-npm start
+npm run dev
 ```
 
 # 📌 Cách sử dụng
@@ -109,9 +109,9 @@ git push origin feature/tên-feature
 
 ### Resource
 
-- [Admin](https://www.figma.com/design/i8Uh9v9S54m1Az68Qc5PCq/www_java_admin?node-id=1-12184&t=jcoHKKJSb4pjgAI4-1)
+- [Figma Admin](https://www.figma.com/design/i8Uh9v9S54m1Az68Qc5PCq/www_java_admin?node-id=1-12184&t=jcoHKKJSb4pjgAI4-1)
 
-- [Client](https://www.figma.com/design/kMEbmqlkTMbRfuLytcjChm/www_java_client?node-id=0-1&t=N3g22D5DQjRiIMhN-1)
+- [Figma Client](https://www.figma.com/design/kMEbmqlkTMbRfuLytcjChm/www_java_client?node-id=0-1&t=N3g22D5DQjRiIMhN-1)
 
 - [Postman](https://.postman.co/workspace/My-Workspace~b85f63af-99ba-4fcd-8a18-00b7f656ad20/collection28574795-47154a04-acfa-4799-a57c-e0b982c27659?action=share&creator=28574795)
 
