@@ -121,9 +121,15 @@ git push origin feature/tên-feature
 
 - [Tailwind CSS](https://tailwindcss.com/)
 
+### Chú ý:
+
+- Nếu chạy backend rồi mà không test trên postman được thì chạy file `SecurityConfig` trong thư mục `config`.
+
+- Có thể chạy http://localhost:8080/swagger-ui.html trên trình duyệt sau khi chạy backend để xem các api đang có.
+
 # 📄 License
 
-MIT © 2025 Nhóm 8
+Copyright by Nhóm 8
 
 # 📫 Liên hệ
 
