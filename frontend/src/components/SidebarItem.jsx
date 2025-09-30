@@ -12,7 +12,7 @@ export const SidebarItem = ({ icon, name, isActive, onClick }) => {
       {/* icon */}
       <i
         className={cn(
-          `las ${icon} ${iconColor} text-3xl absolute top-[10px] left-3`
+          `las ${icon} ${iconColor} text-3xl absolute top-[10px] left-3 transition-colors duration-500 ease-in-out`
         )}
       ></i>
 
