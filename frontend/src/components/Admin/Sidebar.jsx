@@ -1,8 +1,9 @@
 import { sideBars } from "@/lib/data";
 import { useEffect, useRef, useState } from "react";
 import { SidebarItem } from "./SidebarItem";
+import { TextAlignJustify } from "lucide-react";
 
-export const Sidebar = () => {
+export const Sidebar = ({ setCollapsed, collapsed, logout }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [indicatorTop, setIndicatorTop] = useState(0);
   const containerRef = useRef(null);
@@ -16,13 +17,28 @@ export const Sidebar = () => {
   return (
     <div
       style={{
-        width: "240px",
+        width: collapsed ? "86px" : "240px", // thay đổi độ rộng sidebar khi collapsed
         border: "1px solid #ccc",
+        transition: "width 0.3s ease", // animation mượt
       }}
     >
-      <h1 className="text-3xl font-bold text-center w-[240px] h-[60px] leading-[60px]">
-        Nhóm 8
-      </h1>
+      {/* Header giữ nguyên độ cao khi collapsed */}
+      <div
+        className="flex items-center justify-center"
+        style={{ height: "70px" }}
+      >
+        {!collapsed ? (
+          <h1 className="text-3xl font-bold text-center">Nhóm 8</h1>
+        ) : (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="bg-transparent cursor-pointer p-2 hover:bg-gray-200 rounded"
+          >
+            <TextAlignJustify className="text-black" />
+          </button>
+        )}
+      </div>
+
       <div
         ref={containerRef}
         style={{
@@ -32,31 +48,30 @@ export const Sidebar = () => {
           alignItems: "flex-start",
           position: "relative",
           gap: "4px",
-          // marginLeft: "50px",
-          paddingLeft: "20px",
+          paddingLeft: collapsed ? "8px" : "20px", // điều chỉnh padding khi collapsed
+          marginLeft: collapsed ? "8px" : "0px",
         }}
       >
         {/* Thanh nền trượt */}
         <div
           style={{
             position: "absolute",
-            left: "0px",
+            left: collapsed ? "10px" : "20px",
             top: indicatorTop,
             height: "50px",
-            width: "192px",
+            width: collapsed ? "50px" : "192px", // thu nhỏ khi collapsed
             backgroundColor: "#4880FF",
             borderRadius: "6px",
-            transition: "top 0.3s ease",
+            transition: "all 0.3s ease",
             zIndex: 0,
-            left: "20px",
           }}
-        ></div>
+        />
 
         {/* Thanh indicator bên trái trượt */}
         <div
           style={{
             position: "absolute",
-            left: "0px",
+            left: collapsed ? "-8px" : "0px",
             top: indicatorTop,
             height: "50px",
             width: "4px",
@@ -65,18 +80,21 @@ export const Sidebar = () => {
             transition: "top 0.3s ease",
             zIndex: 1,
           }}
-        ></div>
+        />
 
         {/* Danh sách sidebar */}
         {sideBars.map((item, index) => (
           <SidebarItem
             key={item.name}
-            name={item.name}
+            name={collapsed ? "" : item.name}
             icon={item.icon}
             isActive={activeIndex === index}
             onClick={() => setActiveIndex(index)}
+            collapsed={collapsed}
           />
         ))}
+
+        <SidebarItem name={"Logout"} icon={"la-power-off"} onClick={logout} />
       </div>
     </div>
   );

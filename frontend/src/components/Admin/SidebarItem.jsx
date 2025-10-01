@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-export const SidebarItem = ({ icon, name, isActive, onClick }) => {
+export const SidebarItem = ({ icon, name, isActive, onClick, collapsed }) => {
   const iconColor = isActive ? "text-white" : "text-black";
 
   return (
@@ -17,14 +17,16 @@ export const SidebarItem = ({ icon, name, isActive, onClick }) => {
       ></i>
 
       {/* nút */}
-      <button
-        className={cn(
-          `w-full h-full rounded-[6px] transition-colors duration-300 ease-in-out`,
-          isActive ? "text-white" : "text-black bg-transparent"
-        )}
-      >
-        {name}
-      </button>
+      {!collapsed && (
+        <button
+          className={cn(
+            "w-full h-full rounded-[6px] transition-colors duration-300 ease-in-out cursor-pointer",
+            isActive ? "text-white" : "text-black bg-transparent"
+          )}
+        >
+          {name}
+        </button>
+      )}
     </div>
   );
 };

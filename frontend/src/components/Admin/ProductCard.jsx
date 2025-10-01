@@ -31,7 +31,7 @@ export const ProductCard = ({ image, name, price, rating, numOfRating }) => {
   };
 
   return (
-    <div className="w-[360px] h-[496px] border rounded-2xl overflow-hidden inline-block m-2">
+    <div className="  border rounded-2xl overflow-hidden inline-block bg-white">
       <img src={image} className="w-full" alt="product" />
 
       <div className="m-[24px] flex flex-col justify-between h-[132px]">
