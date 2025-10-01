@@ -2,16 +2,19 @@ import React, { useEffect, useState } from "react";
 import { ProductCard } from "@/components/Admin/ProductCard";
 import productImg from "../../assets/images/product.png";
 import axiosInstance from "@/api/axiosConfig";
+import { AdminPagination } from "@/components/Pagination";
 
 export const AdminProduct = () => {
   const [products, setProducts] = useState([]);
-  const [page, setPage] = useState(0);
+  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await axiosInstance.get(`/products?page=${page}&size=12`);
+        const res = await axiosInstance.get(
+          `/products?page=${page - 1}&size=12`
+        );
         // res chính là JSON bạn gửi ở trên
 
         setProducts(res.content); // lấy danh sách sản phẩm
@@ -23,6 +26,22 @@ export const AdminProduct = () => {
 
     fetchProducts();
   }, [page]);
+
+  const handleNext = () => {
+    if (page < totalPages) {
+      setPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrev = () => {
+    if (page > 1) {
+      setPage((prev) => prev - 1);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
 
   return (
     <div>
@@ -41,7 +60,7 @@ export const AdminProduct = () => {
       </div>
 
       {/* Phân trang */}
-      <div className="flex justify-center mt-6 space-x-2">
+      {/* <div className="flex justify-center mt-6 space-x-2">
         {[...Array(totalPages).keys()].map((i) => (
           <button
             key={i}
@@ -53,7 +72,15 @@ export const AdminProduct = () => {
             {i + 1}
           </button>
         ))}
-      </div>
+      </div> */}
+
+      <AdminPagination
+        handleNext={handleNext}
+        handlePrev={handlePrev}
+        handlePageChange={handlePageChange}
+        page={page}
+        totalPages={totalPages}
+      />
     </div>
   );
 };
