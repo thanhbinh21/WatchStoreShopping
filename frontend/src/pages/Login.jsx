@@ -18,6 +18,7 @@ export default function Login() {
 
       localStorage.setItem("accessToken", res.data.accessToken);
       localStorage.setItem("role", res.data.role);
+      localStorage.setItem("user", JSON.stringify(res.data.user));
       if (res.data.refreshToken) {
         localStorage.setItem("refreshToken", res.data.refreshToken);
       }

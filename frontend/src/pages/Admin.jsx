@@ -1,8 +1,13 @@
-import React from "react";
+import { ProductCard } from "@/components/Admin/ProductCard";
+import { Sidebar } from "@/components/Admin/Sidebar";
+import { TopBar } from "@/components/Admin/TopBar";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
+import productImg from "../assets/images/product.png";
 
 export const Admin = () => {
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
@@ -10,20 +15,72 @@ export const Admin = () => {
     navigate("/login");
   };
 
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-96 text-center">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">
-          Chào mừng đến Dashboard!
-        </h1>
-        <p className="mb-6">Bạn đã đăng nhập thành công role ADMIN.</p>
+  const user = JSON.parse(localStorage.getItem("user"));
 
-        <button
-          className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          onClick={handleLogout}
-        >
-          Đăng xuất
-        </button>
+  return (
+    <div className="flex">
+      {/* Sidebar */}
+      <div className="flex flex-col h-screen sticky top-0 bg-white border-r overflow-auto">
+        <Sidebar
+          setCollapsed={setCollapsed}
+          collapsed={collapsed}
+          logout={handleLogout}
+        />
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        {/* TopBar */}
+        <div className="sticky top-0 z-50 bg-white shadow-sm border-b">
+          <TopBar
+            setCollapsed={setCollapsed}
+            collapsed={collapsed}
+            image={user?.imageUrl || "user.png"}
+            name={user?.fullName || "###"}
+            role={user?.role || "ADMIN"}
+          />
+        </div>
+
+        {/* Nội dung chính */}
+        <div className="flex-1 overflow-auto p-6 bg-gray-100">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <ProductCard
+              image={productImg}
+              name={"Test name"}
+              price={"1.000.000"}
+              rating={4.5}
+              numOfRating={135}
+            />
+            <ProductCard
+              image={productImg}
+              name={"Test name"}
+              price={"1.000.000"}
+              rating={4.5}
+              numOfRating={135}
+            />
+            <ProductCard
+              image={productImg}
+              name={"Test name"}
+              price={"1.000.000"}
+              rating={4.5}
+              numOfRating={135}
+            />
+            <ProductCard
+              image={productImg}
+              name={"Test name"}
+              price={"1.000.000"}
+              rating={4.5}
+              numOfRating={135}
+            />
+            <ProductCard
+              image={productImg}
+              name={"Test name"}
+              price={"1.000.000"}
+              rating={4.5}
+              numOfRating={135}
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

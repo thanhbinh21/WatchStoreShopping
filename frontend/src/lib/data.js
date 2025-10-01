@@ -132,8 +132,4 @@ export const sideBars = [
     name: "Settings",
     icon: "la-cog",
   },
-  {
-    name: "Logout",
-    icon: "la-power-off",
-  },
 ];
