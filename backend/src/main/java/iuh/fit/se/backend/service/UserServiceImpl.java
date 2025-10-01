@@ -47,4 +47,16 @@ public class UserServiceImpl implements UserService {
     public List<User> getAllUsers() {
         return userRepository.findAll();
     }
+
+    public User validateUser(String username, String password) {
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            if (user.getPassword().equals(password)) {
+                return user;
+            }
+        }
+        return null; // không tìm thấy hoặc password sai
+    }
 }
