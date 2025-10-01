@@ -17,11 +17,19 @@ export default function Login() {
       });
 
       localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("role", res.data.role);
       if (res.data.refreshToken) {
         localStorage.setItem("refreshToken", res.data.refreshToken);
       }
 
-      navigate("/dashboard");
+      // Chuyển hướng dựa vào role
+      if (res.data.role === "ADMIN") {
+        navigate("/admin");
+      } else if (res.data.role === "USER") {
+        navigate("/user");
+      } else {
+        setError("Không xác định role");
+      }
     } catch (err) {
       console.error("Login failed", err);
       setError("Tên đăng nhập hoặc mật khẩu không đúng");

@@ -1,7 +1,7 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
-export function Dashboard() {
+export const Admin = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -16,7 +16,7 @@ export function Dashboard() {
         <h1 className="text-3xl font-bold mb-6 text-gray-800">
           Chào mừng đến Dashboard!
         </h1>
-        <p className="mb-6">Bạn đã đăng nhập thành công.</p>
+        <p className="mb-6">Bạn đã đăng nhập thành công role ADMIN.</p>
 
         <button
           className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
@@ -27,4 +27,4 @@ export function Dashboard() {
       </div>
     </div>
   );
-}
+};
