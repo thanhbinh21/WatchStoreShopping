@@ -1,9 +1,9 @@
 USE watch_store;
 
 -- Users
-INSERT INTO users (username, password, email, full_name, role, created_at)
+INSERT INTO users (username, password, email, full_name, role, created_at, image_url)
 VALUES 
-('duyphan', '123456', 'duy@watchstore.vn', 'Phan Tấn Duy', 'USER', NOW());
+('duyphan', '123456', 'duy@watchstore.vn', 'Phan Tấn Duy', 'USER', NOW(), '../assets/images/product.png');
 
 -- Categories
 INSERT INTO categories (name, description)

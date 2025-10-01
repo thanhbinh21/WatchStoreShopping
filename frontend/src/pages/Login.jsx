@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import axiosInstance from "@/api/axiosConfig";
 
 export default function Login() {
   const [username, setUsername] = useState("");
@@ -11,22 +12,22 @@ export default function Login() {
   const handleLogin = async (e) => {
     e.preventDefault(); // Ngăn reload trang khi submit
     try {
-      const res = await axios.post("http://localhost:8080/api/auth/login", {
+      const res = await axiosInstance.post("/auth/login", {
         username,
         password,
       });
 
-      localStorage.setItem("accessToken", res.data.accessToken);
-      localStorage.setItem("role", res.data.role);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      if (res.data.refreshToken) {
-        localStorage.setItem("refreshToken", res.data.refreshToken);
+      localStorage.setItem("accessToken", res.accessToken);
+      localStorage.setItem("role", res.role);
+      localStorage.setItem("user", JSON.stringify(res.user));
+      if (res.refreshToken) {
+        localStorage.setItem("refreshToken", res.refreshToken);
       }
 
       // Chuyển hướng dựa vào role
-      if (res.data.role === "ADMIN") {
+      if (res.role === "ADMIN") {
         navigate("/admin");
-      } else if (res.data.role === "USER") {
+      } else if (res.role === "USER") {
         navigate("/user");
       } else {
         setError("Không xác định role");
