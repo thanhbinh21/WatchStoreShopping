@@ -1,7 +1,6 @@
-import { ProductCard } from "@/components/Admin/ProductCard";
 import { Sidebar } from "@/components/Admin/Sidebar";
 import { TopBar } from "@/components/Admin/TopBar";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Outlet, useNavigate } from "react-router";
 
 export const Admin = () => {
@@ -34,7 +33,7 @@ export const Admin = () => {
           <TopBar
             setCollapsed={setCollapsed}
             collapsed={collapsed}
-            image={user?.imageUrl || "user.png"}
+            image="user.png"
             name={user?.fullName || "###"}
             role={user?.role || "ADMIN"}
           />
