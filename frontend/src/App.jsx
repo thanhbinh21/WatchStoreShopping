@@ -1,10 +1,9 @@
-import { UserInfo } from "./components/UserInfo";
-import UserImage from "./assets/images/user.svg";
+import { Notification } from "./components/Notification";
 
 function App() {
   return (
     <>
-      <UserInfo name={"Test name"} image={UserImage} role={"Admin"} />
+      <Notification unreadNum={8} />
     </>
   );
 }

@@ -4,7 +4,7 @@ export const UserInfo = ({ image, name, role }) => {
       <img
         src={image}
         alt="User Avatar"
-        className="w-12 h-12 rounded-[50%] mr-[20px]"
+        className="w-12 h-12 rounded-full mr-[20px]"
       />
       <div className="text-[14px]">
         <p className="font-semibold">{name}</p>
