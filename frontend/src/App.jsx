@@ -1,10 +1,16 @@
-import { Notification } from "./components/Notification";
-import { TopBar } from "./components/TopBar";
+import { ProductCard } from "./components/ProductCard";
+import ProductImg from "./assets/images/product.png";
 
 function App() {
   return (
     <>
-      <TopBar />
+      <ProductCard
+        image={ProductImg}
+        name={"Apple Watch Series 4"}
+        price={"1.000.000"}
+        rating={4.5}
+        numOfRating={123}
+      />
     </>
   );
 }
