@@ -1,9 +1,10 @@
-import { Sidebar } from "./components/Sidebar";
+import { UserInfo } from "./components/UserInfo";
+import UserImage from "./assets/images/user.svg";
 
 function App() {
   return (
     <>
-      <Sidebar />
+      <UserInfo name={"Test name"} image={UserImage} role={"Admin"} />
     </>
   );
 }
