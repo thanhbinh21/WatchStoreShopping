@@ -1,9 +1,16 @@
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 
-export default function PrivateRoute({ children }) {
-  const token = localStorage.getItem("accessToken"); // đổi tên key đúng với Login
+export default function PrivateRoute({ children, allowedRoles }) {
+  const token = localStorage.getItem("accessToken");
+  const role = localStorage.getItem("role");
+
   if (!token) {
-    return <Navigate to="/login" />; // chưa login => redirect login
+    return <Navigate to="/login" />;
   }
-  return children; // đã login => vào route
+
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/login" />; // hoặc 403
+  }
+
+  return children;
 }
