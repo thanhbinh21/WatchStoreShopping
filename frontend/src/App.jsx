@@ -5,11 +5,13 @@ import Login from "./pages/Login";
 import { Dashboard } from "./pages/Dashboard";
 import { Admin } from "./pages/Admin";
 import { User } from "./pages/User";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Public */}
         <Route
           path="/login"
           element={
@@ -19,6 +21,7 @@ function App() {
           }
         />
 
+        {/* Private */}
         <Route
           path="/dashboard"
           element={
@@ -43,6 +46,9 @@ function App() {
             </PrivateRoute>
           }
         />
+
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
