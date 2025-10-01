@@ -10,6 +10,7 @@ export const UserInfo = ({ image, name, role }) => {
         <p className="font-semibold">{name}</p>
         <p>{role}</p>
       </div>
+      <i className="las la-chevron-circle-down text-3xl ml-[26px]"></i>
     </div>
   );
 };
