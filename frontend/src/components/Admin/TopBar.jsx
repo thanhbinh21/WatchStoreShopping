@@ -2,7 +2,7 @@ import React from "react";
 import { SearchBar } from "./SearchBar";
 import { UserInfo } from "./UserInfo";
 import { Notification } from "./Notification";
-import UserImg from "../assets/images/user.png";
+import UserImg from "../../assets/images/user.png";
 import { CircleChevronDown } from "lucide-react";
 
 export const TopBar = () => {
