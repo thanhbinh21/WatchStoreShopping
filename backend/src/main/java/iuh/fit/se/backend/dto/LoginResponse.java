@@ -1,27 +1,15 @@
 package iuh.fit.se.backend.dto;
 
+import iuh.fit.se.backend.entity.User;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
 public class LoginResponse {
     private String accessToken;
     private String role;
+    private User user;
 
-    public LoginResponse(String accessToken, String role) {
-        this.accessToken = accessToken;
-        this.role = role;
-    }
 
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
-
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
 }

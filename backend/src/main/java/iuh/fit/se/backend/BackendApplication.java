@@ -28,6 +28,7 @@ public class BackendApplication {
                         .fullName("Administrator")
                         .role(Role.ADMIN)
                         .createdAt(LocalDateTime.now())
+                        .imageUrl("user.png")
                         .build();
                 userRepository.save(admin);
                 System.out.println("✅ Admin user created!");
