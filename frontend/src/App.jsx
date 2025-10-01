@@ -6,21 +6,21 @@ import { Dashboard } from "./pages/Dashboard";
 import { Admin } from "./pages/Admin";
 import { User } from "./pages/User";
 import NotFound from "./pages/NotFound";
-import { AdminProduct } from "./pages/AdminProduct";
-import { AdminDashboard } from "./pages/AdminDashboard";
-import { AdminFavorites } from "./pages/AdminFavorites";
-import { AdminInbox } from "./pages/AdminInbox";
-import { AdminOrders } from "./pages/AdminOrders";
-import { AdminStock } from "./pages/AdminStock";
-import { AdminPricing } from "./pages/AdminPricing";
-import { AdminCalendar } from "./pages/AdminCalendar";
-import { AdminTodo } from "./pages/AdminTodo";
-import { AdminContact } from "./pages/AdminContact";
-import { AdminInvoice } from "./pages/AdminInvoice";
-import { AdminUIElements } from "./pages/AdminUIElements";
-import { AdminTeam } from "./pages/AdminTeam";
-import { AdminTable } from "./pages/AdminTable";
-import { AdminSettings } from "./pages/AdminSettings";
+import { AdminProduct } from "./pages/Admin/AdminProduct";
+import { AdminDashboard } from "./pages/Admin/AdminDashboard";
+import { AdminFavorites } from "./pages/Admin/AdminFavorites";
+import { AdminInbox } from "./pages/Admin/AdminInbox";
+import { AdminOrders } from "./pages/Admin/AdminOrders";
+import { AdminStock } from "./pages/Admin/AdminStock";
+import { AdminPricing } from "./pages/Admin/AdminPricing";
+import { AdminCalendar } from "./pages/Admin/AdminCalendar";
+import { AdminTodo } from "./pages/Admin/AdminTodo";
+import { AdminContact } from "./pages/Admin/AdminContact";
+import { AdminInvoice } from "./pages/Admin/AdminInvoice";
+import { AdminUIElements } from "./pages/Admin/AdminUIElements";
+import { AdminTeam } from "./pages/Admin/AdminTeam";
+import { AdminTable } from "./pages/Admin/AdminTable";
+import { AdminSettings } from "./pages/Admin/AdminSettings";
 
 function App() {
   return (

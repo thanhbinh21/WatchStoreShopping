@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ProductCard } from "@/components/Admin/ProductCard";
-import productImg from "../assets/images/product.png";
+import productImg from "../../assets/images/product.png";
 import axiosInstance from "@/api/axiosConfig";
 
 export const AdminProduct = () => {
