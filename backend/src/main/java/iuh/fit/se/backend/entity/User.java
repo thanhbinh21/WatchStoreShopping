@@ -38,9 +38,6 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    @Column(length = 255, nullable = false)
-    private String imageUrl;
-
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
