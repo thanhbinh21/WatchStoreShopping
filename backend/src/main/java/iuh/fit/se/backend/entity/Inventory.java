@@ -11,17 +11,18 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString
+@ToString(exclude = "product") // tránh vòng lặp khi log
 public class Inventory {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private int stock;
+    @Column(nullable = false)
+    private int stock; // số lượng tồn kho
 
     @OneToOne
-    @JoinColumn(name = "product_id", nullable = false)
+    @JoinColumn(name = "product_id", nullable = false, unique = true)
     @JsonBackReference
     private Product product;
 }

@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.ProductResponse;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,14 @@ public class ProductController {
 //    }
 
     @GetMapping
-    public Page<Product> searchProducts(
+    public Page<ProductResponse> searchProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String supplier,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "12") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String order
     ) {

@@ -14,6 +14,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@ToString(exclude = "products") // tránh vòng lặp khi log
 public class Category {
 
     @Id

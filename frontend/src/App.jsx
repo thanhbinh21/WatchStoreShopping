@@ -1,43 +1,92 @@
-import { useState } from "react";
-import { Routes } from "react-router";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import PublicRoute from "./routes/PublicRoute";
+import PrivateRoute from "./routes/PrivateRoute";
+import Login from "./pages/Login";
+import { Dashboard } from "./pages/Dashboard";
+import { Admin } from "./pages/Admin";
+import { User } from "./pages/User";
+import NotFound from "./pages/NotFound";
+import { AdminProduct } from "./pages/Admin/AdminProduct";
+import { AdminDashboard } from "./pages/Admin/AdminDashboard";
+import { AdminFavorites } from "./pages/Admin/AdminFavorites";
+import { AdminInbox } from "./pages/Admin/AdminInbox";
+import { AdminOrders } from "./pages/Admin/AdminOrders";
+import { AdminStock } from "./pages/Admin/AdminStock";
+import { AdminPricing } from "./pages/Admin/AdminPricing";
+import { AdminCalendar } from "./pages/Admin/AdminCalendar";
+import { AdminTodo } from "./pages/Admin/AdminTodo";
+import { AdminContact } from "./pages/Admin/AdminContact";
+import { AdminInvoice } from "./pages/Admin/AdminInvoice";
+import { AdminUIElements } from "./pages/Admin/AdminUIElements";
+import { AdminTeam } from "./pages/Admin/AdminTeam";
+import { AdminTable } from "./pages/Admin/AdminTable";
+import { AdminSettings } from "./pages/Admin/AdminSettings";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
-    <>
-      {/* <Button
-        variant="outline"
-        onClick={() =>
-          toast("Event has been created", {
-            description: "Sunday, December 03, 2023 at 9:00 AM",
-            action: {
-              label: "Undo",
-              onClick: () => console.log("Undo"),
-            },
-          })
-        }
-      >
-        Show Toast
-      </Button>
+    <Router>
+      <Routes>
+        {/* Public */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
 
-      <nav className="flex items-center gap-4 p-4 bg-gray-100">
-        <IconClock size={28} stroke={2} className="text-blue-600" />
-        <IconSearch size={24} className="cursor-pointer" />
-        <IconShoppingCart size={24} className="cursor-pointer" />
-        <IconUser size={24} className="cursor-pointer" />
-        <IconHeart size={24} className="cursor-pointer text-red-500" />
-      </nav>
+        {/* Private */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
 
-      <nav className="flex items-center gap-4 p-4 bg-gray-100">
-        <i className="las la-clock text-2xl text-blue-600"></i>
-        <i className="las la-search text-xl cursor-pointer"></i>
-        <i className="las la-shopping-cart text-xl cursor-pointer"></i>
-        <i className="las la-user text-xl cursor-pointer"></i>
-        <i className="las la-heart text-xl cursor-pointer text-red-500"></i>
-      </nav> */}
-      <Routes></Routes>
-    </>
+        {/* Admin routes */}
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowedRoles={["ADMIN"]}>
+              <Admin />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProduct />} />
+          <Route path="favorites" element={<AdminFavorites />} />
+          <Route path="inbox" element={<AdminInbox />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="stock" element={<AdminStock />} />
+          <Route path="pricing" element={<AdminPricing />} />
+          <Route path="calendar" element={<AdminCalendar />} />
+          <Route path="todo" element={<AdminTodo />} />
+          <Route path="contact" element={<AdminContact />} />
+          <Route path="invoice" element={<AdminInvoice />} />
+          <Route path="ui-elements" element={<AdminUIElements />} />
+          <Route path="team" element={<AdminTeam />} />
+          <Route path="table" element={<AdminTable />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+
+        {/* User routes */}
+        <Route
+          path="/user"
+          element={
+            <PrivateRoute allowedRoles={["USER"]}>
+              <User />
+            </PrivateRoute>
+          }
+        />
+
+        {/* Not Found */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Router>
   );
 }
 
