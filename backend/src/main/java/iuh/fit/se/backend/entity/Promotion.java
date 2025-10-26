@@ -35,6 +35,7 @@ public class Promotion {
             joinColumns = @JoinColumn(name = "promotion_id"),
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
+    @Builder.Default
     private List<Product> products = new ArrayList<>();
 
     @CreationTimestamp
