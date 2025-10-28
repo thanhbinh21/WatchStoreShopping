@@ -1,26 +1,26 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import PublicRoute from "./routes/PublicRoute";
-import PrivateRoute from "./routes/PrivateRoute";
-import Login from "./pages/Login";
-import { Dashboard } from "./pages/Dashboard";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Admin } from "./pages/Admin";
-import { User } from "./pages/User";
-import NotFound from "./pages/NotFound";
-import { AdminProduct } from "./pages/Admin/AdminProduct";
+import { AdminCalendar } from "./pages/Admin/AdminCalendar";
+import { AdminContact } from "./pages/Admin/AdminContact";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminFavorites } from "./pages/Admin/AdminFavorites";
 import { AdminInbox } from "./pages/Admin/AdminInbox";
-import { AdminOrders } from "./pages/Admin/AdminOrders";
-import { AdminStock } from "./pages/Admin/AdminStock";
-import { AdminPricing } from "./pages/Admin/AdminPricing";
-import { AdminCalendar } from "./pages/Admin/AdminCalendar";
-import { AdminTodo } from "./pages/Admin/AdminTodo";
-import { AdminContact } from "./pages/Admin/AdminContact";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
-import { AdminUIElements } from "./pages/Admin/AdminUIElements";
-import { AdminTeam } from "./pages/Admin/AdminTeam";
-import { AdminTable } from "./pages/Admin/AdminTable";
+import { AdminOrders } from "./pages/Admin/AdminOrders";
+import { AdminPricing } from "./pages/Admin/AdminPricing";
+import { AdminProduct } from "./pages/Admin/AdminProduct";
 import { AdminSettings } from "./pages/Admin/AdminSettings";
+import { AdminStock } from "./pages/Admin/AdminStock";
+import { AdminTable } from "./pages/Admin/AdminTable";
+import { AdminTeam } from "./pages/Admin/AdminTeam";
+import { AdminTodo } from "./pages/Admin/AdminTodo";
+import { AdminUIElements } from "./pages/Admin/AdminUIElements";
+import { Dashboard } from "./pages/Dashboard";
+import { default as Login, default as LoginRegister } from "./pages/Login";
+import NotFound from "./pages/NotFound";
+import { User } from "./pages/User";
+import PrivateRoute from "./routes/PrivateRoute";
+import PublicRoute from "./routes/PublicRoute";
 
 function App() {
   return (
@@ -32,6 +32,14 @@ function App() {
           element={
             <PublicRoute>
               <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <LoginRegister />
             </PublicRoute>
           }
         />
