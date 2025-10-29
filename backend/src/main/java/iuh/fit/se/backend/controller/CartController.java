@@ -1,41 +1,44 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.entity.Cart;
+import iuh.fit.se.backend.dto.CartResponse;
 import iuh.fit.se.backend.service.CartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/carts")
+@RequestMapping("/api/cart")
 @RequiredArgsConstructor
 public class CartController {
+
     private final CartService cartService;
 
-    @GetMapping
-    public List<Cart> getAll() {
-        return cartService.getAllCarts();
+    @GetMapping("/{userId}")
+    public ResponseEntity<CartResponse> getCart(@PathVariable Long userId) {
+        return ResponseEntity.ok(cartService.getUserCart(userId));
     }
 
-    @GetMapping("/{id}")
-    public Cart getOne(@PathVariable Long id) {
-        return cartService.getCart(id);
+    @PostMapping("/{userId}/product/{productId}")
+    public ResponseEntity<CartResponse> addProduct(@PathVariable Long userId,
+                                                   @PathVariable Long productId,
+                                                   @RequestParam Integer quantity) {
+        return ResponseEntity.ok(cartService.addToCart(userId, productId, quantity));
     }
 
-    @PostMapping
-    public Cart create(@RequestBody Cart cart) {
-        return cartService.saveCart(cart);
+    @PutMapping("/item/{cartItemId}")
+    public ResponseEntity<CartResponse> updateQuantity(@PathVariable Long cartItemId,
+                                                       @RequestParam Integer quantity) {
+        return ResponseEntity.ok(cartService.updateQuantity(cartItemId, quantity));
     }
 
-    @PutMapping("/{id}")
-    public Cart update(@PathVariable Long id, @RequestBody Cart cart) {
-        cart.setId(id);
-        return cartService.saveCart(cart);
+    @DeleteMapping("/item/{cartItemId}")
+    public ResponseEntity<CartResponse> removeItem(@PathVariable Long cartItemId) {
+        return ResponseEntity.ok(cartService.removeItem(cartItemId));
     }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        cartService.deleteCart(id);
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<Void> clearCart(@PathVariable Long userId) {
+        cartService.clearCart(userId);
+        return ResponseEntity.noContent().build();
     }
 }
