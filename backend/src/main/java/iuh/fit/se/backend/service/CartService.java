@@ -1,19 +1,14 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.entity.Cart;
-import iuh.fit.se.backend.repository.CartRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
+import iuh.fit.se.backend.dto.CartResponse;
+public interface CartService {
+    CartResponse getUserCart(Long userId);
 
-import java.util.List;
+    CartResponse addToCart(Long userId, Long productId, Integer quantity);
 
-@Service
-@RequiredArgsConstructor
-public class CartService {
-    private final CartRepository cartRepository;
+    CartResponse updateQuantity(Long cartItemId, Integer quantity);
 
-    public List<Cart> getAllCarts() { return cartRepository.findAll(); }
-    public Cart getCart(Long id) { return cartRepository.findById(id).orElse(null); }
-    public Cart saveCart(Cart cart) { return cartRepository.save(cart); }
-    public void deleteCart(Long id) { cartRepository.deleteById(id); }
+    CartResponse removeItem(Long cartItemId);
+
+    void clearCart(Long userId);
 }
