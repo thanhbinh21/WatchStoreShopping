@@ -7,7 +7,6 @@ export const getProductsByCategoryId = async (categoryId) => {
         const url = `${API_URL_PRD}/category/${categoryId}`;
         const response = await axios.get(url);
 
-        // ép kiểu luôn thành mảng chuẩn
         const result = response.data;
         if (Array.isArray(result)) return result;
         if (result?.data && Array.isArray(result.data)) return result.data;

@@ -15,7 +15,7 @@ export const getCategories = async () => {
   try {
     const res = await axiosInstance.get("/categories");
     // nếu server trả { data: [...] }
-    return res.data; // hoặc return res.data.data nếu nested
+    return res.data;
   } catch (err) {
     console.error(err);
     return [];
