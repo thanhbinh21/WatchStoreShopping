@@ -52,7 +52,7 @@ public class OrderService {
                 item.setOrder(order);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getPrice()); // 🔑 chốt giá tại thời điểm đặt hàng
+                item.setPrice(product.getCurrentPrice()); // 🔑 chốt giá tại thời điểm đặt hàng
 
                 order.getOrderItems().add(item);
             }
@@ -83,7 +83,7 @@ public class OrderService {
                 item.setOrder(existing);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getPrice()); // giữ giá tại thời điểm cập nhật
+                item.setPrice(product.getCurrentPrice()); // giữ giá tại thời điểm cập nhật
 
                 existing.getOrderItems().add(item);
             }

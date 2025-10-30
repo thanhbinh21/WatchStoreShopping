@@ -3,6 +3,9 @@ package iuh.fit.se.backend.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "inventories")
@@ -19,10 +22,14 @@ public class Inventory {
     private Long id;
 
     @Column(nullable = false)
-    private int stock; // số lượng tồn kho
+    private Integer stock; // số lượng tồn kho
 
-    @OneToOne
-    @JoinColumn(name = "product_id", nullable = false, unique = true)
-    @JsonBackReference
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference(value = "product-inventory")
     private Product product;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

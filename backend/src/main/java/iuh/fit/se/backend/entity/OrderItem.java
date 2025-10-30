@@ -20,7 +20,7 @@ public class OrderItem {
     private Long id;
 
     @Column(nullable = false)
-    private int quantity;
+    private Integer quantity;
 
     // Giá snapshot tại thời điểm đặt hàng
     @Column(nullable = false, precision = 15, scale = 2)
@@ -33,12 +33,13 @@ public class OrderItem {
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonBackReference(value = "product-orderItems")
     private Product product;
 
     @PrePersist
     public void prePersist() {
         if (this.product != null && this.price == null) {
-            this.price = product.getPrice(); // snapshot giá khi tạo order
+            this.price = product.getCurrentPrice(); // snapshot giá khi tạo order
         }
     }
 }
