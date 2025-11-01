@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.ReviewRequest;
 import iuh.fit.se.backend.entity.Review;
 import iuh.fit.se.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;
@@ -39,9 +40,8 @@ public class ReviewController {
     }
 
     @PutMapping("/{id}")
-    public Review update(@PathVariable Long id, @RequestBody Review review) {
-        review.setId(id);
-        return reviewService.save(review);
+    public Review update(@PathVariable Long id, @RequestBody ReviewRequest dto) {
+        return reviewService.updateReview(id, dto);
     }
 
     @DeleteMapping("/{id}")

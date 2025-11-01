@@ -86,7 +86,4 @@ public class ProductService {
             );
         });
     }
-    public List<Product> findProductByCategoryID(Long id) {
-        return productRepository.findByCategoryId(id);
-    }
 }
