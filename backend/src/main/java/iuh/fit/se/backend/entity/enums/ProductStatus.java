@@ -1,4 +1,4 @@
-package iuh.fit.se.backend.entity;
+package iuh.fit.se.backend.entity.enums;
 
 public enum ProductStatus {
     ACTIVE,

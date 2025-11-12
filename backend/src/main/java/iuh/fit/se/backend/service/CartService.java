@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.dto.CartResponse;
+import iuh.fit.se.backend.dto.response.CartResponse;
 public interface CartService {
     CartResponse getUserCart(Long userId);
 

@@ -1,11 +1,10 @@
 package iuh.fit.se.backend.controller;
 
 import iuh.fit.se.backend.config.JwtService;
-import iuh.fit.se.backend.dto.LoginRequest;
-import iuh.fit.se.backend.dto.LoginResponse;
-import iuh.fit.se.backend.dto.RegisterRequest;
+import iuh.fit.se.backend.dto.request.LoginRequest;
+import iuh.fit.se.backend.dto.response.LoginResponse;
+import iuh.fit.se.backend.dto.request.RegisterRequest;
 import iuh.fit.se.backend.entity.User;
-import iuh.fit.se.backend.service.UserService;
 import iuh.fit.se.backend.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
