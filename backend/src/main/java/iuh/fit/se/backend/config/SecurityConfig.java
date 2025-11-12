@@ -14,8 +14,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // tắt CSRF cho API
                 .cors(cors -> {}) // Bật CORS để dùng CorsConfig
                 .authorizeHttpRequests(auth -> auth
+                        // Cho phép truy cập Swagger/OpenAPI mà không cần đăng nhập
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         // Quy tắc mở
-                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
 
                         // Phân quyền
                         .requestMatchers("/api/products/**").permitAll()     // Ai cũng xem được sản phẩm
