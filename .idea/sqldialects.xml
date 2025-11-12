@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/backend/script/Script-1.sql" dialect="MariaDB" />
+    <file url="file://$PROJECT_DIR$/backend/script/script_convert_formDB.sql" dialect="MariaDB" />
+    <file url="file://$PROJECT_DIR$/backend/script/watch_store_data.sql" dialect="MariaDB" />
+  </component>
+</project>
