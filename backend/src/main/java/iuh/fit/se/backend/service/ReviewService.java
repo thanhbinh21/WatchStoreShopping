@@ -8,7 +8,9 @@ import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.ReviewRepository;
 import iuh.fit.se.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -26,11 +28,18 @@ public class ReviewService {
     public Review save(Review review) { return reviewRepository.save(review); }
     public void delete(Long id) { reviewRepository.deleteById(id); }
 
-    public Review createReview(ReviewRequest dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        Product product = productRepository.findById(dto.getProductId())
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+        public Review createReview(ReviewRequest dto) {
+                if (dto.getUserId() == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "user.id is required");
+                }
+                if (dto.getProductId() == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "product.id is required");
+                }
+
+                User user = userRepository.findById(dto.getUserId())
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+                Product product = productRepository.findById(dto.getProductId())
+                                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         Review review = Review.builder()
                 .comment(dto.getComment())
@@ -44,20 +53,20 @@ public class ReviewService {
 
     public Review updateReview(Long id, ReviewRequest dto) {
         Review review = reviewRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Review not found"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
         if (dto.getComment() != null) review.setComment(dto.getComment());
         review.setRating(dto.getRating());
 
         if (dto.getUserId() != null) {
             User user = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
             review.setUser(user);
         }
 
         if (dto.getProductId() != null) {
             Product product = productRepository.findById(dto.getProductId())
-                    .orElseThrow(() -> new RuntimeException("Product not found"));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
             review.setProduct(product);
         }
 

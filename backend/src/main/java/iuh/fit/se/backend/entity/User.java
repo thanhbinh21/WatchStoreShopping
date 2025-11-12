@@ -53,4 +53,10 @@ public class User {
     @JsonManagedReference(value = "user-carts")
     @ToString.Exclude
     private List<Cart> carts = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "user-reviews")
+    @ToString.Exclude
+    private List<Review> reviews = new ArrayList<>();
 }

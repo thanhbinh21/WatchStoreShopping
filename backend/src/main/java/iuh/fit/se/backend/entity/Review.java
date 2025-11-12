@@ -30,12 +30,14 @@ public class Review {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference(value = "user-reviews")
+    @ToString.Exclude
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
-    @JsonBackReference
+    @JsonBackReference(value = "product-reviews")
+    @ToString.Exclude
     private Product product;
 
     @CreationTimestamp

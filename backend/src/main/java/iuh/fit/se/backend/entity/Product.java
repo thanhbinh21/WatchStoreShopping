@@ -73,6 +73,12 @@ public class Product {
     @Builder.Default
     private List<Inventory> inventories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "product-reviews")
+    @Builder.Default
+    @ToString.Exclude
+    private List<Review> reviews = new ArrayList<>();
+
     // Many-to-Many with Promotion
     @ManyToMany(mappedBy = "products")
     @Builder.Default
