@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.http.HttpMethod;
 
 @Configuration
 public class SecurityConfig {
@@ -36,6 +37,7 @@ public class SecurityConfig {
 
                         // Phân quyền
                         .requestMatchers("/api/products/**").permitAll()     // Ai cũng xem được sản phẩm
+                        .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
 
                         // Độc quyền (ADMIN)
