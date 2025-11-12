@@ -35,8 +35,8 @@ public class ReviewController {
     }
 
     @PostMapping
-    public Review create(@RequestBody Review review) {
-        return reviewService.save(review);
+    public Review create(@RequestBody ReviewRequest dto) {
+        return reviewService.createReview(dto);
     }
 
     @PutMapping("/{id}")
