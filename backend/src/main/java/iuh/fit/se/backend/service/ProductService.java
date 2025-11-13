@@ -75,12 +75,14 @@ public class ProductService {
             return new ProductResponse(
                     p.getId(),
                     p.getName(),
-                    p.getBrand(),
+                    p.getBrand().getName(),
                     p.getDescription(),
                     p.getCurrentPrice(),
                     p.getPrimaryImageUrl(),
                     p.getCategory() != null ? p.getCategory().getName() : null,
                     p.getSupplier() != null ? p.getSupplier().getName() : null,
+                    p.getStatus() != null ? p.getStatus().toString() : null,
+                    p.getStockQuantity(),
                     avg != null ? avg : 0.0,
                     total != null ? total : 0L
             );

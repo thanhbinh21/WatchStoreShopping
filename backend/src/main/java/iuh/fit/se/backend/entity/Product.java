@@ -118,12 +118,9 @@ public class Product {
                 .orElse(null);
     }
 
-    public Integer getCurrentStock() {
+    public Integer getStockQuantity() {
         return inventories.stream()
-                .sorted(Comparator.comparing(Inventory::getUpdatedAt).reversed())
-                .findFirst()
-                .map(Inventory::getStock)
-                .orElse(0);
+                .mapToInt(Inventory::getStock)
+                .sum();
     }
-
 }

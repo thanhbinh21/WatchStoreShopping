@@ -19,6 +19,8 @@ public class ProductResponse {
     private String imageUrl;
     private String categoryName;
     private String supplierName;
+    private String status;
+    private Integer stockQuantity;
 
     private Double rating;       // trung bình rating
     private Long numOfRating;    // tổng số review
