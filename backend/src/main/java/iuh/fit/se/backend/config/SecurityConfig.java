@@ -38,9 +38,12 @@ public class SecurityConfig {
                         // Quy tắc mở
                         .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
 
+
                         // Phân quyền
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
 
@@ -48,16 +51,23 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
 
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+
                         .requestMatchers(HttpMethod.POST,   "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
-
-                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
 
                         .requestMatchers(HttpMethod.POST,   "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
 
+                        .requestMatchers(HttpMethod.POST,   "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST,   "/api/suppliers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT,    "/api/suppliers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()                        // Các API khác cần login
                 )
