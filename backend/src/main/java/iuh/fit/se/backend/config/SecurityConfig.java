@@ -7,6 +7,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,7 +16,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.http.HttpMethod;
 
 @Configuration
-@EnableMethodSecurity
+@EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -38,24 +40,25 @@ public class SecurityConfig {
                         // Quy tắc mở
                         .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
 
+                        // Upload API - chỉ ADMIN
+                        .requestMatchers("/api/upload/**").hasRole("ADMIN")
 
-                        // Phân quyền
+                        // Phân quyền cho Products
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+
+                        // Phân quyền cho Categories, Brands, Suppliers
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
 
-
                         // Độc quyền (ADMIN)
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
-
                         .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
-
-                        .requestMatchers(HttpMethod.POST,   "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
                         .requestMatchers(HttpMethod.POST,   "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT,    "/api/categories/**").hasRole("ADMIN")
