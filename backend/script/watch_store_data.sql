@@ -1,142 +1,206 @@
-USE watch_store;
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
+-- Xóa dữ liệu cũ (theo thứ tự foreign key)
 SET FOREIGN_KEY_CHECKS = 0;
-INSERT INTO users (username, password, email, full_name, role, created_at) VALUES
-('vovanhung', '123456', 'vovanhung2864@gmail.com', 'Võ Văn Hùng', 'USER', '2022-12-01 00:00:00'),
-('lephanhuynh', '123456', 'nhuhuynh2862@gmail.com', 'Lê Phan Huỳnh Như', 'USER', '2022-12-02 00:00:00'),
-('dangkhoa', '123456', 'dangkhoa2345@gmail.com', 'Võ Quang Đăng Khoa', 'USER', '2022-12-03 00:00:00'),
-('thieuhoang', '123456', 'thieuhoang2346@gmail.com', 'Thiều Việt Hoàng', 'USER', '2023-04-01 00:00:00'),
-('binhminh', '123456', 'binhminh@gmail.com', 'Hoàng Bình Minh', 'USER', '2023-04-05 00:00:00'),
-('baotram', '123456', 'baotram2345@gmail.com', 'Thiều Bảo Trâm', 'USER', '2023-04-06 00:00:00'),
-('camthu', '123456', 'camthu@gmail.com', 'Lê Hồng Cẩm Thu', 'USER', '2023-04-07 00:00:00'),
-('ngoctram', '123456', 'ngoctram567@gmail.com', 'Lê Ngọc Trâm', 'USER', '2023-04-08 00:00:00'),
-('camtho', '123456', 'camtho234@gmail.com', 'Phạm Cẩm Thơ', 'USER', '2023-04-09 00:00:00'),
-('congtru', '123456', 'congtru2865@gmail.com', 'Đào Công Trứ', 'USER', '2023-04-10 00:00:00'),
-('admin', 'admin123', 'admin@watchstore.vn', 'Admin WatchStore', 'ADMIN', NOW());
-INSERT INTO categories (name, description) VALUES
-('Seiko', 'Seiko - thương hiệu Nhật Bản'),
-('Casio', 'Casio - thương hiệu Nhật Bản'),
-('Citizen', 'Citizen - thương hiệu Nhật Bản'),
-('Orient', 'Orient - thương hiệu Nhật Bản'),
-('Apple', 'Apple - smartwatch'),
-('Rolex', 'Rolex - thương hiệu xa xỉ'),
-('Omega', 'Omega - thương hiệu cao cấp'),
-('Swatch', 'Swatch - trẻ trung'),
-('Tissot', 'Tissot - Thụy Sỹ');
-INSERT INTO suppliers (name, contact) VALUES
-('Tân Phúc', 'tanphuc@gmail.com'),
-('Thịnh Long', 'thinhlong@gmail.com'),
-('Kim Long', 'thinhgia@gmail.com'),
-('Thế Giới Đồng Hồ', 'thegioidongho@gmail.com'),
-('Minh Tân', 'minhtan@gmail.com'),
-('Đức Tài', 'ductai@gmail.com'),
-('Nam Sơn', 'namson@gmail.com'),
-('Thịnh Hưng', 'thinhhung@gmail.com'),
-('Duy Anh', 'duyanh@gmail.com');
-INSERT INTO products (name, brand, description, price, image_url, category_id, supplier_id) VALUES
-('Seiko 5 Field Sports Style SRPG29K1', 'Seiko', 'Mẫu Seiko SRPG29K1 thiết kế đơn giản chức năng 3 kim, dạ quang, mặt số xanh 39.4mm.', 7090000.00, 'SRPG29K1-699x699.png', (SELECT id FROM categories WHERE name='Seiko' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Seiko 5 Field Specialist Style SRPG41K1', 'Seiko', 'Mẫu Seiko SRPG41K1 thiết kế đơn giản, mặt số 39.4mm.', 8050000.00, 'SRPG41K1.png', (SELECT id FROM categories WHERE name='Seiko' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Seiko SSB351P1', 'Seiko', 'Seiko SSB351P1 phiên bản chronograph, mặt 43.9mm.', 6375000.00, 'SSB351P1-699x699.png', (SELECT id FROM categories WHERE name='Seiko' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Casio EFV-550L-1AVUDF', 'Casio', 'Casio EFV-550L-1AVUDF Edifice, 47mm.', 3529000.00, '68_EFV-550L-1AVUDF-1-699x699.png', (SELECT id FROM categories WHERE name='Casio' LIMIT 1), (SELECT id FROM suppliers WHERE name='Tân Phúc' LIMIT 1)),
-('Casio MTP-1302D-7A1VDF', 'Casio', 'Casio MTP-1302D-7A1VDF – Nữ – Quartz 38.5mm.', 1347000.00, '35_MTP-1302D-7A1VDF-699x699.png', (SELECT id FROM categories WHERE name='Casio' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thịnh Long' LIMIT 1)),
-('Casio AEQ-110W-3AVDF', 'Casio', 'Casio AEQ-110W-3AVDF – Đồng hồ điện tử, đa chức năng.', 1581000.00, '118_AEQ-110W-3AVDF-699x699.png', (SELECT id FROM categories WHERE name='Casio' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thịnh Long' LIMIT 1)),
-('Citizen BM7370-89E', 'Citizen', 'Citizen BM7370-89E Eco-Drive, dây kim loại.', 8000000.00, 'BM7370-89E-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen AN8195-58E', 'Citizen', 'Citizen AN8195-58E Quartz 42mm.', 5985000.00, 'AN8195-58E-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen NP1020-15A', 'Citizen', 'Citizen NP1020-15A Automatic, dây da.', 8450000.00, '138_NP1020-15A-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Orient Sun And Moon RA-AS0103A10B', 'Orient', 'Orient RA-AS0103A10B Sun & Moon, automatic.', 11490000.00, 'RA-AS0103A10B-699x699.png', (SELECT id FROM categories WHERE name='Orient' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Orient Bambino FAC08003A0', 'Orient', 'Orient Bambino FAC08003A0 - cổ điển, automatic.', 7510000.00, 'FAC08003A0-1-699x699.png', (SELECT id FROM categories WHERE name='Orient' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Orient FGW01004A0', 'Orient', 'Orient FGW01004A0 Quartz, kính sapphire.', 4160000.00, 'FGW01004A0-699x699.png', (SELECT id FROM categories WHERE name='Orient' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('Apple Watch SE Nhôm 2022 GPS - 40mm', 'Apple', 'Apple Watch SE 2022 Nhôm GPS.', 8990000.00, '0011842_midnight_550.png', (SELECT id FROM categories WHERE name='Apple' LIMIT 1), (SELECT id FROM suppliers WHERE name='Minh Tân' LIMIT 1)),
-('Apple Watch Ultra LTE 49mm Ocean Band Vàng', 'Apple', 'Apple Watch Ultra LTE 49mm.', 23990000.00, '0001670_white_550.png', (SELECT id FROM categories WHERE name='Apple' LIMIT 1), (SELECT id FROM suppliers WHERE name='Minh Tân' LIMIT 1)),
-('Apple Watch 8 45mm nhôm GPS + Cellular Đỏ', 'Apple', 'Apple Watch 8 45mm.', 15990000.00, '0014063_apple-watch-series-8-45mm-nhom-gps-cellular-sao-chep_550.png', (SELECT id FROM categories WHERE name='Apple' LIMIT 1), (SELECT id FROM suppliers WHERE name='Minh Tân' LIMIT 1)),
-('SEIKO 5 FIELD SRPD77K1', 'Seiko', 'SEIKO 5 SRPD77K1 automatic 42.5mm.', 8090000.00, 'SRPG33K1-699x699.png', (SELECT id FROM categories WHERE name='Seiko' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('CASIO ECB-900DB-1BDR', 'Casio', 'CASIO ECB-900DB-1BDR Solar Edifice.', 6909000.00, '52_ECB-900DB-1BDR-699x699.png', (SELECT id FROM categories WHERE name='Casio' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thịnh Long' LIMIT 1)),
-('Orient SK RA-AA0B01G19B', 'Orient', 'Orient SK RA-AA0B01G19B mạ vàng automatic.', 7909000.00, 'AQ-S810W-1A4VDF-699x699.png', (SELECT id FROM categories WHERE name='Orient' LIMIT 1), (SELECT id FROM suppliers WHERE name='Thế Giới Đồng Hồ' LIMIT 1)),
-('CITIZEN BI5054-53L', 'Citizen', 'Citizen BI5054-53L Quartz.', 4270000.00, '177_BI5054-53L-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen AR1135-10E', 'Citizen', 'Citizen AR1135-10E Eco-Drive.', 6900000.00, 'AR1135-10E-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen AR1113-12A', 'Citizen', 'Citizen AR1113-12A Eco-Drive.', 8530000.00, 'AR1113-12A-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen BM9012-02A', 'Citizen', 'Citizen BM9012-02A Eco-Drive dây da.', 6900000.00, '159_BM9012-02A-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen BI5006-81P', 'Citizen', 'Citizen BI5006-81P Quartz.', 4985000.00, '86_BI5006-81P-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen ER0210-55Y', 'Citizen', 'Citizen ER0210-55Y Nữ Quartz khảm xà cừ.', 3785000.00, '18_ER0210-55Y-699x699.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1)),
-('Citizen ED8180-52X', 'Citizen', 'Citizen ED8180-52X Nữ Quartz.', 4855000.00, 'ED8180-52X.png', (SELECT id FROM categories WHERE name='Citizen' LIMIT 1), (SELECT id FROM suppliers WHERE name='Kim Long' LIMIT 1));
-INSERT INTO inventories (stock, product_id) SELECT 32, id FROM products WHERE name='Seiko 5 Field Sports Style SRPG29K1';
-INSERT INTO inventories (stock, product_id) SELECT 27, id FROM products WHERE name='Seiko 5 Field Specialist Style SRPG41K1';
-INSERT INTO inventories (stock, product_id) SELECT 28, id FROM products WHERE name='Seiko SSB351P1';
-INSERT INTO inventories (stock, product_id) SELECT 20, id FROM products WHERE name='Casio EFV-550L-1AVUDF';
-INSERT INTO inventories (stock, product_id) SELECT 18, id FROM products WHERE name='Casio MTP-1302D-7A1VDF';
-INSERT INTO inventories (stock, product_id) SELECT 11, id FROM products WHERE name='Casio AEQ-110W-3AVDF';
-INSERT INTO inventories (stock, product_id) SELECT 19, id FROM products WHERE name='Citizen BM7370-89E';
-INSERT INTO inventories (stock, product_id) SELECT 18, id FROM products WHERE name='Citizen AN8195-58E';
-INSERT INTO inventories (stock, product_id) SELECT 18, id FROM products WHERE name='Citizen NP1020-15A';
-INSERT INTO inventories (stock, product_id) SELECT 33, id FROM products WHERE name='Orient Sun And Moon RA-AS0103A10B';
-INSERT INTO inventories (stock, product_id) SELECT 30, id FROM products WHERE name='Orient Bambino FAC08003A0';
-INSERT INTO inventories (stock, product_id) SELECT 35, id FROM products WHERE name='Orient FGW01004A0';
-INSERT INTO inventories (stock, product_id) SELECT 32, id FROM products WHERE name='Apple Watch SE Nhôm 2022 GPS - 40mm';
-INSERT INTO inventories (stock, product_id) SELECT 15, id FROM products WHERE name='Apple Watch Ultra LTE 49mm Ocean Band Vàng';
-INSERT INTO inventories (stock, product_id) SELECT 20, id FROM products WHERE name='Apple Watch 8 45mm nhôm GPS + Cellular Đỏ';
-INSERT INTO inventories (stock, product_id) SELECT 14, id FROM products WHERE name='SEIKO 5 FIELD SRPD77K1';
-INSERT INTO inventories (stock, product_id) SELECT 13, id FROM products WHERE name='CASIO ECB-900DB-1BDR';
-INSERT INTO inventories (stock, product_id) SELECT 16, id FROM products WHERE name='Orient SK RA-AA0B01G19B';
-INSERT INTO inventories (stock, product_id) SELECT 18, id FROM products WHERE name='CITIZEN BI5054-53L';
-INSERT INTO inventories (stock, product_id) SELECT 23, id FROM products WHERE name='Citizen AR1135-10E';
-INSERT INTO inventories (stock, product_id) SELECT 10, id FROM products WHERE name='Citizen AR1113-12A';
-INSERT INTO inventories (stock, product_id) SELECT 10, id FROM products WHERE name='Citizen BM9012-02A';
-INSERT INTO inventories (stock, product_id) SELECT 10, id FROM products WHERE name='Citizen BI5006-81P';
-INSERT INTO inventories (stock, product_id) SELECT 8, id FROM products WHERE name='Citizen ER0210-55Y';
-INSERT INTO inventories (stock, product_id) SELECT 10, id FROM products WHERE name='Citizen ED8180-52X';
-INSERT INTO carts (user_id) SELECT id FROM users WHERE email='vovanhung2864@gmail.com' LIMIT 1;
-INSERT INTO carts (user_id) SELECT id FROM users WHERE email='nhuhuynh2862@gmail.com' LIMIT 1;
-INSERT INTO cart_items (quantity, cart_id, product_id) SELECT 1, c.id, p.id FROM carts c JOIN users u ON u.id=c.user_id JOIN products p ON p.name='Seiko 5 Field Sports Style SRPG29K1' WHERE u.email='vovanhung2864@gmail.com' LIMIT 1;
-INSERT INTO cart_items (quantity, cart_id, product_id) SELECT 2, c.id, p.id FROM carts c JOIN users u ON u.id=c.user_id JOIN products p ON p.name='Casio AEQ-110W-3AVDF' WHERE u.email='nhuhuynh2862@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'DELIVERED', u.id, '2022-12-29 03:56:02', 20000, 0, 7110000, '521, CMT8#Phường 14#Quận 10#Thành phố Hồ Chí Minh', 'CASH', NULL FROM users u WHERE u.email='vovanhung2864@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'DELIVERED', u.id, '2023-03-21 04:12:14', 20000, 0, 8070000, '521, CMT8#Phường 14#Quận 10#Thành phố Hồ Chí Minh', 'VNPAY', NULL FROM users u WHERE u.email='nhuhuynh2862@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'DELIVERED', u.id, '2023-03-23 04:12:14', 20000, 0, 6395000, '521, CMT8#Phường 14#Quận 10#Thành phố Hồ Chí Minh', 'VNPAY', NULL FROM users u WHERE u.email='dangkhoa2345@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-04-20 04:30:45', 35000, 1548775, 29461725, '34#Phường Bồng Lai#Thị xã Quế Võ#Tỉnh Bắc Ninh', 'MOMO', 'VO001' FROM users u WHERE u.email='thieuhoang2346@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-04-24 04:35:13', 120000, 543750, 17701250, '31#Phường Mỹ Long#Thành phố Long Xuyên#Tỉnh An Giang', 'VNPAY', 'VO009' FROM users u WHERE u.email='binhminh@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-04-29 04:39:09', 120000, 1164975, 22254525, '31#Phường Mỹ Long#Thành phố Long Xuyên#Tỉnh An Giang', 'CREDIT', 'VO001' FROM users u WHERE u.email='binhminh@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-13 04:54:28', 35000, 0, 2963000, '31#Phường Mỹ Long#Thành phố Long Xuyên#Tỉnh An Giang', 'CASH', NULL FROM users u WHERE u.email='binhminh@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-16 04:56:03', 35000, 0, 18089500, '34#Xã Lương Can#Huyện Hà Quảng#Tỉnh Cao Bằng', 'CASH', NULL FROM users u WHERE u.email='dangkhoa2345@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-19 05:03:16', 35000, 0, 7125000, '34#Xã Lương Can#Huyện Hà Quảng#Tỉnh Cao Bằng', 'CASH', NULL FROM users u WHERE u.email='dangkhoa2345@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-19 05:03:42', 20000, 0, 10051000, '521, CMT8#Phường 14#Quận 10#Thành phố Hồ Chí Minh', 'MOMO', NULL FROM users u WHERE u.email='vovanhung2864@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-19 05:03:52', 20000, 0, 15210500, '521, CMT8#Phường 14#Quận 10#Thành phố Hồ Chí Minh', 'CASH', NULL FROM users u WHERE u.email='vovanhung2864@gmail.com' LIMIT 1;
-INSERT INTO orders (status, user_id, created_at, shipping_fee, order_discount, order_total, address, payment_method, voucher_code) SELECT 'PENDING', u.id, '2023-05-19 05:04:42', 35000, 0, 7605000, '34#Phường Bồng Lai#Thị xã Quế Võ#Tỉnh Bắc Ninh', 'CASH', NULL FROM users u WHERE u.email='thieuhoang2346@gmail.com' LIMIT 1;
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 7090000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Seiko 5 Field Sports Style SRPG29K1' WHERE o.created_at='2022-12-29 03:56:02' AND u.email='vovanhung2864@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8050000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Seiko 5 Field Specialist Style SRPG41K1' WHERE o.created_at='2023-03-21 04:12:14' AND u.email='nhuhuynh2862@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 6375000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Seiko SSB351P1' WHERE o.created_at='2023-03-23 04:12:14' AND u.email='dangkhoa2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8000000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen BM7370-89E' WHERE o.created_at='2023-04-20 04:30:45' AND u.email='thieuhoang2346@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 5985000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen AN8195-58E' WHERE o.created_at='2023-04-20 04:30:45' AND u.email='thieuhoang2346@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8450000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen NP1020-15A' WHERE o.created_at='2023-04-20 04:30:45' AND u.email='thieuhoang2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8540500.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Apple Watch SE Nhôm 2022 GPS - 40mm' WHERE o.created_at='2023-04-20 04:30:45' AND u.email='thieuhoang2346@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 2, 3529000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio EFV-550L-1AVUDF' WHERE o.created_at='2023-04-24 04:35:13' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 7, 1581000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio AEQ-110W-3AVDF' WHERE o.created_at='2023-04-24 04:35:13' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 1347000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio MTP-1302D-7A1VDF' WHERE o.created_at='2023-04-29 04:39:09' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 15190500.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Apple Watch 8 45mm nhôm GPS + Cellular Đỏ' WHERE o.created_at='2023-04-29 04:39:09' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 6762000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen AR1135-10E' WHERE o.created_at='2023-04-29 04:39:09' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 1347000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio MTP-1302D-7A1VDF' WHERE o.created_at='2023-05-13 04:54:28' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 1581000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio AEQ-110W-3AVDF' WHERE o.created_at='2023-05-13 04:54:28' AND u.email='binhminh@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 3529000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio EFV-550L-1AVUDF' WHERE o.created_at='2023-05-16 04:56:03' AND u.email='dangkhoa2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 5985000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen AN8195-58E' WHERE o.created_at='2023-05-16 04:56:03' AND u.email='dangkhoa2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8540500.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Apple Watch SE Nhôm 2022 GPS - 40mm' WHERE o.created_at='2023-05-16 04:56:03' AND u.email='dangkhoa2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 7090000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Seiko 5 Field Sports Style SRPG29K1' WHERE o.created_at='2023-05-19 05:03:16' AND u.email='dangkhoa2345@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 1581000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Casio AEQ-110W-3AVDF' WHERE o.created_at='2023-05-19 05:03:42' AND u.email='vovanhung2864@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 8450000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen NP1020-15A' WHERE o.created_at='2023-05-19 05:03:42' AND u.email='vovanhung2864@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 1, 15190500.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Apple Watch 8 45mm nhôm GPS + Cellular Đỏ' WHERE o.created_at='2023-05-19 05:03:52' AND u.email='vovanhung2864@gmail.com';
-INSERT INTO order_items (quantity, price, order_id, product_id) SELECT 2, 3785000.00, o.id, p.id FROM orders o JOIN users u ON o.user_id=u.id JOIN products p ON p.name='Citizen ER0210-55Y' WHERE o.created_at='2023-05-19 05:04:42' AND u.email='thieuhoang2346@gmail.com';
-INSERT INTO payments (method, amount, order_id, created_at) SELECT 'CASH', SUM(oi.price*oi.quantity), o.id, o.created_at FROM orders o JOIN order_items oi ON oi.order_id=o.id WHERE o.created_at='2022-12-29 03:56:02' GROUP BY o.id;
-INSERT INTO payments (method, amount, order_id, created_at) SELECT 'VNPAY', SUM(oi.price*oi.quantity), o.id, o.created_at FROM orders o JOIN order_items oi ON oi.order_id=o.id WHERE o.created_at='2023-03-21 04:12:14' GROUP BY o.id;
-INSERT INTO payments (method, amount, order_id, created_at) SELECT 'MOMO', SUM(oi.price*oi.quantity), o.id, o.created_at FROM orders o JOIN order_items oi ON oi.order_id=o.id WHERE o.created_at='2023-04-20 04:30:45' GROUP BY o.id;
-INSERT INTO shipments (address, status, order_id, created_at) SELECT '521, CMT8, Phường 14, Quận 10, TP.HCM', 'DELIVERED', o.id, o.created_at FROM orders o WHERE o.created_at='2022-12-29 03:56:02';
-INSERT INTO shipments (address, status, order_id, created_at) SELECT '34, Phường Bồng Lai, Thị xã Quế Võ, Tỉnh Bắc Ninh', 'PENDING', o.id, o.created_at FROM orders o WHERE o.created_at='2023-04-20 04:30:45';
-INSERT INTO promotions (name, discount, created_at, start_date, end_date) VALUES
-('30/4', 5.00, NOW(), '2023-04-24 00:00:00', '2023-04-30 23:59:59'),
-('5/5', 2.00, NOW(), '2023-05-04 00:00:00', '2023-05-07 23:59:59'),
-('Noel', 3.00, NOW(), '2023-12-15 00:00:00', '2023-12-25 23:59:59'),
-('Black Friday 2025', 20.00, NOW(), '2025-11-01 00:00:00', '2025-11-30 23:59:59'),
-('Tet 2025', 10.00, NOW(), '2025-01-01 00:00:00', '2025-01-10 23:59:59');
-INSERT INTO promotion_products (promotion_id, product_id) SELECT pr.id, p.id FROM promotions pr JOIN products p ON p.name='Apple Watch SE Nhôm 2022 GPS - 40mm' WHERE pr.name='30/4';
-INSERT INTO promotion_products (promotion_id, product_id) SELECT pr.id, p.id FROM promotions pr JOIN products p ON p.name='SEIKO 5 FIELD SRPD77K1' WHERE pr.name='Black Friday 2025';
-INSERT INTO reviews (comment, rating, user_id, product_id, created_at) SELECT 'Rất đẹp và sang trọng!', 5, u.id, p.id, NOW() FROM users u JOIN products p ON p.name='Seiko 5 Field Sports Style SRPG29K1' WHERE u.email='vovanhung2864@gmail.com';
-INSERT INTO reviews (comment, rating, user_id, product_id, created_at) SELECT 'Đeo bền, pin trâu', 4, u.id, p.id, NOW() FROM users u JOIN products p ON p.name='Casio AEQ-110W-3AVDF' WHERE u.email='vovanhung2864@gmail.com';
-INSERT INTO reviews (comment, rating, user_id, product_id, created_at) SELECT 'Thiết kế tinh tế, đáng tiền', 5, u.id, p.id, NOW() FROM users u JOIN products p ON p.name='Apple Watch 8 45mm nhôm GPS + Cellular Đỏ' WHERE u.email='binhminh@gmail.com';
-INSERT INTO reviews (comment, rating, user_id, product_id, created_at) SELECT 'Phù hợp đi làm, lịch lãm', 4, u.id, p.id, NOW() FROM users u JOIN products p ON p.name='Orient Bambino FAC08003A0' WHERE u.email='dangkhoa2345@gmail.com';
-INSERT INTO reviews (comment, rating, user_id, product_id, created_at) SELECT 'Mạnh mẽ, pin ngon', 5, u.id, p.id, NOW() FROM users u JOIN products p ON p.name='Citizen BM7370-89E' WHERE u.email='nhuhuynh2862@gmail.com';
+
+DELETE FROM reviews;
+DELETE FROM shipments;
+DELETE FROM payments;
+DELETE FROM order_items;
+DELETE FROM orders;
+DELETE FROM cart_items;
+DELETE FROM carts;
+DELETE FROM promotion_products;
+DELETE FROM promotions;
+DELETE FROM product_specs;
+DELETE FROM product_prices;
+DELETE FROM product_images;
+DELETE FROM inventories;
+DELETE FROM products;
+DELETE FROM categories;
+DELETE FROM suppliers;
+-- DELETE FROM users; -- Bỏ comment nếu muốn xóa users
+
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- Reset AUTO_INCREMENT
+ALTER TABLE categories AUTO_INCREMENT = 1;
+ALTER TABLE suppliers AUTO_INCREMENT = 1;
+ALTER TABLE products AUTO_INCREMENT = 1;
+ALTER TABLE inventories AUTO_INCREMENT = 1;
+ALTER TABLE carts AUTO_INCREMENT = 1;
+ALTER TABLE cart_items AUTO_INCREMENT = 1;
+ALTER TABLE orders AUTO_INCREMENT = 1;
+ALTER TABLE order_items AUTO_INCREMENT = 1;
+ALTER TABLE payments AUTO_INCREMENT = 1;
+ALTER TABLE shipments AUTO_INCREMENT = 1;
+ALTER TABLE reviews AUTO_INCREMENT = 1;
+ALTER TABLE promotions AUTO_INCREMENT = 1;
+ALTER TABLE product_images AUTO_INCREMENT = 1;
+ALTER TABLE product_prices AUTO_INCREMENT = 1;
+ALTER TABLE product_specs AUTO_INCREMENT = 1;
+
+-- 1. Thêm danh mục (Categories)
+INSERT INTO `categories` (`name`, `description`) VALUES
+('Đồng hồ Nam', 'Đồng hồ dành cho nam giới'),
+('Đồng hồ Nữ', 'Đồng hồ dành cho nữ giới'),
+('Đồng hồ Thông minh', 'Smartwatch và đồng hồ thông minh'),
+('Đồng hồ Thể thao', 'Đồng hồ thể thao và outdoor'),
+('Đồng hồ Cao cấp', 'Đồng hồ luxury và cao cấp');
+
+-- 2. Thêm nhà cung cấp (Suppliers)
+INSERT INTO `suppliers` (`name`, `contact`) VALUES
+('Casio Vietnam', 'casio@example.com | 0901234567'),
+('Citizen Vietnam', 'citizen@example.com | 0901234568'),
+('Seiko Vietnam', 'seiko@example.com | 0901234569'),
+('Apple Vietnam', 'apple@example.com | 0901234570'),
+('Samsung Vietnam', 'samsung@example.com | 0901234571'),
+('Orient Vietnam', 'orient@example.com | 0901234572'),
+('Fossil Vietnam', 'fossil@example.com | 0901234573'),
+('Daniel Wellington', 'dw@example.com | 0901234574');
+
+-- 3. Thêm người dùng (Users)
+-- IMPORTANT: Bỏ comment dòng dưới nếu bạn chưa có users trong database
+-- Nếu đã có users, hãy cập nhật user_id trong các bảng Carts, Orders phù hợp với ID users hiện tại
+/*
+INSERT INTO `users` (`username`, `email`, `full_name`, `password`, `role`, `created_at`) VALUES
+('admin', 'admin@watchstore.com', 'Administrator', '$2a$10$abcdefghijklmnopqrstuvwxyz1234567890', 'ADMIN', NOW()),
+('nguyenvana', 'nguyenvana@email.com', 'Nguyễn Văn A', '$2a$10$abcdefghijklmnopqrstuvwxyz1234567891', 'USER', NOW()),
+('tranthib', 'tranthib@email.com', 'Trần Thị B', '$2a$10$abcdefghijklmnopqrstuvwxyz1234567892', 'USER', NOW()),
+('phamvanc', 'phamvanc@email.com', 'Phạm Văn C', '$2a$10$abcdefghijklmnopqrstuvwxyz1234567893', 'USER', NOW()),
+('lehoangd', 'lehoangd@email.com', 'Lê Hoàng D', '$2a$10$abcdefghijklmnopqrstuvwxyz1234567894', 'USER', NOW());
+*/
+
+-- 4. Thêm sản phẩm (Products)
+INSERT INTO `products` (`name`, `brand`, `description`, `price`, `category_id`, `supplier_id`, `status`, `image_url`, `created_at`) VALUES
+('Casio G-Shock GA-2100', 'Casio', 'Đồng hồ thể thao nam, chống nước 200m, thiết kế octagon', 3500000, 4, 1, 'ACTIVE', 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=500', NOW()),
+('Citizen Eco-Drive AT8154', 'Citizen', 'Đồng hồ nam cao cấp, pin năng lượng ánh sáng, chronograph', 12500000, 5, 2, 'ACTIVE', 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=500', NOW()),
+('Seiko 5 Sports SRPD', 'Seiko', 'Đồng hồ cơ automatic nam, phong cách sports', 5800000, 1, 3, 'ACTIVE', 'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=500', NOW()),
+('Apple Watch Series 9', 'Apple', 'Smartwatch cao cấp, GPS, màn hình OLED, theo dõi sức khỏe', 10500000, 3, 4, 'ACTIVE', 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=500', NOW()),
+('Samsung Galaxy Watch 6', 'Samsung', 'Smartwatch Android, theo dõi giấc ngủ, 40mm', 7200000, 3, 5, 'ACTIVE', 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=500', NOW()),
+('Orient Bambino Gen 2', 'Orient', 'Đồng hồ cơ automatic nam, phong cách dress watch', 4200000, 1, 6, 'ACTIVE', 'https://images.unsplash.com/photo-1548171915-e79a380a2a4b?w=500', NOW()),
+('Fossil Gen 6 Smartwatch', 'Fossil', 'Smartwatch Wear OS, màn hình AMOLED 1.28"', 6500000, 3, 7, 'ACTIVE', 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?w=500', NOW()),
+('Daniel Wellington Classic Petite', 'Daniel Wellington', 'Đồng hồ nữ minimalist, dây da, mặt 32mm', 3800000, 2, 8, 'ACTIVE', 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=500', NOW()),
+('Casio Baby-G BA-110', 'Casio', 'Đồng hồ thể thao nữ, chống nước, nhiều màu sắc', 2900000, 4, 1, 'ACTIVE', 'https://images.unsplash.com/photo-1600519677897-fec2e0a9a64e?w=500', NOW()),
+('Seiko Presage Cocktail Time', 'Seiko', 'Đồng hồ nam cao cấp, automatic, mặt số nghệ thuật', 15500000, 5, 3, 'ACTIVE', 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=500', NOW()),
+('Citizen Promaster Diver', 'Citizen', 'Đồng hồ lặn chuyên nghiệp, chống nước 200m', 8900000, 4, 2, 'ACTIVE', 'https://images.unsplash.com/photo-1611858830736-230b91e5d9d7?w=500', NOW()),
+('Fossil Carlie Mini', 'Fossil', 'Đồng hồ nữ thời trang, mặt nhỏ 28mm, dây thép', 3200000, 2, 7, 'ACTIVE', 'https://images.unsplash.com/photo-1539874754764-5a96559165b0?w=500', NOW());
+
+-- 5. Thêm kho hàng (Inventories)
+INSERT INTO `inventories` (`product_id`, `stock`, `updated_at`) VALUES
+(1, 25, NOW()),
+(2, 15, NOW()),
+(3, 30, NOW()),
+(4, 20, NOW()),
+(5, 18, NOW()),
+(6, 22, NOW()),
+(7, 12, NOW()),
+(8, 28, NOW()),
+(9, 35, NOW()),
+(10, 10, NOW()),
+(11, 16, NOW()),
+(12, 24, NOW());
+
+-- 6. Thêm hình ảnh sản phẩm (Product Images)
+INSERT INTO `product_images` (`product_id`, `image_url`, `is_primary`) VALUES
+(1, 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=800', 1),
+(1, 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=800', 0),
+(2, 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?w=800', 1),
+(3, 'https://images.unsplash.com/photo-1587836374828-4dbafa94cf0e?w=800', 1),
+(3, 'https://images.unsplash.com/photo-1622434641406-a158123450f9?w=800', 0),
+(4, 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?w=800', 1),
+(5, 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800', 1),
+(8, 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=800', 1),
+(10, 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?w=800', 1);
+
+-- 7. Thêm thông số sản phẩm (Product Specs)
+INSERT INTO `product_specs` (`product_id`, `key_name`, `value`) VALUES
+(1, 'Đường kính mặt', '45mm'),
+(1, 'Độ chống nước', '200m'),
+(1, 'Loại máy', 'Quartz'),
+(1, 'Chất liệu dây', 'Nhựa resin'),
+(2, 'Đường kính mặt', '43mm'),
+(2, 'Loại máy', 'Eco-Drive (năng lượng ánh sáng)'),
+(2, 'Chất liệu vỏ', 'Thép không gỉ'),
+(3, 'Đường kính mặt', '42.5mm'),
+(3, 'Loại máy', 'Automatic (cơ tự động)'),
+(3, 'Độ chống nước', '100m'),
+(4, 'Kích thước màn hình', '45mm'),
+(4, 'Loại màn hình', 'OLED Retina'),
+(4, 'Hệ điều hành', 'watchOS');
+
+-- 8. Thêm giá sản phẩm (Product Prices)
+INSERT INTO `product_prices` (`product_id`, `price`, `price_type`, `is_current`, `start_date`, `end_date`) VALUES
+(1, 3500000, 'REGULAR', 1, NOW(), NULL),
+(2, 12500000, 'REGULAR', 1, NOW(), NULL),
+(3, 5800000, 'REGULAR', 1, NOW(), NULL),
+(4, 10500000, 'REGULAR', 1, NOW(), NULL),
+(5, 7200000, 'REGULAR', 1, NOW(), NULL);
+
+-- 9. Thêm khuyến mãi (Promotions)
+INSERT INTO `promotions` (`name`, `discount`, `start_date`, `end_date`, `created_at`) VALUES
+('Flash Sale Cuối Tuần', 15.00, '2025-10-25 00:00:00', '2025-10-27 23:59:59', NOW()),
+('Khuyến mãi Smartwatch', 10.00, '2025-10-20 00:00:00', '2025-11-10 23:59:59', NOW()),
+('Sale Đồng Hồ Nam', 20.00, '2025-10-28 00:00:00', '2025-11-15 23:59:59', NOW());
+
+-- 10. Thêm sản phẩm khuyến mãi (Promotion Products)
+INSERT INTO `promotion_products` (`promotion_id`, `product_id`) VALUES
+(1, 1),
+(1, 9),
+(2, 4),
+(2, 5),
+(2, 7),
+(3, 1),
+(3, 3),
+(3, 6);
+
+-- 11. Thêm giỏ hàng (Carts)
+INSERT INTO `carts` (`user_id`) VALUES
+(1);
+
+-- 12. Thêm sản phẩm trong giỏ (Cart Items)
+INSERT INTO `cart_items` (`cart_id`, `product_id`, `quantity`) VALUES
+(4, 1, 1),
+(4, 8, 1),
+(4, 4, 1);
+
+-- 13. Thêm đơn hàng (Orders)
+INSERT INTO `orders` (`user_id`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'COMPLETED', '2025-10-15 10:30:00', '2025-10-20 14:20:00'),
+(1, 'SHIPPED', '2025-10-20 09:15:00', '2025-10-25 11:00:00'),
+(1, 'PAID', '2025-10-27 16:45:00', '2025-10-27 17:00:00'),
+(1, 'PENDING', '2025-10-28 08:20:00', NULL),
+(1, 'COMPLETED', '2025-10-10 14:30:00', '2025-10-18 10:00:00');
+
+-- 14. Thêm sản phẩm trong đơn hàng (Order Items)
+INSERT INTO `order_items` (`order_id`, `product_id`, `quantity`, `price`) VALUES
+(1, 3, 1, 5800000),
+(1, 9, 1, 2900000),
+(2, 4, 1, 10500000),
+(3, 2, 1, 12500000),
+(4, 1, 2, 3500000),
+(5, 8, 1, 3800000),
+(5, 12, 1, 3200000);
+
+-- 15. Thêm thanh toán (Payments)
+INSERT INTO `payments` (`order_id`, `amount`, `method`, `created_at`) VALUES
+(1, 8700000, 'VNPAY', '2025-10-15 10:35:00'),
+(2, 10500000, 'CREDIT_CARD', '2025-10-20 09:20:00'),
+(3, 12500000, 'BANK_TRANSFER', '2025-10-27 17:00:00'),
+(5, 7000000, 'MOMO', '2025-10-10 14:35:00');
+
+-- 16. Thêm vận chuyển (Shipments)
+INSERT INTO `shipments` (`order_id`, `address`, `status`, `created_at`) VALUES
+(1, '123 Nguyễn Huệ, Quận 1, TP.HCM', 'DELIVERED', '2025-10-16 08:00:00'),
+(2, '456 Lê Lợi, Quận 3, TP.HCM', 'SHIPPED', '2025-10-22 09:00:00'),
+(3, '789 Trần Hưng Đạo, Quận 5, TP.HCM', 'PENDING', '2025-10-27 18:00:00'),
+(5, '321 Võ Văn Tần, Quận 3, TP.HCM', 'DELIVERED', '2025-10-12 10:00:00');
+
+-- 17. Thêm đánh giá (Reviews)
+INSERT INTO `reviews` (`product_id`, `user_id`, `rating`, `comment`, `created_at`, `updated_at`) VALUES
+(3, 1, 5, 'Đồng hồ rất đẹp, chất lượng tốt, giao hàng nhanh!', '2025-10-21 10:00:00', NULL),
+(9, 1, 4, 'Đồng hồ dễ thương, phù hợp cho nữ. Giá hợp lý.', '2025-10-21 10:15:00', NULL),
+(4, 1, 5, 'Apple Watch tuyệt vời, tính năng đầy đủ, pin khỏe!', '2025-10-26 15:30:00', NULL),
+(8, 1, 5, 'Thiết kế minimalist rất đẹp, đúng như mô tả.', '2025-10-19 09:20:00', NULL),
+(3, 1, 4, 'Đồng hồ cơ chạy chính xác, giá tốt trong tầm.', '2025-10-28 11:00:00', NULL);

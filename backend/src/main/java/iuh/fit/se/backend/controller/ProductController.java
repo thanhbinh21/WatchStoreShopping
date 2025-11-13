@@ -1,10 +1,11 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.dto.ProductResponse;
+import iuh.fit.se.backend.dto.response.ProductResponse;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -45,24 +46,23 @@ public class ProductController {
         return productService.searchProducts(name);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public Product create(@RequestBody Product product) {
         return productService.saveProduct(product);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Product update(@PathVariable Long id, @RequestBody Product product) {
         product.setId(id);
         return productService.saveProduct(product);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         productService.deleteProduct(id);
     }
 
-    @GetMapping("/category/{id}")
-    public List<Product> getProductsByCategoryId(@PathVariable Long id) {
-        return productService.findProductByCategoryID(id);
-    }
 }

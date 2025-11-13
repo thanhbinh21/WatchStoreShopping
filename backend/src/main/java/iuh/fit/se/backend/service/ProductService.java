@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.dto.ProductResponse;
+import iuh.fit.se.backend.dto.response.ProductResponse;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.ReviewRepository;
@@ -85,8 +85,5 @@ public class ProductService {
                     total != null ? total : 0L
             );
         });
-    }
-    public List<Product> findProductByCategoryID(Long id) {
-        return productRepository.findByCategoryId(id);
     }
 }
