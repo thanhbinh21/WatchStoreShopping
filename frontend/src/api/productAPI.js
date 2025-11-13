@@ -14,7 +14,7 @@ export const getProducts = async (params = {}) => {
       minPrice = null,
       maxPrice = null,
       sortBy = "id",
-      order = "asc",
+      order = "desc", // Sort mới nhất lên đầu
     } = params;
 
     const queryParams = new URLSearchParams();
@@ -63,14 +63,19 @@ export const searchProducts = async (name) => {
 // Tạo sản phẩm mới
 export const createProduct = async (productData) => {
   try {
-    // Transform data to match backend structure
+    // Transform data to match backend DTO structure
     const payload = {
       name: productData.name,
       description: productData.description,
       status: productData.status || "ACTIVE",
-      brand: { id: Number(productData.brandId) },
-      category: { id: Number(productData.categoryId) },
-      supplier: { id: Number(productData.supplierId) },
+      brandId: Number(productData.brandId),
+      categoryId: Number(productData.categoryId),
+      supplierId: Number(productData.supplierId),
+      price: productData.price ? Number(productData.price) : null,
+      stockQuantity: productData.stockQuantity
+        ? Number(productData.stockQuantity)
+        : null,
+      images: productData.images || [], // Array of {imageUrl, isPrimary}
     };
 
     const newProduct = await axiosInstance.post(PRODUCT_URL, payload);
@@ -84,14 +89,19 @@ export const createProduct = async (productData) => {
 // Cập nhật sản phẩm
 export const updateProduct = async (id, productData) => {
   try {
-    // Transform data to match backend structure
+    // Transform data to match backend DTO structure
     const payload = {
       name: productData.name,
       description: productData.description,
       status: productData.status,
-      brand: { id: Number(productData.brandId) },
-      category: { id: Number(productData.categoryId) },
-      supplier: { id: Number(productData.supplierId) },
+      brandId: Number(productData.brandId),
+      categoryId: Number(productData.categoryId),
+      supplierId: Number(productData.supplierId),
+      price: productData.price ? Number(productData.price) : null,
+      stockQuantity: productData.stockQuantity
+        ? Number(productData.stockQuantity)
+        : null,
+      images: productData.images || [],
     };
 
     const updatedProduct = await axiosInstance.put(

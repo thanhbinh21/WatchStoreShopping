@@ -13,8 +13,10 @@ import { Button } from "@/components/ui/button";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
 import { getSuppliers } from "@/api/supplierAPI";
+import { uploadProductImages } from "@/api/uploadAPI";
 import { useEffect, useState } from "react";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X, Star } from "lucide-react";
+import { toast } from "sonner";
 
 export const ProductFormDialog = ({
   isOpen,
@@ -23,6 +25,7 @@ export const ProductFormDialog = ({
   formData,
   onChange,
   onSubmit,
+  onSubmitWithImages, // New prop to handle submit with images
 }) => {
   const isEditMode = mode === "edit";
 
@@ -32,9 +35,9 @@ export const ProductFormDialog = ({
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // State for image upload
-  const [imagePreview, setImagePreview] = useState(null);
-  const [imageFile, setImageFile] = useState(null);
+  // State for multiple images
+  const [uploadedImages, setUploadedImages] = useState([]);
+  const [uploading, setUploading] = useState(false);
 
   // Fetch data for dropdowns
   useEffect(() => {
@@ -58,20 +61,80 @@ export const ProductFormDialog = ({
       };
       fetchData();
 
-      // Handle image preview
-      if (isEditMode && formData.imageUrl) {
-        setImagePreview(formData.imageUrl);
-        setImageFile(null);
+      // Load existing images if edit mode
+      if (isEditMode && formData.images) {
+        setUploadedImages(
+          formData.images.map((img) => ({
+            imageUrl: img.imageUrl,
+            isPrimary: img.isPrimary,
+          }))
+        );
       } else {
-        setImagePreview(null);
-        setImageFile(null);
+        setUploadedImages([]);
       }
-    } else {
-      // Reset image state when closing
-      setImagePreview(null);
-      setImageFile(null);
     }
-  }, [isOpen, isEditMode, formData.imageUrl]);
+  }, [isOpen, isEditMode, formData.images]);
+
+  // Handle file upload
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const result = await uploadProductImages(files);
+
+      const newImages = result.fileNames.map((fileName, index) => ({
+        imageUrl: fileName,
+        isPrimary: uploadedImages.length === 0 && index === 0, // First image is primary if no images exist
+      }));
+
+      const updatedImages = [...uploadedImages, ...newImages];
+      setUploadedImages(updatedImages);
+      toast.success(`Upload thành công ${files.length} ảnh`);
+
+      // Reset input file để có thể chọn lại
+      e.target.value = "";
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Lỗi khi upload ảnh");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Set primary image
+  const setPrimaryImage = (index) => {
+    setUploadedImages(
+      uploadedImages.map((img, i) => ({
+        ...img,
+        isPrimary: i === index,
+      }))
+    );
+  };
+
+  // Remove image
+  const removeImage = (index) => {
+    const newImages = uploadedImages.filter((_, i) => i !== index);
+    // If removed image was primary and there are other images, set first as primary
+    if (uploadedImages[index].isPrimary && newImages.length > 0) {
+      newImages[0].isPrimary = true;
+    }
+    setUploadedImages(newImages);
+  };
+
+  // Handle form submit with images
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+
+    // If onSubmitWithImages is provided, use it with uploadedImages
+    if (onSubmitWithImages) {
+      onSubmitWithImages(e, uploadedImages);
+    } else {
+      // Fallback to regular onSubmit
+      onSubmit(e);
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -91,7 +154,7 @@ export const ProductFormDialog = ({
             <Loader2 className="size-8 animate-spin text-gray-400" />
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4">
+          <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Tên sản phẩm */}
             <div className="space-y-2">
               <Label htmlFor={`${mode}-name`}>Tên sản phẩm *</Label>
@@ -198,59 +261,89 @@ export const ProductFormDialog = ({
               </div>
             </div>
 
-            {/* Upload hình ảnh */}
+            {/* Upload nhiều ảnh */}
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-image`}>Hình ảnh sản phẩm</Label>
-              <div className="flex items-start gap-4">
-                {/* Preview */}
-                {imagePreview && (
-                  <div className="relative">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="h-24 w-24 rounded-md object-cover border"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setImagePreview(null);
-                        setImageFile(null);
-                      }}
-                      className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </div>
-                )}
+              <Label>Hình ảnh sản phẩm</Label>
 
-                {/* Upload button */}
+              {/* Uploaded images grid */}
+              {uploadedImages.length > 0 && (
+                <div className="grid grid-cols-4 gap-3 mb-3">
+                  {uploadedImages.map((img, index) => (
+                    <div
+                      key={index}
+                      className="relative group border-2 rounded-lg overflow-hidden"
+                      style={{
+                        borderColor: img.isPrimary ? "#10b981" : "#e5e7eb",
+                      }}
+                    >
+                      <img
+                        src={`/images/products/${img.imageUrl}`}
+                        alt={`Product ${index + 1}`}
+                        className="w-full h-24 object-cover"
+                      />
+
+                      {/* Primary badge */}
+                      {img.isPrimary && (
+                        <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                          <Star className="inline size-3 mr-1" />
+                          Chính
+                        </div>
+                      )}
+
+                      {/* Actions */}
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                        {!img.isPrimary && (
+                          <button
+                            type="button"
+                            onClick={() => setPrimaryImage(index)}
+                            className="bg-green-500 text-white p-1.5 rounded hover:bg-green-600"
+                            title="Đặt làm ảnh chính"
+                          >
+                            <Star className="size-4" />
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="bg-red-500 text-white p-1.5 rounded hover:bg-red-600"
+                          title="Xóa ảnh"
+                        >
+                          <X className="size-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Upload button */}
+              <div className="flex items-center gap-3">
                 <label
-                  htmlFor={`${mode}-image`}
-                  className="flex flex-col items-center justify-center h-24 w-24 border-2 border-dashed border-gray-300 rounded-md cursor-pointer hover:border-gray-400 transition-colors"
+                  htmlFor={`${mode}-images`}
+                  className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
                 >
-                  <Upload className="size-6 text-gray-400 mb-1" />
-                  <span className="text-xs text-gray-500">Upload</span>
+                  <Upload className="size-5 text-gray-400" />
+                  <span className="text-sm text-gray-600">
+                    {uploading ? "Đang upload..." : "Chọn ảnh"}
+                  </span>
                   <input
-                    id={`${mode}-image`}
+                    id={`${mode}-images`}
                     type="file"
                     accept="image/*"
+                    multiple
                     className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setImageFile(file);
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setImagePreview(reader.result);
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }}
+                    onChange={handleFileUpload}
+                    disabled={uploading}
                   />
                 </label>
+                {uploading && (
+                  <Loader2 className="size-5 animate-spin text-gray-400" />
+                )}
               </div>
+
               <p className="text-xs text-gray-500">
-                Chọn hình ảnh (PNG, JPG, JPEG - tối đa 5MB)
+                Chọn nhiều ảnh (PNG, JPG, JPEG - tối đa 5MB/file). Click{" "}
+                <Star className="inline size-3" /> để đặt ảnh chính.
               </p>
             </div>
 

@@ -72,20 +72,25 @@ public class ProductService {
         return productPage.map(p -> {
             Double avg = reviewRepository.getAverageRating(p.getId());
             Long total = reviewRepository.getTotalReviews(p.getId());
-            return new ProductResponse(
-                    p.getId(),
-                    p.getName(),
-                    p.getBrand().getName(),
-                    p.getDescription(),
-                    p.getCurrentPrice(),
-                    p.getPrimaryImageUrl(),
-                    p.getCategory() != null ? p.getCategory().getName() : null,
-                    p.getSupplier() != null ? p.getSupplier().getName() : null,
-                    p.getStatus() != null ? p.getStatus().toString() : null,
-                    p.getStockQuantity(),
-                    avg != null ? avg : 0.0,
-                    total != null ? total : 0L
-            );
+            
+            ProductResponse response = new ProductResponse();
+            response.setId(p.getId());
+            response.setName(p.getName());
+            response.setBrand(p.getBrand().getName());
+            response.setBrandId(p.getBrand().getId());
+            response.setDescription(p.getDescription());
+            response.setPrice(p.getCurrentPrice());
+            response.setImageUrl(p.getPrimaryImageUrl());
+            response.setCategoryName(p.getCategory() != null ? p.getCategory().getName() : null);
+            response.setCategoryId(p.getCategory() != null ? p.getCategory().getId() : null);
+            response.setSupplierName(p.getSupplier() != null ? p.getSupplier().getName() : null);
+            response.setSupplierId(p.getSupplier() != null ? p.getSupplier().getId() : null);
+            response.setStatus(p.getStatus() != null ? p.getStatus().toString() : null);
+            response.setStockQuantity(p.getStockQuantity());
+            response.setRating(avg != null ? avg : 0.0);
+            response.setNumOfRating(total != null ? total : 0L);
+            
+            return response;
         });
     }
 }

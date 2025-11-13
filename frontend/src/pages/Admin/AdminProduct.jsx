@@ -30,7 +30,12 @@ export const AdminProduct = () => {
     name: "",
     price: "",
     description: "",
-    imageUrl: "",
+    brandId: "",
+    categoryId: "",
+    supplierId: "",
+    stockQuantity: "",
+    status: "ACTIVE",
+    images: [],
     rating: 0,
     numOfRating: 0,
   });
@@ -98,17 +103,39 @@ export const AdminProduct = () => {
     setSelectedProduct(null);
   };
 
-  const handleEdit = (product) => {
-    setSelectedProduct(product);
-    setFormData({
-      name: product.name,
-      description: product.description || "",
-      status: product.status || "ACTIVE",
-      brandId: product.brand?.id || product.brand || "",
-      categoryId: product.category?.id || product.categoryName || "",
-      supplierId: product.supplier?.id || product.supplierName || "",
-    });
-    setIsEditOpen(true);
+  const handleEdit = async (product) => {
+    try {
+      // Lấy thông tin chi tiết từ API
+      const fullProduct = await getProductById(product.id);
+      setSelectedProduct(fullProduct);
+
+      // Lấy giá hiện tại từ productPrices hoặc price field
+      const currentPrice =
+        fullProduct.price ||
+        fullProduct.productPrices?.find((p) => p.isCurrent)?.price ||
+        fullProduct.productPrices?.[0]?.price ||
+        "";
+
+      // Lấy số lượng tồn kho
+      const stockQuantity =
+        fullProduct.stockQuantity || fullProduct.inventories?.[0]?.stock || "";
+
+      setFormData({
+        name: fullProduct.name,
+        description: fullProduct.description || "",
+        status: fullProduct.status || "ACTIVE",
+        brandId: String(fullProduct.brandId || ""),
+        categoryId: String(fullProduct.categoryId || ""),
+        supplierId: String(fullProduct.supplierId || ""),
+        price: currentPrice,
+        stockQuantity: stockQuantity,
+        images: fullProduct.productImages || [],
+      });
+      setIsEditOpen(true);
+    } catch (err) {
+      console.error("Lỗi khi lấy thông tin sản phẩm:", err);
+      toast.error("Không thể tải thông tin sản phẩm");
+    }
   };
 
   const handleDelete = (product) => {
@@ -124,6 +151,9 @@ export const AdminProduct = () => {
       brandId: "",
       categoryId: "",
       supplierId: "",
+      price: "",
+      stockQuantity: "",
+      images: [],
     });
     setIsAddOpen(true);
   };
@@ -136,10 +166,15 @@ export const AdminProduct = () => {
     }));
   };
 
-  const handleSubmitAdd = async (e) => {
+  const handleSubmitAdd = async (e, images = []) => {
     e.preventDefault();
     try {
-      await createProduct(formData);
+      const productData = {
+        ...formData,
+        images,
+      };
+
+      await createProduct(productData);
       toast.success("Thêm sản phẩm thành công");
       setIsAddOpen(false);
       fetchProducts();
@@ -158,10 +193,30 @@ export const AdminProduct = () => {
     }
   };
 
-  const handleSubmitEdit = async (e) => {
+  const handleSubmitEdit = async (e, images = []) => {
     e.preventDefault();
     try {
-      await updateProduct(selectedProduct.id, formData);
+      // Transform images: nếu có upload mới thì dùng, không thì dùng images cũ
+      let imagesToSend = images.length > 0 ? images : formData.images;
+
+      // Transform formData.images từ backend format sang request format
+      if (imagesToSend && imagesToSend.length > 0) {
+        imagesToSend = imagesToSend.map((img) => ({
+          imageUrl: img.imageUrl,
+          isPrimary: img.isPrimary || false,
+        }));
+      }
+
+      const productData = {
+        ...formData,
+        images: imagesToSend,
+      };
+
+      console.log("=== UPDATING PRODUCT ===");
+      console.log("Product ID:", selectedProduct.id);
+      console.log("Product data:", productData);
+
+      await updateProduct(selectedProduct.id, productData);
       toast.success("Cập nhật sản phẩm thành công");
       setIsEditOpen(false);
       fetchProducts();
@@ -259,6 +314,7 @@ export const AdminProduct = () => {
         formData={formData}
         onChange={handleFormChange}
         onSubmit={handleSubmitAdd}
+        onSubmitWithImages={handleSubmitAdd}
       />
 
       {/* Edit Dialog */}
@@ -269,6 +325,7 @@ export const AdminProduct = () => {
         formData={formData}
         onChange={handleFormChange}
         onSubmit={handleSubmitEdit}
+        onSubmitWithImages={handleSubmitEdit}
       />
 
       {/* Delete Confirmation Dialog */}
