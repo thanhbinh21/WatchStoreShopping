@@ -17,12 +17,13 @@ import org.springframework.http.HttpMethod;
 public class SecurityConfig {
 
     @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                                                                   AuthenticationProvider authenticationProvider) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // tắt CSRF cho API
-                .cors(cors -> {}) // Bật CORS để dùng CorsConfig
+                .cors(cors -> {
+                }) // Bật CORS để dùng CorsConfig
                 .authorizeHttpRequests(auth -> auth
                         // Cho phép truy cập Swagger/OpenAPI mà không cần đăng nhập
                         .requestMatchers(
@@ -43,26 +44,28 @@ public class SecurityConfig {
                         // Độc quyền (ADMIN)
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
+                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
 
                         .anyRequest().authenticated()                        // Các API khác cần login
-                                )
-                                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                                .authenticationProvider(authenticationProvider)
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
-        @Bean
-        public AuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService) {
-                DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-                authProvider.setUserDetailsService(userDetailsService);
-                authProvider.setPasswordEncoder(passwordEncoder());
-                return authProvider;
-        }
+    @Bean
+    public AuthenticationProvider authenticationProvider(CustomUserDetailsService userDetailsService) {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
 
-        @Bean
-        public PasswordEncoder passwordEncoder() {
-                return new BCryptPasswordEncoder();
-        }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

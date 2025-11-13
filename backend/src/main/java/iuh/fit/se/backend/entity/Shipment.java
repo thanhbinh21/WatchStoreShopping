@@ -1,6 +1,7 @@
 package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import iuh.fit.se.backend.entity.enums.ShipmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 

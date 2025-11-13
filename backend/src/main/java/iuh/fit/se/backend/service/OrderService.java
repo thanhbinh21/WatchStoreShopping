@@ -1,7 +1,7 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.dto.OrderItemRequest;
-import iuh.fit.se.backend.dto.OrderRequest;
+import iuh.fit.se.backend.dto.request.OrderItemRequest;
+import iuh.fit.se.backend.dto.request.OrderRequest;
 import iuh.fit.se.backend.entity.Order;
 import iuh.fit.se.backend.entity.OrderItem;
 import iuh.fit.se.backend.entity.Product;

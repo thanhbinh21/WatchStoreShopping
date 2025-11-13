@@ -1,7 +1,7 @@
 package iuh.fit.se.backend.service.impl;
 
-import iuh.fit.se.backend.dto.CartItemDto;
-import iuh.fit.se.backend.dto.CartResponse;
+import iuh.fit.se.backend.dto.response.CartItemDto;
+import iuh.fit.se.backend.dto.response.CartResponse;
 import iuh.fit.se.backend.entity.Cart;
 import iuh.fit.se.backend.entity.CartItem;
 import iuh.fit.se.backend.entity.Product;

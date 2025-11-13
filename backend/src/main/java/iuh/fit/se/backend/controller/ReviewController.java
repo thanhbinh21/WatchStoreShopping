@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.dto.ReviewRequest;
+import iuh.fit.se.backend.dto.request.ReviewRequest;
 import iuh.fit.se.backend.entity.Review;
 import iuh.fit.se.backend.service.ReviewService;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package iuh.fit.se.backend.dto;
+package iuh.fit.se.backend.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
