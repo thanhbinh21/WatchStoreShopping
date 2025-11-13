@@ -1,23 +1,14 @@
-import axios from "axios";
-
-const axiosInstance = axios.create({
-  baseURL: "http://localhost:8080/api",
-  timeout: 10000,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+import axiosInstance from "./axiosConfig";
 
 const CATEGORY_URL = "/categories";
 
-// Lấy tất cả category
+// Lấy tất cả categories
 export const getCategories = async () => {
   try {
-    const res = await axiosInstance.get("/categories");
-    // nếu server trả { data: [...] }
-    return res.data;
+    const res = await axiosInstance.get(CATEGORY_URL);
+    return res || [];
   } catch (err) {
-    console.error(err);
+    console.error("Error fetching categories:", err);
     return [];
   }
 };
@@ -45,7 +36,10 @@ export const createCategory = async (categoryData) => {
 
 export const updateCategory = async (id, categoryData) => {
   try {
-    const updatedCategory = await axiosInstance.put(`${CATEGORY_URL}/${id}`, categoryData);
+    const updatedCategory = await axiosInstance.put(
+      `${CATEGORY_URL}/${id}`,
+      categoryData
+    );
     return updatedCategory;
   } catch (err) {
     console.error(`Error updating category ${id}:`, err);
