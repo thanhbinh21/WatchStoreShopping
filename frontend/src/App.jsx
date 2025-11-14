@@ -21,6 +21,7 @@ import NotFound from "./pages/NotFound";
 import { User } from "./pages/User";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
+import Cart from "@/pages/Cart.jsx";
 
 function App() {
     return (
@@ -90,9 +91,11 @@ function App() {
                         </PrivateRoute>
                     }
                 />
-
+                <Route path="cart" element={<Cart />} />
                 {/* Not Found */}
                 <Route path="*" element={<NotFound />} />
+
+
             </Routes>
         </Router>
     );
