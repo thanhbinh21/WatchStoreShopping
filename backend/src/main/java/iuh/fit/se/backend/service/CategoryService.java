@@ -14,7 +14,9 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        return categoryRepository.findAll(org.springframework.data.domain.Sort.by(
+            org.springframework.data.domain.Sort.Direction.DESC, "id"
+        ));
     }
 
     public Category getCategoryById(Long id) {return categoryRepository.findById(id).orElse(null);}

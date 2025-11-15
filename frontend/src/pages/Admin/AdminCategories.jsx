@@ -31,7 +31,9 @@ export const AdminCategories = () => {
   const fetchCategories = useCallback(async () => {
     try {
       const res = await getCategories();
-      setCategories(res || []);
+      // Sort by ID descending (mới nhất lên đầu)
+      const sortedCategories = (res || []).sort((a, b) => b.id - a.id);
+      setCategories(sortedCategories);
     } catch (err) {
       console.error("Lỗi khi lấy danh mục:", err);
       toast.error("Không thể tải danh sách danh mục");

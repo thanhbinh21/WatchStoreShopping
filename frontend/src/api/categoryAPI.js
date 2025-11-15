@@ -30,7 +30,7 @@ export const createCategory = async (categoryData) => {
     return newCategory;
   } catch (err) {
     console.error("Error creating category:", err);
-    return null;
+    throw err; // Throw error để component có thể handle
   }
 };
 
@@ -43,7 +43,7 @@ export const updateCategory = async (id, categoryData) => {
     return updatedCategory;
   } catch (err) {
     console.error(`Error updating category ${id}:`, err);
-    return null;
+    throw err; // Throw error để component có thể handle
   }
 };
 
@@ -53,6 +53,6 @@ export const deleteCategory = async (id) => {
     return true;
   } catch (err) {
     console.error(`Error deleting category ${id}:`, err);
-    return false;
+    throw err; // Throw error để component có thể handle
   }
 };

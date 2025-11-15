@@ -49,28 +49,31 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        // Phân quyền cho Categories, Brands, Suppliers
+                        // Phân quyền cho Categories - PUT/POST/DELETE trước GET
+                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+
+                        // Phân quyền cho Brands - PUT/POST/DELETE trước GET
+                        .requestMatchers(HttpMethod.POST, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+
+                        // Phân quyền cho Suppliers - PUT/POST/DELETE trước GET
+                        .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
+
+                        // Reviews
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
+                        .requestMatchers("/api/reviews/**").hasRole("ADMIN")
 
                         // Độc quyền (ADMIN)
-                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
-                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
-                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
-
-                        .requestMatchers(HttpMethod.POST,   "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.POST,   "/api/brands/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/brands/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
-
-                        .requestMatchers(HttpMethod.POST,   "/api/suppliers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT,    "/api/suppliers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()                        // Các API khác cần login
                 )
