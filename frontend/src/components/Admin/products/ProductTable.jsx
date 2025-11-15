@@ -24,7 +24,7 @@ export const ProductTable = ({
                 Tên sản phẩm
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                Brand
+                Thương hiệu
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Giá
