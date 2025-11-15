@@ -82,6 +82,7 @@ public class Product {
     // Many-to-Many with Promotion
     @ManyToMany(mappedBy = "products")
     @Builder.Default
+    @ToString.Exclude
     private List<Promotion> promotions = new ArrayList<>();
 
     // One-to-Many with CartItem and OrderItem

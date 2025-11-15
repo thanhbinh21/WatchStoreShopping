@@ -38,11 +38,14 @@ public class SecurityConfig {
                         // Phân quyền
                         .requestMatchers("/api/products/**").permitAll()     // Ai cũng xem được sản phẩm
                         .requestMatchers(HttpMethod.GET, "/api/reviews/product/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
 
 
                         // Độc quyền (ADMIN)
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
 
                         .anyRequest().authenticated()                        // Các API khác cần login
