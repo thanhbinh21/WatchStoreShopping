@@ -10,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -29,8 +30,11 @@ public class Product {
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(length = 100)
-    private String brand;
+    @ManyToOne
+    @JoinColumn(name = "brand_id", nullable = false)
+    @JsonBackReference(value = "brand-products")
+    private Brand brand;
+
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -83,6 +87,7 @@ public class Product {
     // Many-to-Many with Promotion
     @ManyToMany(mappedBy = "products")
     @Builder.Default
+    @ToString.Exclude
     private List<Promotion> promotions = new ArrayList<>();
 
     // One-to-Many with CartItem and OrderItem
@@ -112,5 +117,11 @@ public class Product {
                 .findFirst()
                 .map(ProductImage::getImageUrl)
                 .orElse(null);
+    }
+
+    public Integer getStockQuantity() {
+        return inventories.stream()
+                .mapToInt(Inventory::getStock)
+                .sum();
     }
 }

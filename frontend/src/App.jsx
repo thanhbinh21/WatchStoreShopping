@@ -22,65 +22,67 @@ import { User } from "./pages/User";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
+import { AdminCategories } from "./pages/Admin/AdminCategories";
 
 function App() {
-    return (
-        <Router>
-            <Routes>
-                {/* Public */}
-                <Route
-                    path="/login"
-                    element={
-                        <PublicRoute>
-                            <Login />
-                        </PublicRoute>
-                    }
-                />
-                <Route
-                    path="/"
-                    element={
-                        <PublicRoute>
-                            <LoginRegister />
-                        </PublicRoute>
-                    }
-                />
+  return (
+    <Router>
+      <Routes>
+        {/* Public */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <Login />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <PublicRoute>
+              <LoginRegister />
+            </PublicRoute>
+          }
+        />
 
-                {/* Private */}
-                <Route
-                    path="/dashboard"
-                    element={
-                        <PrivateRoute>
-                            <Dashboard />
-                        </PrivateRoute>
-                    }
-                />
+        {/* Private */}
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
 
-                {/* Admin routes */}
-                <Route
-                    path="/admin"
-                    element={
-                        <PrivateRoute allowedRoles={["ADMIN"]}>
-                            <Admin />
-                        </PrivateRoute>
-                    }
-                >
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="dashboard" element={<AdminDashboard />} />
-                    <Route path="products" element={<AdminProduct />} />
-                    <Route path="favorites" element={<AdminFavorites />} />
-                    <Route path="inbox" element={<AdminInbox />} />
-                    <Route path="orders" element={<AdminOrders />} />
-                    <Route path="stock" element={<AdminStock />} />
-                    <Route path="pricing" element={<AdminPricing />} />
-                    <Route path="calendar" element={<AdminCalendar />} />
-                    <Route path="todo" element={<AdminTodo />} />
-                    <Route path="contact" element={<AdminContact />} />
-                    <Route path="invoice" element={<AdminInvoice />} />
-                    <Route path="ui-elements" element={<AdminUIElements />} />
-                    <Route path="team" element={<AdminTeam />} />
-                    <Route path="table" element={<AdminTable />} />
-                    <Route path="settings" element={<AdminSettings />} />
-                </Route>
+        {/* Admin routes */}
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowedRoles={["ADMIN"]}>
+              <Admin />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="products" element={<AdminProduct />} />
+          <Route path="categories" element={<AdminCategories />} />
+          <Route path="favorites" element={<AdminFavorites />} />
+          <Route path="inbox" element={<AdminInbox />} />
+          <Route path="orders" element={<AdminOrders />} />
+          <Route path="stock" element={<AdminStock />} />
+          <Route path="pricing" element={<AdminPricing />} />
+          <Route path="calendar" element={<AdminCalendar />} />
+          <Route path="todo" element={<AdminTodo />} />
+          <Route path="contact" element={<AdminContact />} />
+          <Route path="invoice" element={<AdminInvoice />} />
+          <Route path="ui-elements" element={<AdminUIElements />} />
+          <Route path="team" element={<AdminTeam />} />
+          <Route path="table" element={<AdminTable />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
 
                 {/* User routes */}
                 <Route
