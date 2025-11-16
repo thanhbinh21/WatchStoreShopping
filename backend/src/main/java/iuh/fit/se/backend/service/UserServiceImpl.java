@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.entity.Role;
+import iuh.fit.se.backend.entity.enums.Role;
 import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;

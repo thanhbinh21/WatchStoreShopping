@@ -1,6 +1,7 @@
 package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import iuh.fit.se.backend.entity.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;

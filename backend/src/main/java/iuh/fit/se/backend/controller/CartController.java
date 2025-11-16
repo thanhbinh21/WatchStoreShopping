@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.dto.CartResponse;
+import iuh.fit.se.backend.dto.response.CartResponse;
 import iuh.fit.se.backend.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;

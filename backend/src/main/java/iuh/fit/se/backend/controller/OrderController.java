@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.dto.OrderRequest;
+import iuh.fit.se.backend.dto.request.OrderRequest;
 import iuh.fit.se.backend.entity.Order;
 import iuh.fit.se.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;

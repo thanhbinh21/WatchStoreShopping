@@ -1,6 +1,7 @@
 package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import iuh.fit.se.backend.entity.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
