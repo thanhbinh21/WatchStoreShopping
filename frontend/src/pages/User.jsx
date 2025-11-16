@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router";
-import Navbar from "../components/navbar.jsx"
+import Navbar from "../components/navbar.jsx";
 import ProductList from "../components/ProductList.jsx";
-import Footer from "@/components/Footer.jsx";
- 
+
 export const User = () => {
   const navigate = useNavigate();
 
@@ -32,9 +31,6 @@ export const User = () => {
           Đăng xuất
         </button>
       </div>
-      <><Footer></Footer>
-      </>
-      
     </div>
   );
 };
