@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router";
-
+import Navbar from "../components/navbar.jsx"
+import ProductList from "../components/ProductList.jsx";
+import Footer from "@/components/Footer.jsx";
+ 
 export const User = () => {
   const navigate = useNavigate();
 
@@ -9,9 +12,13 @@ export const User = () => {
     localStorage.removeItem("role");
     navigate("/login");
   };
-
+  const [products, setProducts] = useState([]);
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
+      <>
+        <Navbar onProductsChange={setProducts} />
+        <ProductList products={products} />
+      </>
       <div className="bg-white p-8 rounded-xl shadow-lg w-96 text-center">
         <h1 className="text-3xl font-bold mb-6 text-gray-800">
           Chào mừng đến Dashboard!
@@ -25,6 +32,9 @@ export const User = () => {
           Đăng xuất
         </button>
       </div>
+      <><Footer></Footer>
+      </>
+      
     </div>
   );
 };

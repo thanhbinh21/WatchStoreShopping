@@ -93,4 +93,8 @@ public class ProductService {
             return response;
         });
     }
+
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategoryId(categoryId);
+    }
 }
