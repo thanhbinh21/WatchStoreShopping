@@ -1,8 +1,10 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
 
 export default function ProductList({ products }) {
+    const navigate = useNavigate();
     const [loadingItem, setLoadingItem] = useState(null);
 
     const handleAddToCart = async (productId) => {
@@ -47,16 +49,21 @@ export default function ProductList({ products }) {
                         key={prd.id}
                         className="bg-white shadow-lg rounded-2xl p-4 flex flex-col hover:scale-105 transition-transform duration-300"
                     >
-                        <img
-                            src={prd.primaryImageUrl || "https://via.placeholder.com/150"}
-                            className="w-full h-48 object-cover rounded-xl mb-3"
-                        />
-                        <h3 className="text-lg font-semibold text-gray-800 truncate">
-                            {prd.name}
-                        </h3>
-                        <p className="text-red-600 font-bold mt-2">
-                            {prd.currentPrice?.toLocaleString("vi-VN")}₫
-                        </p>
+                        <div 
+                            onClick={() => navigate(`/product/${prd.id}`)}
+                            className="cursor-pointer"
+                        >
+                            <img
+                                src={prd.primaryImageUrl || "https://via.placeholder.com/150"}
+                                className="w-full h-48 object-cover rounded-xl mb-3"
+                            />
+                            <h3 className="text-lg font-semibold text-gray-800 truncate">
+                                {prd.name}
+                            </h3>
+                            <p className="text-red-600 font-bold mt-2">
+                                {prd.currentPrice?.toLocaleString("vi-VN")}₫
+                            </p>
+                        </div>
                         <button
                             onClick={() => handleAddToCart(prd.id)}
                             disabled={loadingItem === prd.id}

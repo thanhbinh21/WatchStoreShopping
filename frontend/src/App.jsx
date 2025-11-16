@@ -23,6 +23,7 @@ import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
 import { AdminCategories } from "./pages/Admin/AdminCategories";
+import ProductDetail from "./pages/ProductDetail";
 
 function App() {
   return (
@@ -94,6 +95,7 @@ function App() {
                     }
                 />
                 <Route path="cart" element={<Cart />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
                 {/* Not Found */}
                 <Route path="*" element={<NotFound />} />
 
