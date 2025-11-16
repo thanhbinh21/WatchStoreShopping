@@ -17,26 +17,54 @@ export const AdminPagination = ({
   page,
   totalPages,
 }) => {
+  // Nếu không có trang nào, không hiển thị pagination
+  if (totalPages === 0) {
+    return null;
+  }
+
   const generatePages = () => {
     const pages = [];
 
-    if (totalPages <= 4) {
+    // Nếu tổng số trang <= 5, hiển thị tất cả
+    if (totalPages <= 5) {
       for (let i = 1; i <= totalPages; i++) {
         pages.push(i);
       }
     } else {
-      if (page <= 2) {
-        pages.push(1, 2, 3, "...", totalPages);
-      } else if (page >= totalPages - 1) {
-        pages.push(1, "...", totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, "...", page - 1, page, page + 1, "...", totalPages);
+      // Luôn hiển thị trang đầu
+      pages.push(1);
+
+      // Nếu trang hiện tại > 3, thêm dấu ...
+      if (page > 3) {
+        pages.push("...");
+      }
+
+      // Hiển thị các trang xung quanh trang hiện tại
+      for (
+        let i = Math.max(2, page - 1);
+        i <= Math.min(totalPages - 1, page + 1);
+        i++
+      ) {
+        pages.push(i);
+      }
+
+      // Nếu trang hiện tại < totalPages - 2, thêm dấu ...
+      if (page < totalPages - 2) {
+        pages.push("...");
+      }
+
+      // Luôn hiển thị trang cuối (nếu totalPages > 1)
+      if (totalPages > 1) {
+        pages.push(totalPages);
       }
     }
+
     return pages;
   };
 
   const pagesToShow = generatePages();
+  const isPrevDisabled = page <= 1;
+  const isNextDisabled = page >= totalPages;
 
   return (
     <div className="flex justify-center mt-4">
@@ -44,10 +72,10 @@ export const AdminPagination = ({
         <PaginationContent>
           <PaginationItem>
             <PaginationPrevious
-              onClick={page === 1 ? undefined : handlePrev}
+              onClick={isPrevDisabled ? undefined : handlePrev}
               className={cn(
                 "cursor-pointer",
-                page === 1 && "pointer-events-none opacity-50"
+                isPrevDisabled && "pointer-events-none opacity-50"
               )}
             />
           </PaginationItem>
@@ -72,10 +100,10 @@ export const AdminPagination = ({
 
           <PaginationItem>
             <PaginationNext
-              onClick={page === totalPages ? undefined : handleNext}
+              onClick={isNextDisabled ? undefined : handleNext}
               className={cn(
                 "cursor-pointer",
-                page === totalPages && "pointer-events-none opacity-50"
+                isNextDisabled && "pointer-events-none opacity-50"
               )}
             />
           </PaginationItem>
