@@ -1,20 +1,23 @@
 import React, { useState } from "react";
-import { addToCart } from "@/api/cartAPI"; // cái file bạn vừa viết
+import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
 
 export default function ProductList({ products }) {
-    const [loadingItem, setLoadingItem] = useState(null); // để show loading riêng từng nút
-    const user = JSON.parse(localStorage.getItem("user"));
+    const [loadingItem, setLoadingItem] = useState(null);
 
     const handleAddToCart = async (productId) => {
-        if (!user) {
+        // Lấy user từ localStorage
+        const user = JSON.parse(localStorage.getItem("user"));
+        if (!user?.id) {
             toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
             return;
         }
 
+        console.log("User ID:", user.id);
+
         setLoadingItem(productId);
         try {
-            const res = await addToCart(user.id, productId, 1); // mặc định 1 sp
+            const res = await addToCart(user.id, productId, 1);
             toast.success("Đã thêm vào giỏ hàng ✅");
             console.log("Cart updated:", res);
         } catch (err) {

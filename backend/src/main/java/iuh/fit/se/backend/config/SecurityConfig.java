@@ -42,9 +42,8 @@ public class SecurityConfig {
 
                         // Phân quyền
                         .requestMatchers("/api/products/**").permitAll()     // Ai cũng xem được sản phẩm
-                        .requestMatchers("/api/categories/**").permitAll()
-                        .requestMatchers("/api/cart/**").permitAll()
-                        .requestMatchers("/api/products/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/products/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
                         // Upload API - chỉ ADMIN
