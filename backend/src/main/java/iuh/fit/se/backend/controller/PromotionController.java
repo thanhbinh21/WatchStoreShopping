@@ -1,9 +1,16 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.ApiResponse;
+import iuh.fit.se.backend.dto.ProductPromotionResponse;
+import iuh.fit.se.backend.dto.PromotionRequest;
+import iuh.fit.se.backend.dto.PromotionSummary;
 import iuh.fit.se.backend.entity.Promotion;
 import iuh.fit.se.backend.service.PromotionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -14,28 +21,72 @@ public class PromotionController {
     private final PromotionService promotionService;
 
     @GetMapping
-    public List<Promotion> getAll() {
-        return promotionService.getAll();
+    public ResponseEntity<ApiResponse<List<ProductPromotionResponse>>> getAll() {
+        List<ProductPromotionResponse> data = promotionService.getPromotionsGroupedByProduct();
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/{id}")
-    public Promotion getOne(@PathVariable Long id) {
-        return promotionService.get(id);
+    public ResponseEntity<ApiResponse<PromotionSummary>> getOne(@PathVariable Long id) {
+    return promotionService.get(id)
+        .map(promotion -> ResponseEntity.ok(ApiResponse.success(
+            new PromotionSummary(
+                promotion.getId(),
+                promotion.getName(),
+                promotion.getDiscount(),
+                promotion.getStartDate(),
+                promotion.getEndDate(),
+                promotion.getProducts().stream().map(product -> product.getId()).toList()
+            )
+        )))
+        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+            .body(ApiResponse.<PromotionSummary>failure("Promotion not found")));
     }
 
     @PostMapping
-    public Promotion create(@RequestBody Promotion promotion) {
-        return promotionService.save(promotion);
+    public ResponseEntity<ApiResponse<?>> create(@RequestBody PromotionRequest request) {
+        Promotion promotion = Promotion.builder()
+                .name(request.getName())
+                .discount(request.getDiscount())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .build();
+        try {
+            promotionService.save(promotion, request.resolveProductIds());
+            return ResponseEntity.ok(ApiResponse.success("Promotion created"));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Unable to create promotion"));
+        }
     }
 
     @PutMapping("/{id}")
-    public Promotion update(@PathVariable Long id, @RequestBody Promotion promotion) {
-        promotion.setId(id);
-        return promotionService.save(promotion);
+    public ResponseEntity<ApiResponse<?>> update(@PathVariable Long id, @RequestBody PromotionRequest request) {
+        Promotion promotion = Promotion.builder()
+                .id(id)
+                .name(request.getName())
+                .discount(request.getDiscount())
+                .startDate(request.getStartDate())
+                .endDate(request.getEndDate())
+                .build();
+        try {
+            promotionService.save(promotion, request.resolveProductIds());
+            return ResponseEntity.ok(ApiResponse.success("Promotion updated"));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        } catch (Exception ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.failure("Unable to update promotion"));
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        promotionService.delete(id);
+    public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id) {
+    promotionService.delete(id);
+    return ResponseEntity.ok(ApiResponse.success("Promotion deleted"));
     }
 }

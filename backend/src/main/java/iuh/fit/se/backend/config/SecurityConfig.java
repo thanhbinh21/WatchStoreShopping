@@ -40,6 +40,10 @@ public class SecurityConfig {
                         // Quy tắc mở
                         .requestMatchers("/api/auth/**", "/swagger-ui.html", "/swagger-ui/**").permitAll()
 
+                        // Phân quyền
+                        .requestMatchers("/api/products/**").permitAll()     // Ai cũng xem được sản phẩm
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
                         // Upload API - chỉ ADMIN
                         .requestMatchers("/api/upload/**").hasRole("ADMIN")
 
@@ -72,7 +76,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN")
 
                         // Độc quyền (ADMIN)
-                        .requestMatchers("/api/orders/**").hasRole("ADMIN")
+                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
+                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
                         .requestMatchers("/api/inventories/**").hasRole("ADMIN")
 
                         .anyRequest().authenticated()                        // Các API khác cần login

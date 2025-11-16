@@ -36,6 +36,7 @@ public class Promotion {
             inverseJoinColumns = @JoinColumn(name = "product_id")
     )
     @Builder.Default
+    @ToString.Exclude
     private List<Product> products = new ArrayList<>();
 
     @CreationTimestamp
