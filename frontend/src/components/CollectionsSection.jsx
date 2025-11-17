@@ -125,7 +125,7 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
   if (loading) {
     return (
       <section className="py-16 bg-white" data-testid="collections-loading">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">
               OUR COLLECTIONS
@@ -145,7 +145,7 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
   if (error) {
     return (
       <section className="py-16 lg:py-24 bg-white" data-testid="collections-error">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">
               OUR COLLECTIONS
@@ -168,7 +168,7 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
   if (!categories || categories.length === 0) {
     return (
       <section className="py-16 lg:py-24 bg-white" data-testid="collections-empty">
-        <div className="container mx-auto px-4">
+        <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">
               OUR COLLECTIONS
@@ -192,7 +192,7 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
 
   return (
     <section className="py-16 lg:py-24 bg-white" data-testid="collections-section">
-      <div className="container mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
           <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">

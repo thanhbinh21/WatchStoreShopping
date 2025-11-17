@@ -2,8 +2,10 @@ import React, { useState } from "react";
 import { Heart, ShoppingCart } from "lucide-react";
 import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export default function ProductCard({ product, onAddToCart }) {
+  const navigate = useNavigate();
   const [favorite, setFavorite] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
 
@@ -12,13 +14,24 @@ export default function ProductCard({ product, onAddToCart }) {
     setFavorite(!favorite);
   };
 
+  const handleCardClick = () => {
+    // Điều hướng đến trang chi tiết sản phẩm
+    navigate(`/product/${product.id}`);
+  };
+
   const handleAddToCart = async (e) => {
     e.stopPropagation();
     
-    // Lấy user từ localStorage
+    // Kiểm tra đăng nhập
+    const token = localStorage.getItem("accessToken");
     const user = JSON.parse(localStorage.getItem("user"));
-    if (!user?.id) {
+    
+    if (!token || !user?.id) {
       toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
+      // Chuyển đến trang login
+      setTimeout(() => {
+        navigate("/login");
+      }, 1000);
       return;
     }
 
@@ -99,7 +112,10 @@ export default function ProductCard({ product, onAddToCart }) {
   };
 
   return (
-    <div className="bg-white rounded-xl overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group">
+    <div 
+      onClick={handleCardClick}
+      className="bg-white rounded-xl overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group cursor-pointer"
+    >
       {/* Image Container */}
       <div className="relative w-full h-56 lg:h-64 overflow-hidden bg-gray-100">
         <img
@@ -125,7 +141,7 @@ export default function ProductCard({ product, onAddToCart }) {
         </p>
 
         {/* Product Name */}
-        <h3 className="text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 mb-2 min-h-[3rem]">
+        <h3 className="text-base lg:text-lg font-semibold text-gray-900 line-clamp-2 mb-2 min-h-12">
           {product.name}
         </h3>
 
