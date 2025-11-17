@@ -56,9 +56,9 @@ export default function LoginRegister() {
                     localStorage.setItem("refreshToken", res.refreshToken);
                 }
 
-                if (res.role === "ADMIN") navigate("/admin");
-                else if (res.role === "USER") navigate("/user");
-                else setError("Không xác định vai trò người dùng");
+                // Chuyển đến /home cho cả admin và user
+                navigate("/home");
+                toast.success("Đăng nhập thành công!");
             } else {
                 await axiosInstance.post("/auth/register", {
                     username: form.username,

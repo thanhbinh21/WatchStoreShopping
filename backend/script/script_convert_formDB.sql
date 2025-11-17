@@ -19,12 +19,24 @@
 CREATE DATABASE IF NOT EXISTS `watch_store` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */;
 USE `watch_store`;
 
+-- Dumping structure for table watch_store.brands
+CREATE TABLE IF NOT EXISTS `brands` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `description` varchar(255) DEFAULT NULL,
+  `logo_url` varchar(255) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `UKoce3937d2f4mpfqrycbr0l93m` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Data exporting was unselected.
+
 -- Dumping structure for table watch_store.carts
 CREATE TABLE IF NOT EXISTS `carts` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UK64t7ox312pqal3p7fg9o503c2` (`user_id`),
+  KEY `FKb5o626f86h46m4s7ms6ginnop` (`user_id`),
   CONSTRAINT `FKb5o626f86h46m4s7ms6ginnop` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -32,9 +44,9 @@ CREATE TABLE IF NOT EXISTS `carts` (
 
 -- Dumping structure for table watch_store.cart_items
 CREATE TABLE IF NOT EXISTS `cart_items` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `quantity` int(11) NOT NULL,
   `cart_id` bigint(20) NOT NULL,
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `product_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FKpcttvuq4mxppo8sxggjtn5i2c` (`cart_id`),
@@ -52,18 +64,18 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `name` varchar(255) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKt8o6pivur7nn124jehx7cygw5` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 
 -- Dumping structure for table watch_store.inventories
 CREATE TABLE IF NOT EXISTS `inventories` (
-  `stock` int(11) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `product_id` bigint(20) NOT NULL,
+  `stock` int(11) NOT NULL,
   `updated_at` datetime(6) DEFAULT NULL,
+  `product_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UK3bms153u88bt0daekfy4qpj6k` (`product_id`),
+  KEY `FK8drmqyx629j3oo8ct9jnc5y3y` (`product_id`),
   CONSTRAINT `FK8drmqyx629j3oo8ct9jnc5y3y` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -71,11 +83,11 @@ CREATE TABLE IF NOT EXISTS `inventories` (
 
 -- Dumping structure for table watch_store.orders
 CREATE TABLE IF NOT EXISTS `orders` (
-  `created_at` datetime(6) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `created_at` datetime(6) NOT NULL,
+  `status` enum('CANCELLED','COMPLETED','PAID','PENDING','SHIPPED') NOT NULL,
   `updated_at` datetime(6) DEFAULT NULL,
   `user_id` bigint(20) NOT NULL,
-  `status` enum('CANCELLED','COMPLETED','PAID','PENDING','SHIPPED') NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FK32ql8ubntj5uh44ph9659tiih` (`user_id`),
   CONSTRAINT `FK32ql8ubntj5uh44ph9659tiih` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
@@ -85,9 +97,9 @@ CREATE TABLE IF NOT EXISTS `orders` (
 
 -- Dumping structure for table watch_store.order_items
 CREATE TABLE IF NOT EXISTS `order_items` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `price` decimal(15,2) NOT NULL,
   `quantity` int(11) NOT NULL,
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `order_id` bigint(20) NOT NULL,
   `product_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
@@ -101,11 +113,11 @@ CREATE TABLE IF NOT EXISTS `order_items` (
 
 -- Dumping structure for table watch_store.payments
 CREATE TABLE IF NOT EXISTS `payments` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `amount` decimal(15,2) NOT NULL,
   `created_at` datetime(6) NOT NULL,
-  `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `order_id` bigint(20) NOT NULL,
   `method` enum('BANK_TRANSFER','CASH','CREDIT_CARD','DEBIT_CARD','MOMO','SHOPEEPAY','VNPAY','ZALOPAY') NOT NULL,
+  `order_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UK8vo36cen604as7etdfwmyjsxt` (`order_id`),
   CONSTRAINT `FK81gagumt0r8y3rmudcgpbk42l` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
@@ -115,21 +127,21 @@ CREATE TABLE IF NOT EXISTS `payments` (
 
 -- Dumping structure for table watch_store.products
 CREATE TABLE IF NOT EXISTS `products` (
-  `price` decimal(15,2) NOT NULL,
-  `category_id` bigint(20) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `supplier_id` bigint(20) NOT NULL,
   `brand` varchar(100) DEFAULT NULL,
-  `name` varchar(200) NOT NULL,
-  `description` text DEFAULT NULL,
-  `image_url` varchar(255) DEFAULT NULL,
   `created_at` datetime(6) NOT NULL,
+  `description` text DEFAULT NULL,
+  `name` varchar(200) NOT NULL,
   `status` enum('ACTIVE','DISCONTINUED','INACTIVE','OUT_OF_STOCK') NOT NULL,
+  `category_id` bigint(20) NOT NULL,
+  `supplier_id` bigint(20) NOT NULL,
+  `brand_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UKo61fmio5yukmmiqgnxf8pnavn` (`name`),
   KEY `FKog2rp4qthbtt2lfyhfo32lsw9` (`category_id`),
   KEY `FK6i174ixi9087gcvvut45em7fd` (`supplier_id`),
+  KEY `FKa3a4mpsfdf4d2y6r8ra3sc8mv` (`brand_id`),
   CONSTRAINT `FK6i174ixi9087gcvvut45em7fd` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`id`),
+  CONSTRAINT `FKa3a4mpsfdf4d2y6r8ra3sc8mv` FOREIGN KEY (`brand_id`) REFERENCES `brands` (`id`),
   CONSTRAINT `FKog2rp4qthbtt2lfyhfo32lsw9` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -179,12 +191,12 @@ CREATE TABLE IF NOT EXISTS `product_specs` (
 
 -- Dumping structure for table watch_store.promotions
 CREATE TABLE IF NOT EXISTS `promotions` (
-  `discount` decimal(5,2) NOT NULL,
-  `created_at` datetime(6) NOT NULL,
-  `end_date` datetime(6) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `start_date` datetime(6) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `discount` decimal(5,2) NOT NULL,
+  `end_date` datetime(6) NOT NULL,
   `name` varchar(100) NOT NULL,
+  `start_date` datetime(6) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKtl1qivlff8q1b3c6wlgkvgh1b` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -193,8 +205,8 @@ CREATE TABLE IF NOT EXISTS `promotions` (
 
 -- Dumping structure for table watch_store.promotion_products
 CREATE TABLE IF NOT EXISTS `promotion_products` (
-  `product_id` bigint(20) NOT NULL,
   `promotion_id` bigint(20) NOT NULL,
+  `product_id` bigint(20) NOT NULL,
   KEY `FK9rm5m4rnoamh56kxetmoe1kk9` (`product_id`),
   KEY `FKkn7hllhf1o8jjrolro4rqmxt7` (`promotion_id`),
   CONSTRAINT `FK9rm5m4rnoamh56kxetmoe1kk9` FOREIGN KEY (`product_id`) REFERENCES `products` (`id`),
@@ -205,13 +217,13 @@ CREATE TABLE IF NOT EXISTS `promotion_products` (
 
 -- Dumping structure for table watch_store.reviews
 CREATE TABLE IF NOT EXISTS `reviews` (
-  `rating` int(11) NOT NULL,
-  `created_at` datetime(6) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `product_id` bigint(20) NOT NULL,
-  `updated_at` datetime(6) DEFAULT NULL,
-  `user_id` bigint(20) NOT NULL,
   `comment` text DEFAULT NULL,
+  `created_at` datetime(6) NOT NULL,
+  `rating` int(11) NOT NULL,
+  `updated_at` datetime(6) DEFAULT NULL,
+  `product_id` bigint(20) NOT NULL,
+  `user_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `FKpl51cejpw4gy5swfar8br9ngi` (`product_id`),
   KEY `FKcgy7qjc1r99dp117y9en6lxye` (`user_id`),
@@ -223,11 +235,11 @@ CREATE TABLE IF NOT EXISTS `reviews` (
 
 -- Dumping structure for table watch_store.shipments
 CREATE TABLE IF NOT EXISTS `shipments` (
-  `created_at` datetime(6) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `order_id` bigint(20) NOT NULL,
   `address` varchar(255) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
   `status` enum('DELIVERED','PENDING','RETURNED','SHIPPED') NOT NULL,
+  `order_id` bigint(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKhrhy2yghr8dampg1jtecuekvp` (`order_id`),
   CONSTRAINT `FKrnt4wht95lxxplspltrg9681s` FOREIGN KEY (`order_id`) REFERENCES `orders` (`id`)
@@ -238,27 +250,27 @@ CREATE TABLE IF NOT EXISTS `shipments` (
 -- Dumping structure for table watch_store.suppliers
 CREATE TABLE IF NOT EXISTS `suppliers` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
   `contact` varchar(255) DEFAULT NULL,
+  `name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `UKeegixpn11chp14nb25tl3ucv0` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 
 -- Dumping structure for table watch_store.users
 CREATE TABLE IF NOT EXISTS `users` (
-  `created_at` datetime(6) NOT NULL,
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
+  `created_at` datetime(6) NOT NULL,
   `email` varchar(100) NOT NULL,
   `full_name` varchar(100) NOT NULL,
   `password` varchar(255) NOT NULL,
   `role` enum('ADMIN','USER') NOT NULL,
+  `username` varchar(50) NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`),
-  UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+  UNIQUE KEY `UK6dotkott2kjsp8vw4d0m25fb7` (`email`),
+  UNIQUE KEY `UKr43af9ap4edm43mmtq01oddj6` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Data exporting was unselected.
 

@@ -16,7 +16,7 @@ export default function HeroSection() {
 
   return (
     <section className="relative w-full min-h-[700px] flex items-center bg-gradient-to-b from-blue-50/50 via-purple-50/30 to-white pt-20 pb-16">
-      <div className="container mx-auto px-4 py-8 lg:py-16">
+      <div className="max-w-7xl mx-auto px-4 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Section - Text Content */}
           <div className="flex flex-col justify-center space-y-8 order-2 lg:order-1">
