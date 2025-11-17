@@ -6,9 +6,35 @@ const CATEGORY_URL = "/categories";
 export const getCategories = async () => {
   try {
     const res = await axiosInstance.get(CATEGORY_URL);
-    return res || [];
+    console.log("categoryAPI - Raw response:", res);
+    console.log("categoryAPI - Response type:", typeof res);
+    console.log("categoryAPI - Is array?", Array.isArray(res));
+    
+    // axiosConfig interceptor already returns response.data
+    // But if it's a string, we need to parse it
+    let data = res;
+    
+    if (typeof res === 'string') {
+      console.log("categoryAPI - Response is string, length:", res.length);
+      console.log("categoryAPI - First 200 chars:", res.substring(0, 200));
+      console.log("categoryAPI - Attempting to parse JSON");
+      try {
+        data = JSON.parse(res);
+        console.log("categoryAPI - Parsed data:", data);
+        console.log("categoryAPI - Parsed data type:", typeof data);
+        console.log("categoryAPI - Is parsed data array?", Array.isArray(data));
+      } catch (parseError) {
+        console.error("categoryAPI - Failed to parse JSON:", parseError);
+        console.error("categoryAPI - String content:", res);
+        return [];
+      }
+    }
+    
+    // Return the data (should be array or object)
+    return data || [];
   } catch (err) {
     console.error("Error fetching categories:", err);
+    console.error("Error details:", err.response?.data || err.message);
     return [];
   }
 };
