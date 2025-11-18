@@ -6,22 +6,27 @@ export const getProductsByCategoryId = async (categoryId) => {
     try {
         const url = `${API_URL_PRD}/category/${categoryId}`;
         const response = await axios.get(url);
-
-        const result = response.data;
-        if (Array.isArray(result)) return result;
-        if (result?.data && Array.isArray(result.data)) return result.data;
-        return [];
+        // Đảm bảo luôn trả về mảng cho UI
+        return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
         console.error(`Lỗi gọi API tìm sản phẩm theo ID danh mục ${categoryId}:`, error);
         return [];
     }
 };
+
 export const searchProductsByName = async (name) => {
     try {
         const res = await axios.get(`${API_URL_PRD}/search`, {
             params: { name },
         });
-        return res.data;
+
+        // ✨ ĐÃ SỬA LỖI: Luôn đảm bảo kết quả tìm kiếm trả về là một mảng.
+        // Xử lý trường hợp res.data là mảng, hoặc object chứa mảng (ví dụ: { data: [...] })
+        return Array.isArray(res.data)
+            ? res.data
+            : (res.data && Array.isArray(res.data.data))
+                ? res.data.data
+                : []; // Mặc định là mảng rỗng
     } catch (error) {
         console.error("Lỗi tìm sản phẩm:", error);
         return [];

@@ -1,30 +1,56 @@
-import React from "react";
-import { useNavigate } from "react-router";
+import React, { useState, useEffect } from "react";
+import Navbar from "../components/Navbar.jsx";
+import ProductList from "../components/ProductList.jsx";
+import HeroSection from "../components/HeroSection.jsx";
+import CollectionsSection from "../components/CollectionsSection.jsx";
+import Footer from "../components/Footer.jsx";
+import { getProducts } from "@/api/productAPI";
 
 export const User = () => {
-  const navigate = useNavigate();
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("role");
-    navigate("/login");
-  };
+  // Fetch default products on initial load
+  useEffect(() => {
+    const fetchInitialProducts = async () => {
+      try {
+        const result = await getProducts({ page: 0, size: 8 });
+        const productsList = result?.content || result || [];
+        if (Array.isArray(productsList) && productsList.length > 0) {
+          setProducts(productsList);
+        }
+      } catch (error) {
+        console.error("Error fetching initial products:", error);
+      } finally {
+        setIsInitialLoad(false);
+      }
+    };
+
+    fetchInitialProducts();
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
-      <div className="bg-white p-8 rounded-xl shadow-lg w-96 text-center">
-        <h1 className="text-3xl font-bold mb-6 text-gray-800">
-          Chào mừng đến Dashboard!
-        </h1>
-        <p className="mb-6">Bạn đã đăng nhập thành công role USER.</p>
+    <div className="flex flex-col min-h-screen bg-white">
+      {/* Navbar */}
+      <Navbar onProductsChange={setProducts} />
 
-        <button
-          className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
-          onClick={handleLogout}
-        >
-          Đăng xuất
-        </button>
+      {/* Hero Section - Phần 1 */}
+      <HeroSection />
+
+      {/* Collections Section - Phần 2 */}
+      <CollectionsSection
+        onProductsChange={setProducts}
+        onCategorySelect={setSelectedCategory}
+      />
+
+      {/* Product List Section - Phần 3 */}
+      <div id="products-section">
+        <ProductList products={products} showViewAll={true} />
       </div>
+
+      {/* Footer */}
+      <Footer />
     </div>
   );
 };

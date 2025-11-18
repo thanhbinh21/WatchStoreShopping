@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,5 +29,6 @@ public class Category {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "category-products")
+    @JsonIgnore // Ignore products khi serialize để tránh circular reference và giảm payload
     private List<Product> products = new ArrayList<>();
 }

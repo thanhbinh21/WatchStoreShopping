@@ -249,4 +249,10 @@ public class ProductController {
         productService.deleteProduct(id);
     }
 
+
+    @GetMapping("/category/{categoryId}")
+    public List<Product> getProductsByCategory(@PathVariable Long categoryId) {
+        return productService.getProductsByCategory(categoryId);
+    }
+
 }

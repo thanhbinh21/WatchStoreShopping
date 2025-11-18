@@ -3,259 +3,362 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosConfig";
-import { User, Lock, Mail, Loader2 } from "lucide-react";
+import { User, Lock, Mail, Loader2, Gift, ShieldCheck } from "lucide-react"; // Thêm icon Gift
 import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { GoogleIcon } from "@/components/ui/GoogleIcon";
+import { ZaloIcon } from "@/components/ui/ZaloIcon";
 
 export default function LoginRegister() {
-    const [isLogin, setIsLogin] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [showSuccess, setShowSuccess] = useState(false);
-    const [form, setForm] = useState({
-        username: "",
-        password: "",
-        confirmPassword: "",
-        email: "",
-        fullName: "",
-    });
-    const [error, setError] = useState("");
-    const navigate = useNavigate();
+  const [isLogin, setIsLogin] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+    email: "",
+    fullName: "",
+  });
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
 
-    const handleChange = (e) => {
-        setForm({ ...form, [e.target.name]: e.target.value });
-    };
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError("");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-        if (!isLogin && form.password !== form.confirmPassword) {
-            setError("Mật khẩu xác nhận không khớp");
-            return;
+    if (!isLogin && form.password !== form.confirmPassword) {
+      setError("Mật khẩu xác nhận không khớp");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (isLogin) {
+        const res = await axiosInstance.post("/auth/login", {
+          username: form.username,
+          password: form.password,
+        });
+
+        localStorage.setItem("accessToken", res.accessToken);
+        localStorage.setItem("role", res.role);
+        localStorage.setItem("user", JSON.stringify(res.user));
+        if (res.refreshToken) {
+          localStorage.setItem("refreshToken", res.refreshToken);
         }
 
-        setLoading(true);
-        try {
-            if (isLogin) {
-                const res = await axiosInstance.post("/auth/login", {
-                    username: form.username,
-                    password: form.password,
-                });
+        // Chuyển đến /home cho cả admin và user
+        navigate("/home");
+        toast.success("Đăng nhập thành công!");
+      } else {
+        await axiosInstance.post("/auth/register", {
+          username: form.username,
+          email: form.email,
+          password: form.password,
+          fullName: form.fullName,
+        });
+        setShowSuccess(true);
+        setForm({
+          username: "",
+          password: "",
+          confirmPassword: "",
+          email: "",
+          fullName: "",
+        });
+      }
+    } catch (err) {
+      console.error("Auth error", err);
+      const errorMsg =
+        err.response?.data ||
+        (isLogin
+          ? "Tên đăng nhập hoặc mật khẩu không đúng"
+          : "Đăng ký thất bại. Vui lòng thử lại.");
+      toast.error(errorMsg);
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                localStorage.setItem("accessToken", res.accessToken);
-                localStorage.setItem("role", res.role);
-                localStorage.setItem("user", JSON.stringify(res.user));
-                if (res.refreshToken) {
-                    localStorage.setItem("refreshToken", res.refreshToken);
-                }
+  const benefits = [
+    {
+      icon: ShieldCheck,
+      text: "Chiết khấu đến 5% khi mua các sản phẩm tại CellphoneS",
+    },
+    { icon: Gift, text: "Miễn phí giao hàng cho thành viên SMEM, SVIP" },
+    { icon: Gift, text: "Tặng voucher sinh nhật đến 500.000đ" },
+    { icon: Gift, text: "Trợ giá thu cũ lên đến 1 triệu" },
+    { icon: Gift, text: "Thăng hạng nhận voucher đến 300.000đ" },
+    {
+      icon: Gift,
+      text: "Đặc quyền S-Student/S-Teacher ưu đãi thêm đến 10%",
+    },
+  ];
 
-                if (res.role === "ADMIN") navigate("/admin");
-                else if (res.role === "USER") navigate("/user");
-                else setError("Không xác định vai trò người dùng");
-            } else {
-                await axiosInstance.post("/auth/register", {
-                    username: form.username,
-                    email: form.email,
-                    password: form.password,
-                    fullName: form.fullName,
-                });
-                setShowSuccess(true);
-                setForm({
-                    username: "",
-                    password: "",
-                    confirmPassword: "",
-                    email: "",
-                    fullName: "",
-                });
-            }
-        } catch (err) {
-            console.error("Auth error", err);
-            toast.error(err.response.data);
-            setError(
-                isLogin
-                    ? "Tên đăng nhập hoặc mật khẩu không đúng"
-                    : "Đăng ký thất bại. Vui lòng thử lại."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+  return (
+    <>
+      {/* Popup thành công (giữ nguyên) */}
+      <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>🎉 Đăng ký thành công!</DialogTitle>
+            <DialogDescription>
+              Tài khoản của bạn đã được tạo. Hãy đăng nhập để bắt đầu hành trình
+              mới.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end mt-4">
+            <Button
+              onClick={() => {
+                setShowSuccess(false);
+                setIsLogin(true);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Đăng nhập ngay
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-    return (
-        <>
-            {/* Popup thành công */}
-            <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
-                <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                        <DialogTitle>🎉 Đăng ký thành công!</DialogTitle>
-                        <DialogDescription>
-                            Tài khoản của bạn đã được tạo. Hãy đăng nhập để bắt
-                            đầu hành trình mới.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="flex justify-end mt-4">
-                        <Button
-                            onClick={() => {
-                                setShowSuccess(false);
-                                setIsLogin(true);
-                            }}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
-                        >
-                            Đăng nhập ngay
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
+      {/* Giao diện chính mới */}
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 p-4">
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden">
+          {/* Cột trái: Quảng cáo */}
+          <div className="w-full md:w-1/2 p-8 md:p-12 relative bg-white">
+            {/* Box đỏ viền */}
+            <div className="border-2 border-red-600 rounded-lg p-6 h-full">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                Nhập hội khách hàng thành viên{" "}
+                <span className="text-red-600">SMEMBER</span>
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Để không bỏ lỡ các ưu đãi hấp dẫn từ CellphoneS
+              </p>
 
-            {/* Giao diện chính */}
-            <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-4">
-                <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transition-all duration-300">
-                    <div className="p-8">
-                        <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
-                            {isLogin ? "Đăng nhập" : "Tạo tài khoản mới"}
-                        </h2>
+              <ul className="space-y-4">
+                {benefits.map((item, index) => (
+                  <li key={index} className="flex items-start">
+                    <item.icon className="h-5 w-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" />
+                    <span className="text-gray-700">{item.text}</span>
+                  </li>
+                ))}
+              </ul>
 
-                        {error && (
-                            <p className="text-red-500 text-sm mb-4 text-center">
-                                {error}
-                            </p>
-                        )}
+              <a
+                href="#"
+                className="text-red-600 hover:underline font-medium mt-6 inline-block"
+              >
+                Xem chi tiết chính sách ưu đãi Smember
+              </a>
 
-                        <form onSubmit={handleSubmit} className="space-y-4">
-                            <div className="relative">
-                                <User
-                                    className="absolute left-3 top-3 text-gray-400"
-                                    size={20}
-                                />
-                                <input
-                                    type="text"
-                                    name="username"
-                                    placeholder="Tên đăng nhập"
-                                    value={form.username}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                />
-                            </div>
-
-                            {!isLogin && (
-                                <>
-                                    <div className="relative">
-                                        <User
-                                            className="absolute left-3 top-3 text-gray-400"
-                                            size={20}
-                                        />
-                                        <input
-                                            type="text"
-                                            name="fullName"
-                                            placeholder="Họ và tên"
-                                            value={form.fullName}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        />
-                                    </div>
-
-                                    <div className="relative">
-                                        <Mail
-                                            className="absolute left-3 top-3 text-gray-400"
-                                            size={20}
-                                        />
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            placeholder="Email"
-                                            value={form.email}
-                                            onChange={handleChange}
-                                            required
-                                            className="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                        />
-                                    </div>
-                                </>
-                            )}
-
-                            <div className="relative">
-                                <Lock
-                                    className="absolute left-3 top-3 text-gray-400"
-                                    size={20}
-                                />
-                                <input
-                                    type="password"
-                                    name="password"
-                                    placeholder="Mật khẩu"
-                                    value={form.password}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                />
-                            </div>
-
-                            {!isLogin && (
-                                <div className="relative">
-                                    <Lock
-                                        className="absolute left-3 top-3 text-gray-400"
-                                        size={20}
-                                    />
-                                    <input
-                                        type="password"
-                                        name="confirmPassword"
-                                        placeholder="Xác nhận mật khẩu"
-                                        value={form.confirmPassword}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                                    />
-                                </div>
-                            )}
-
-                            <Button
-                                type="submit"
-                                disabled={loading}
-                                className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
-                            >
-                                {loading ? (
-                                    <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                                        Đang xử lý...
-                                    </>
-                                ) : isLogin ? (
-                                    "Đăng nhập"
-                                ) : (
-                                    "Đăng ký tài khoản"
-                                )}
-                            </Button>
-                        </form>
-
-                        <div className="mt-6 text-center text-sm text-gray-600">
-                            {isLogin
-                                ? "Chưa có tài khoản?"
-                                : "Đã có tài khoản?"}{" "}
-                            <button
-                                onClick={() => {
-                                    setIsLogin(!isLogin);
-                                    setError("");
-                                }}
-                                className="text-indigo-600 hover:underline font-medium"
-                            >
-                                {isLogin ? "Đăng ký ngay" : "Đăng nhập"}
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="bg-indigo-100 text-center py-3 text-sm text-gray-600 font-medium">
-                        {isLogin
-                            ? "Chào mừng trở lại 👋"
-                            : "Tạo tài khoản để bắt đầu hành trình mới 🚀"}
-                    </div>
-                </div>
+              {/* Bạn có thể thêm ảnh mascot ở đây nếu muốn */}
+              {/* <img src="/path/to/mascot.png" alt="Mascot" className="absolute bottom-0 right-0 w-1/2" /> */}
             </div>
-        </>
-    );
+          </div>
+
+          {/* Cột phải: Form */}
+          <div className="w-full md:w-1/2 p-8 md:p-12">
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
+              {isLogin ? "Đăng nhập SMEMBER" : "Đăng ký thành viên"}
+            </h2>
+
+            {error && (
+              <p className="text-red-500 text-sm mb-4 text-center">{error}</p>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Trường chung: Tên đăng nhập */}
+              <div>
+                <label
+                  htmlFor="username"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  {isLogin ? "Số điện thoại" : "Tên đăng nhập"}
+                </label>
+                <input
+                  type="text"
+                  name="username"
+                  id="username"
+                  placeholder={
+                    isLogin ? "Nhập số điện thoại" : "Nhập tên đăng nhập"
+                  }
+                  value={form.username}
+                  onChange={handleChange}
+                  required
+                  className="w-full mt-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+
+              {/* Trường chỉ có khi Đăng ký */}
+              {!isLogin && (
+                <>
+                  <div>
+                    <label
+                      htmlFor="fullName"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Họ và tên
+                    </label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      id="fullName"
+                      placeholder="Nhập họ và tên"
+                      value={form.fullName}
+                      onChange={handleChange}
+                      required
+                      className="w-full mt-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700"
+                    >
+                      Email
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      id="email"
+                      placeholder="Nhập email"
+                      value={form.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full mt-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Trường chung: Mật khẩu */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Mật khẩu
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  placeholder="Nhập mật khẩu"
+                  value={form.password}
+                  onChange={handleChange}
+                  required
+                  className="w-full mt-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
+
+              {/* Trường chỉ có khi Đăng ký */}
+              {!isLogin && (
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
+                    Xác nhận mật khẩu
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    id="confirmPassword"
+                    placeholder="Nhập lại mật khẩu"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    className="w-full mt-1 px-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400"
+                  />
+                </div>
+              )}
+
+              {/* Link Quên mật khẩu (chỉ hiển thị khi đăng nhập) */}
+              {isLogin && (
+                <div className="text-right">
+                  <a href="#" className="text-sm text-blue-600 hover:underline">
+                    Quên mật khẩu?
+                  </a>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : isLogin ? (
+                  "Đăng nhập"
+                ) : (
+                  "Đăng ký tài khoản"
+                )}
+              </Button>
+            </form>
+
+            {/* Phần đăng nhập bằng MXH (chỉ hiển thị khi đăng nhập) */}
+            {isLogin && (
+              <>
+                <div className="flex items-center my-6">
+                  <hr className="flex-grow border-gray-300" />
+                  <span className="mx-4 text-sm text-gray-500">
+                    Hoặc đăng nhập bằng
+                  </span>
+                  <hr className="flex-grow border-gray-300" />
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center w-30"
+                  >
+                    <GoogleIcon />
+                    Google
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center justify-center w-30"
+                  >
+                    <ZaloIcon />
+                    Zalo
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Link chuyển đổi Đăng nhập/Đăng ký */}
+            <div className="mt-6 text-center text-sm text-gray-600">
+              {isLogin ? "Bạn chưa có tài khoản?" : "Đã có tài khoản?"}{" "}
+              <button
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError("");
+                }}
+                className="text-red-600 hover:underline font-medium"
+              >
+                {isLogin ? "Đăng ký ngay" : "Đăng nhập"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
