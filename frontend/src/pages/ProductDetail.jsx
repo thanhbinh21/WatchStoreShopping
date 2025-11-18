@@ -57,7 +57,7 @@ export default function ProductDetail() {
   const handleAddToCart = async () => {
     const token = localStorage.getItem("accessToken");
     const user = JSON.parse(localStorage.getItem("user"));
-    
+
     if (!token || !user?.id) {
       toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
       setTimeout(() => {
@@ -97,10 +97,14 @@ export default function ProductDetail() {
     const hasHalfStar = rating % 1 >= 0.5;
 
     for (let i = 0; i < fullStars; i++) {
-      stars.push(<Star key={i} className="size-4 fill-yellow-400 text-yellow-400" />);
+      stars.push(
+        <Star key={i} className="size-4 fill-yellow-400 text-yellow-400" />
+      );
     }
     if (hasHalfStar) {
-      stars.push(<Star key="half" className="size-4 fill-yellow-200 text-yellow-400" />);
+      stars.push(
+        <Star key="half" className="size-4 fill-yellow-200 text-yellow-400" />
+      );
     }
     const remainingStars = 5 - Math.ceil(rating);
     for (let i = 0; i < remainingStars; i++) {
@@ -109,10 +113,17 @@ export default function ProductDetail() {
     return stars;
   };
 
+  // SVG placeholder
+  const svgPlaceholder =
+    "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='20' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+
   const getImageUrl = (imageUrl) => {
-    if (!imageUrl) return null;
-    if (imageUrl.startsWith('http')) return imageUrl;
-    return `http://localhost:8080/images/products/${imageUrl}`;
+    if (!imageUrl) return svgPlaceholder;
+    // If already full URL (http/https) or data URI, use as is
+    if (imageUrl.startsWith("http") || imageUrl.startsWith("data:"))
+      return imageUrl;
+    // If relative path, prepend with /images/products/ (from public folder)
+    return `/images/products/${imageUrl}`;
   };
 
   if (loading) {
@@ -143,7 +154,10 @@ export default function ProductDetail() {
               Không tìm thấy sản phẩm
             </h2>
             <div className="flex gap-4 justify-center mt-6">
-              <Button onClick={() => navigate("/home")} className="bg-red-600 hover:bg-red-700">
+              <Button
+                onClick={() => navigate("/home")}
+                className="bg-red-600 hover:bg-red-700"
+              >
                 <Home className="size-4 mr-2" />
                 Về trang chủ
               </Button>
@@ -159,23 +173,25 @@ export default function ProductDetail() {
     );
   }
 
-  const displayImage = selectedImage 
+  const displayImage = selectedImage
     ? getImageUrl(selectedImage.imageUrl)
-    : product.imageUrl 
+    : product.imageUrl
     ? getImageUrl(product.imageUrl)
     : null;
 
   // Category cho breadcrumb (nếu có)
-  const categoryForNav = product.categoryName ? { 
-    id: product.categoryId, 
-    name: product.categoryName 
-  } : null;
+  const categoryForNav = product.categoryName
+    ? {
+        id: product.categoryId,
+        name: product.categoryName,
+      }
+    : null;
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       <Navbar selectedCategory={categoryForNav} />
-      
+
       <div className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
           {/* Back Button */}
@@ -203,21 +219,14 @@ export default function ProductDetail() {
             <div className="lg:col-span-2 space-y-4">
               {/* Main Image */}
               <div className="bg-white rounded-2xl shadow-lg p-8 aspect-square flex items-center justify-center">
-                {displayImage ? (
-                  <img
-                    src={displayImage}
-                    alt={product.name}
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect width='400' height='400' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='20' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                    }}
-                  />
-                ) : (
-                  <div className="text-center text-gray-400">
-                    <Package className="size-20 mx-auto mb-4" />
-                    <p>Không có hình ảnh</p>
-                  </div>
-                )}
+                <img
+                  src={displayImage}
+                  alt={product.name}
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    e.target.src = svgPlaceholder;
+                  }}
+                />
               </div>
 
               {/* Thumbnail Images */}
@@ -238,7 +247,7 @@ export default function ProductDetail() {
                         alt={product.name}
                         className="w-full h-full object-cover rounded-lg"
                         onError={(e) => {
-                          e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100'%3E%3Crect width='100' height='100' fill='%23f3f4f6'/%3E%3C/svg%3E";
+                          e.target.src = svgPlaceholder;
                         }}
                       />
                       {img.isPrimary && (
@@ -260,7 +269,9 @@ export default function ProductDetail() {
                       Mô tả sản phẩm
                     </h3>
                     <div className="prose prose-sm max-w-none text-gray-700">
-                      <p className="whitespace-pre-wrap">{product.description}</p>
+                      <p className="whitespace-pre-wrap">
+                        {product.description}
+                      </p>
                     </div>
                   </CardContent>
                 </Card>
@@ -269,7 +280,9 @@ export default function ProductDetail() {
               {/* Specifications */}
               <Card>
                 <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Thông số kỹ thuật</h3>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Thông số kỹ thuật
+                  </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex justify-between py-3 border-b">
                       <span className="text-gray-600">ID Sản phẩm:</span>
@@ -284,25 +297,37 @@ export default function ProductDetail() {
                     {product.categoryName && (
                       <div className="flex justify-between py-3 border-b">
                         <span className="text-gray-600">Danh mục:</span>
-                        <span className="font-medium">{product.categoryName}</span>
+                        <span className="font-medium">
+                          {product.categoryName}
+                        </span>
                       </div>
                     )}
                     {product.supplierName && (
                       <div className="flex justify-between py-3 border-b">
                         <span className="text-gray-600">Nhà cung cấp:</span>
-                        <span className="font-medium">{product.supplierName}</span>
+                        <span className="font-medium">
+                          {product.supplierName}
+                        </span>
                       </div>
                     )}
                     <div className="flex justify-between py-3 border-b">
                       <span className="text-gray-600">Tình trạng:</span>
-                      <Badge className={product.status === "ACTIVE" ? "bg-green-500" : "bg-red-500"}>
+                      <Badge
+                        className={
+                          product.status === "ACTIVE"
+                            ? "bg-green-500"
+                            : "bg-red-500"
+                        }
+                      >
                         {product.status === "ACTIVE" ? "Còn hàng" : "Hết hàng"}
                       </Badge>
                     </div>
                     {product.stockQuantity !== undefined && (
                       <div className="flex justify-between py-3 border-b">
                         <span className="text-gray-600">Số lượng kho:</span>
-                        <span className="font-medium">{product.stockQuantity}</span>
+                        <span className="font-medium">
+                          {product.stockQuantity}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -354,7 +379,9 @@ export default function ProductDetail() {
 
                   {/* Quantity */}
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-3">Số lượng:</p>
+                    <p className="text-sm font-medium text-gray-700 mb-3">
+                      Số lượng:
+                    </p>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center border border-gray-300 rounded-lg">
                         <button
@@ -402,7 +429,7 @@ export default function ProductDetail() {
                         </>
                       )}
                     </Button>
-                    
+
                     <Button variant="outline" className="w-full py-6">
                       <Heart className="size-5 mr-2" />
                       Yêu thích
@@ -413,15 +440,21 @@ export default function ProductDetail() {
                   <div className="space-y-3 pt-4 border-t">
                     <div className="flex items-center gap-3 text-sm">
                       <Truck className="size-5 text-blue-900" />
-                      <span className="text-gray-700">Miễn phí vận chuyển cho đơn hàng trên 500.000₫</span>
+                      <span className="text-gray-700">
+                        Miễn phí vận chuyển cho đơn hàng trên 500.000₫
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <Shield className="size-5 text-blue-900" />
-                      <span className="text-gray-700">Bảo hành chính hãng 12 tháng</span>
+                      <span className="text-gray-700">
+                        Bảo hành chính hãng 12 tháng
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 text-sm">
                       <RotateCcw className="size-5 text-blue-900" />
-                      <span className="text-gray-700">Đổi trả trong 30 ngày</span>
+                      <span className="text-gray-700">
+                        Đổi trả trong 30 ngày
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -430,7 +463,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
-      
+
       <Footer />
     </div>
   );
