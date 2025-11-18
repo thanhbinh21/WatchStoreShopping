@@ -2,6 +2,7 @@ package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import iuh.fit.se.backend.entity.enums.ProductStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -9,6 +10,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Entity
@@ -28,8 +30,11 @@ public class Product {
     @Column(nullable = false, length = 200)
     private String name;
 
-    @Column(length = 100)
-    private String brand;
+    @ManyToOne
+    @JoinColumn(name = "brand_id", nullable = false)
+    @JsonBackReference(value = "brand-products")
+    private Brand brand;
+
 
     @Column(columnDefinition = "TEXT")
     private String description;
@@ -112,5 +117,11 @@ public class Product {
                 .findFirst()
                 .map(ProductImage::getImageUrl)
                 .orElse(null);
+    }
+
+    public Integer getStockQuantity() {
+        return inventories.stream()
+                .mapToInt(Inventory::getStock)
+                .sum();
     }
 }

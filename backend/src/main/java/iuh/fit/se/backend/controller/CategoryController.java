@@ -1,8 +1,10 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.request.CategoryRequest;
 import iuh.fit.se.backend.entity.Category;
 import iuh.fit.se.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,28 +16,36 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<Category> getAll() {
+    public List<Category> getAllCategories() {
         return categoryService.getAllCategories();
     }
 
     @GetMapping("/{id}")
-    public Category getOne(@PathVariable Long id) {
-        return categoryService.getCategory(id);
+    public Category getCategoryById(@PathVariable Long id) {
+        return categoryService.getCategoryById(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public Category create(@RequestBody Category category) {
+    public Category createCategory(@RequestBody CategoryRequest request) {
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
         return categoryService.saveCategory(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public Category update(@PathVariable Long id, @RequestBody Category category) {
-        category.setId(id);
+    public Category updateCategory(@PathVariable Long id, @RequestBody CategoryRequest request) {
+        Category category = categoryService.getCategoryById(id);
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
         return categoryService.saveCategory(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
+    public void deleteCategory(@PathVariable Long id) {
         categoryService.deleteCategory(id);
     }
 }

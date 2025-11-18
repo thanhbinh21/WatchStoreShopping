@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.dto.ReviewRequest;
+import iuh.fit.se.backend.dto.request.ReviewRequest;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.entity.Review;
 import iuh.fit.se.backend.entity.User;
