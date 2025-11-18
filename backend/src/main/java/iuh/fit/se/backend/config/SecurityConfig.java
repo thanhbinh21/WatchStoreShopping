@@ -41,6 +41,12 @@ public class SecurityConfig {
                         // Auth endpoints - Public
                         .requestMatchers("/api/auth/**").permitAll()
 
+//                        cart
+                        .requestMatchers(HttpMethod.GET, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.PUT, "/api/cart/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/cart/**").permitAll()
+
                         // Products - GET public, modifications need ADMIN
                         .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
