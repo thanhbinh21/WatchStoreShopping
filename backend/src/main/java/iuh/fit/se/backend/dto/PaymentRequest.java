@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.dto;
 
-import iuh.fit.se.backend.entity.PaymentMethod;
+import iuh.fit.se.backend.entity.enums.PaymentMethod;
 import lombok.Data;
 
 import java.math.BigDecimal;
