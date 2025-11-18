@@ -46,6 +46,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
                         .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
+                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
 
                         .anyRequest().authenticated()                        // Các API khác cần login
