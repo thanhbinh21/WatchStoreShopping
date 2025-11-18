@@ -4,58 +4,61 @@ const BRAND_URL = "/brands";
 
 // Lấy tất cả brands
 export const getBrands = async () => {
-  try {
-    const res = await axiosInstance.get(BRAND_URL);
-    return res || [];
-  } catch (err) {
-    console.error("Error fetching brands:", err);
-    return [];
-  }
+    try {
+        const res = await axiosInstance.get(BRAND_URL);
+        if (Array.isArray(res)) return res;
+        if (Array.isArray(res?.data)) return res.data;
+        if (Array.isArray(res?.content)) return res.content;
+        return [];
+    } catch (err) {
+        console.error("Error fetching brands:", err);
+        return [];
+    }
 };
 
 // Lấy brand theo ID
 export const getBrandById = async (id) => {
-  try {
-    const brand = await axiosInstance.get(`${BRAND_URL}/${id}`);
-    return brand;
-  } catch (err) {
-    console.error(`Error fetching brand ${id}:`, err);
-    return null;
-  }
+    try {
+        const brand = await axiosInstance.get(`${BRAND_URL}/${id}`);
+        return brand;
+    } catch (err) {
+        console.error(`Error fetching brand ${id}:`, err);
+        return null;
+    }
 };
 
 // Tạo brand mới
 export const createBrand = async (brandData) => {
-  try {
-    const newBrand = await axiosInstance.post(BRAND_URL, brandData);
-    return newBrand;
-  } catch (err) {
-    console.error("Error creating brand:", err);
-    return null;
-  }
+    try {
+        const newBrand = await axiosInstance.post(BRAND_URL, brandData);
+        return newBrand;
+    } catch (err) {
+        console.error("Error creating brand:", err);
+        return null;
+    }
 };
 
 // Cập nhật brand
 export const updateBrand = async (id, brandData) => {
-  try {
-    const updatedBrand = await axiosInstance.put(
-      `${BRAND_URL}/${id}`,
-      brandData
-    );
-    return updatedBrand;
-  } catch (err) {
-    console.error(`Error updating brand ${id}:`, err);
-    return null;
-  }
+    try {
+        const updatedBrand = await axiosInstance.put(
+            `${BRAND_URL}/${id}`,
+            brandData
+        );
+        return updatedBrand;
+    } catch (err) {
+        console.error(`Error updating brand ${id}:`, err);
+        return null;
+    }
 };
 
 // Xóa brand
 export const deleteBrand = async (id) => {
-  try {
-    await axiosInstance.delete(`${BRAND_URL}/${id}`);
-    return true;
-  } catch (err) {
-    console.error(`Error deleting brand ${id}:`, err);
-    return false;
-  }
+    try {
+        await axiosInstance.delete(`${BRAND_URL}/${id}`);
+        return true;
+    } catch (err) {
+        console.error(`Error deleting brand ${id}:`, err);
+        return false;
+    }
 };
