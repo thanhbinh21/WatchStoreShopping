@@ -75,9 +75,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN")
 
+                        // Độc quyền (ADMIN)
+                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
+                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
+                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
                         // Promotions - GET public, modifications need ADMIN
                         .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
-                        .requestMatchers("/api/promotions/**").hasRole("ADMIN")
+                        
 
                         // Payments - GET public
                         .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
@@ -89,8 +100,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/upload/**").hasRole("ADMIN")
 
                         // Admin endpoints - ADMIN only
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/orders/**").hasRole("ADMIN")
+                        
+                        
                         .requestMatchers("/api/inventories/**").hasRole("ADMIN")
 
                         // All other requests need authentication

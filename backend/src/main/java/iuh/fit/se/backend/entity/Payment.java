@@ -32,7 +32,6 @@ public class Payment {
 
     @OneToOne
     @JoinColumn(name = "order_id", nullable = false)
-    @JsonBackReference
     private Order order;
 
     @CreationTimestamp
