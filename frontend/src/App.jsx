@@ -23,6 +23,8 @@ import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
 import { AdminCategories } from "./pages/Admin/AdminCategories";
+import ProductDetail from "./pages/ProductDetail";
+import { Home } from "./pages/Home";
 
 function App() {
   return (
@@ -37,14 +39,8 @@ function App() {
             </PublicRoute>
           }
         />
-        <Route
-          path="/"
-          element={
-            <PublicRoute>
-              <LoginRegister />
-            </PublicRoute>
-          }
-        />
+        <Route path="/" element={<Home />} />
+        <Route path="/home" element={<Home />} />
 
         {/* Private */}
         <Route
@@ -85,15 +81,8 @@ function App() {
         </Route>
 
                 {/* User routes */}
-                <Route
-                    path="/user"
-                    element={
-                        <PrivateRoute allowedRoles={["USER"]}>
-                            <User />
-                        </PrivateRoute>
-                    }
-                />
                 <Route path="cart" element={<Cart />} />
+                <Route path="/product/:id" element={<ProductDetail />} />
                 {/* Not Found */}
                 <Route path="*" element={<NotFound />} />
 
