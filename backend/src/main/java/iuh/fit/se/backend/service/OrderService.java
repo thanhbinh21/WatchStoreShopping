@@ -11,6 +11,7 @@ import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.specification.OrderSpecification;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
@@ -42,11 +44,23 @@ public class OrderService {
 
         Order order = new Order();
         order.setUser(user);
+        
+        // Set shipping information
+        order.setFullName(request.getFullName());
+        order.setPhone(request.getPhone());
+        order.setAddress(request.getAddress());
+        order.setWard(request.getWard());
+        order.setDistrict(request.getDistrict());
+        order.setCity(request.getCity());
+        order.setNote(request.getNote());
+        
+        // Set payment method
+        order.setPaymentMethod(request.getPaymentMethod());
 
         if (request.getOrderItems() != null) {
             for (OrderItemRequest itemReq : request.getOrderItems()) {
                 Product product = productRepository.findById(itemReq.getProductId())
-                        .orElseThrow(() -> new RuntimeException("Product not found"));
+                        .orElseThrow(() -> new RuntimeException("Product not found: " + itemReq.getProductId()));
 
                 OrderItem item = new OrderItem();
                 item.setOrder(order);
