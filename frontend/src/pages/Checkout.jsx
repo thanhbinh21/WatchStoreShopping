@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { createOrder } from '../api/orderAPI';
-import { removeCartItem } from '../api/cartAPI';
-import { toast } from 'sonner';
-import Header from '../components/Header';
-import Navbar from '../components/Navbar';
-import Footer from '../components/Footer';
+import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { createOrder } from "../api/orderAPI";
+import { removeCartItem } from "../api/cartAPI";
+import { parseStoredUser } from "@/utils/storage";
+import { toast } from "sonner";
+import Header from "../components/Header";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const paymentMethods = [
-    { value: 'CASH', label: 'Tiền mặt khi nhận hàng (COD)' }
+    { value: "CASH", label: "Tiền mặt khi nhận hàng (COD)" },
     // Các phương thức thanh toán khác sẽ phát triển sau
     // { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng' },
     // { value: 'MOMO', label: 'Ví MoMo' },
@@ -18,33 +19,36 @@ const paymentMethods = [
 export default function Checkout() {
     const location = useLocation();
     const navigate = useNavigate();
-    const { selectedItems, totalPrice } = location.state || { selectedItems: [], totalPrice: 0 };
+    const { selectedItems, totalPrice } = location.state || {
+        selectedItems: [],
+        totalPrice: 0,
+    };
 
     const [formData, setFormData] = useState({
-        fullName: '',
-        phone: '',
-        address: '',
-        ward: '',
-        district: '',
-        city: '',
-        note: '',
-        paymentMethod: 'CASH'
+        fullName: "",
+        phone: "",
+        address: "",
+        ward: "",
+        district: "",
+        city: "",
+        note: "",
+        paymentMethod: "CASH",
     });
 
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (!selectedItems || selectedItems.length === 0) {
-            toast.error('Vui lòng chọn sản phẩm từ giỏ hàng');
-            navigate('/cart');
+            toast.error("Vui lòng chọn sản phẩm từ giỏ hàng");
+            navigate("/cart");
         }
     }, [selectedItems, navigate]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
+        setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
     };
 
@@ -52,8 +56,13 @@ export default function Checkout() {
         e.preventDefault();
 
         // Validate form
-        if (!formData.fullName || !formData.phone || !formData.address || !formData.city) {
-            toast.error('Vui lòng điền đầy đủ thông tin');
+        if (
+            !formData.fullName ||
+            !formData.phone ||
+            !formData.address ||
+            !formData.city
+        ) {
+            toast.error("Vui lòng điền đầy đủ thông tin");
             return;
         }
 
@@ -61,21 +70,19 @@ export default function Checkout() {
 
         try {
             // Get user from localStorage
-            const userStr = localStorage.getItem('user');
-            if (!userStr) {
-                toast.error('Vui lòng đăng nhập để đặt hàng');
-                navigate('/login');
+            const user = parseStoredUser();
+            if (!user?.id) {
+                toast.error("Vui lòng đăng nhập để đặt hàng");
+                navigate("/login");
                 return;
             }
-
-            const user = JSON.parse(userStr);
 
             // Prepare order request
             const orderRequest = {
                 userId: user.id,
-                orderItems: selectedItems.map(item => ({
+                orderItems: selectedItems.map((item) => ({
                     productId: item.product?.id || item.productId,
-                    quantity: item.quantity
+                    quantity: item.quantity,
                 })),
                 // Shipping information
                 fullName: formData.fullName,
@@ -86,7 +93,7 @@ export default function Checkout() {
                 city: formData.city,
                 note: formData.note,
                 // Payment method
-                paymentMethod: formData.paymentMethod
+                paymentMethod: formData.paymentMethod,
             };
 
             // Create order
@@ -98,19 +105,22 @@ export default function Checkout() {
                     await removeCartItem(item.id);
                 }
             } catch (error) {
-                console.error('Error removing cart items:', error);
+                console.error("Error removing cart items:", error);
             }
 
             // Backend trả về Order object trực tiếp
-            toast.success('Đặt hàng thành công!');
-            navigate('/orders', { 
-                state: { 
+            toast.success("Đặt hàng thành công!");
+            navigate("/orders", {
+                state: {
                     orderId: order?.id,
-                    message: 'Đơn hàng của bạn đang được xử lý' 
-                } 
+                    message: "Đơn hàng của bạn đang được xử lý",
+                },
             });
         } catch (error) {
-            const errorMsg = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi đặt hàng';
+            const errorMsg =
+                error.response?.data?.message ||
+                error.message ||
+                "Có lỗi xảy ra khi đặt hàng";
             toast.error(errorMsg);
         } finally {
             setLoading(false);
@@ -132,12 +142,18 @@ export default function Checkout() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Left: Delivery Information Form */}
                     <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-                        <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
+                        <h2 className="text-xl font-semibold mb-4">
+                            Thông tin giao hàng
+                        </h2>
 
-                        <form onSubmit={handleSubmitOrder} className="space-y-4">
+                        <form
+                            onSubmit={handleSubmitOrder}
+                            className="space-y-4"
+                        >
                             <div>
                                 <label className="block text-sm font-medium mb-1">
-                                    Họ và tên <span className="text-red-500">*</span>
+                                    Họ và tên{" "}
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -152,7 +168,8 @@ export default function Checkout() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1">
-                                    Số điện thoại <span className="text-red-500">*</span>
+                                    Số điện thoại{" "}
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="tel"
@@ -168,7 +185,8 @@ export default function Checkout() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
-                                        Tỉnh/Thành phố <span className="text-red-500">*</span>
+                                        Tỉnh/Thành phố{" "}
+                                        <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
@@ -182,7 +200,9 @@ export default function Checkout() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Quận/Huyện</label>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Quận/Huyện
+                                    </label>
                                     <input
                                         type="text"
                                         name="district"
@@ -194,7 +214,9 @@ export default function Checkout() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium mb-1">Phường/Xã</label>
+                                    <label className="block text-sm font-medium mb-1">
+                                        Phường/Xã
+                                    </label>
                                     <input
                                         type="text"
                                         name="ward"
@@ -208,7 +230,8 @@ export default function Checkout() {
 
                             <div>
                                 <label className="block text-sm font-medium mb-1">
-                                    Địa chỉ cụ thể <span className="text-red-500">*</span>
+                                    Địa chỉ cụ thể{" "}
+                                    <span className="text-red-500">*</span>
                                 </label>
                                 <input
                                     type="text"
@@ -222,7 +245,9 @@ export default function Checkout() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium mb-1">Ghi chú</label>
+                                <label className="block text-sm font-medium mb-1">
+                                    Ghi chú
+                                </label>
                                 <textarea
                                     name="note"
                                     value={formData.note}
@@ -234,7 +259,9 @@ export default function Checkout() {
                             </div>
 
                             <div>
-                                <h3 className="text-lg font-semibold mb-3">Phương thức thanh toán</h3>
+                                <h3 className="text-lg font-semibold mb-3">
+                                    Phương thức thanh toán
+                                </h3>
                                 <div className="space-y-2">
                                     {paymentMethods.map((method) => (
                                         <label
@@ -245,7 +272,10 @@ export default function Checkout() {
                                                 type="radio"
                                                 name="paymentMethod"
                                                 value={method.value}
-                                                checked={formData.paymentMethod === method.value}
+                                                checked={
+                                                    formData.paymentMethod ===
+                                                    method.value
+                                                }
                                                 onChange={handleInputChange}
                                                 className="mr-3"
                                             />
@@ -260,11 +290,11 @@ export default function Checkout() {
                                 disabled={loading}
                                 className={`w-full py-3 rounded-lg text-white font-semibold ${
                                     loading
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-red-600 hover:bg-red-700'
+                                        ? "bg-gray-400 cursor-not-allowed"
+                                        : "bg-red-600 hover:bg-red-700"
                                 }`}
                             >
-                                {loading ? 'Đang xử lý...' : 'Đặt hàng'}
+                                {loading ? "Đang xử lý..." : "Đặt hàng"}
                             </button>
                         </form>
                     </div>
@@ -272,13 +302,21 @@ export default function Checkout() {
                     {/* Right: Order Summary */}
                     <div className="lg:col-span-1">
                         <div className="bg-white p-6 rounded-lg shadow sticky top-4">
-                            <h2 className="text-xl font-semibold mb-4">Đơn hàng</h2>
+                            <h2 className="text-xl font-semibold mb-4">
+                                Đơn hàng
+                            </h2>
 
                             <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
                                 {selectedItems.map((item) => (
-                                    <div key={item.id} className="flex items-start space-x-3 pb-3 border-b">
+                                    <div
+                                        key={item.id}
+                                        className="flex items-start space-x-3 pb-3 border-b"
+                                    >
                                         <img
-                                            src={item.imageUrl || 'https://via.placeholder.com/60'}
+                                            src={
+                                                item.imageUrl ||
+                                                "https://via.placeholder.com/60"
+                                            }
                                             alt={item.productName}
                                             className="w-16 h-16 object-cover rounded"
                                         />
@@ -286,7 +324,9 @@ export default function Checkout() {
                                             <h3 className="text-sm font-medium line-clamp-2">
                                                 {item.productName}
                                             </h3>
-                                            <p className="text-sm text-gray-600">SL: {item.quantity}</p>
+                                            <p className="text-sm text-gray-600">
+                                                SL: {item.quantity}
+                                            </p>
                                             <p className="text-sm font-semibold text-red-600">
                                                 {item.price.toLocaleString()}đ
                                             </p>
@@ -306,7 +346,9 @@ export default function Checkout() {
                                 </div>
                                 <div className="flex justify-between text-lg font-bold border-t pt-2">
                                     <span>Tổng cộng:</span>
-                                    <span className="text-red-600">{totalPrice.toLocaleString()}đ</span>
+                                    <span className="text-red-600">
+                                        {totalPrice.toLocaleString()}đ
+                                    </span>
                                 </div>
                             </div>
                         </div>

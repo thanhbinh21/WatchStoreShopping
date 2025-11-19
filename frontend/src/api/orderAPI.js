@@ -31,13 +31,30 @@ export const searchOrders = async (params = {}) => {
     if (maxTotal !== undefined && maxTotal !== null)
         query.set("maxTotal", maxTotal);
 
-    return axiosInstance.get(`${ORDER_URL}?${query.toString()}`);
+    const response = await axiosInstance.get(
+        `${ORDER_URL}?${query.toString()}`
+    );
+    return response.data;
 };
 
 export const getOrderDetail = async (id) => {
-    return axiosInstance.get(`${ORDER_URL}/${id}/detail`);
+    const response = await axiosInstance.get(`${ORDER_URL}/${id}/detail`);
+    return response.data;
 };
 
 export const updateOrderStatus = async (id, status) => {
-    return axiosInstance.put(`${ORDER_URL}/${id}/status`, { status });
+    const response = await axiosInstance.put(`${ORDER_URL}/${id}/status`, {
+        status,
+    });
+    return response.data;
+};
+
+export const createOrder = async (orderData) => {
+    const response = await axiosInstance.post(ORDER_URL, orderData);
+    return response.data;
+};
+
+export const getOrdersByUserId = async (userId) => {
+    const response = await axiosInstance.get(`${ORDER_URL}/user/${userId}`);
+    return response.data;
 };
