@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getCart, updateCartItem, removeCartItem } from "../api/cartAPI.js";
+import { parseStoredUser } from "@/utils/storage";
 
 export default function Cart() {
     const [cartItems, setCartItems] = useState([]);
@@ -8,7 +9,7 @@ export default function Cart() {
     const [selectedItems, setSelectedItems] = useState([]);
 
     const navigate = useNavigate();
-    const user = JSON.parse(localStorage.getItem("user"));
+    const user = parseStoredUser();
     const userId = user?.id;
 
     // Load giỏ hàng
@@ -42,8 +43,10 @@ export default function Cart() {
         if (selectedItems.length === 0) return;
 
         // Lấy các sản phẩm đã chọn
-        const itemsToCheckout = cartItems.filter(item => selectedItems.includes(item.id));
-        
+        const itemsToCheckout = cartItems.filter((item) =>
+            selectedItems.includes(item.id)
+        );
+
         // Tính tổng tiền
         const total = itemsToCheckout.reduce(
             (sum, item) => sum + item.price * item.quantity,
@@ -51,11 +54,11 @@ export default function Cart() {
         );
 
         // Chuyển đến trang thanh toán với dữ liệu
-        navigate('/checkout', {
+        navigate("/checkout", {
             state: {
                 selectedItems: itemsToCheckout,
-                totalPrice: total
-            }
+                totalPrice: total,
+            },
         });
     };
 
@@ -115,7 +118,11 @@ export default function Cart() {
 
                 <div className="mb-4">
                     <label className="flex items-center space-x-2">
-                        <input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+                        <input
+                            type="checkbox"
+                            checked={selectAll}
+                            onChange={handleSelectAll}
+                        />
                         <span>Chọn tất cả</span>
                     </label>
                 </div>
@@ -124,25 +131,51 @@ export default function Cart() {
                     {cartItems.length === 0 && <p>Giỏ hàng trống 😢</p>}
 
                     {cartItems.map((item) => (
-                        <div key={item.id} className="flex border rounded p-2 space-x-4 items-start">
+                        <div
+                            key={item.id}
+                            className="flex border rounded p-2 space-x-4 items-start"
+                        >
                             <input
                                 type="checkbox"
                                 checked={selectedItems.includes(item.id)}
                                 onChange={() => handleSelectItem(item.id)}
                             />
                             <img
-                                src={item.imageUrl || "https://via.placeholder.com/80"}
+                                src={
+                                    item.imageUrl ||
+                                    "https://via.placeholder.com/80"
+                                }
                                 alt={item.productName}
                                 className="w-20 h-20 object-cover rounded"
                             />
                             <div className="flex-1">
-                                <h2 className="font-medium">{item.productName}</h2>
-                                <p className="text-red-500 font-semibold">{item.price.toLocaleString()}đ</p>
+                                <h2 className="font-medium">
+                                    {item.productName}
+                                </h2>
+                                <p className="text-red-500 font-semibold">
+                                    {item.price.toLocaleString()}đ
+                                </p>
 
                                 <div className="mt-2 flex items-center">
-                                    <button onClick={() => handleQuantityChange(item.id, -1)} className="px-2 border rounded">-</button>
-                                    <span className="mx-2">{item.quantity}</span>
-                                    <button onClick={() => handleQuantityChange(item.id, 1)} className="px-2 border rounded">+</button>
+                                    <button
+                                        onClick={() =>
+                                            handleQuantityChange(item.id, -1)
+                                        }
+                                        className="px-2 border rounded"
+                                    >
+                                        -
+                                    </button>
+                                    <span className="mx-2">
+                                        {item.quantity}
+                                    </span>
+                                    <button
+                                        onClick={() =>
+                                            handleQuantityChange(item.id, 1)
+                                        }
+                                        className="px-2 border rounded"
+                                    >
+                                        +
+                                    </button>
                                 </div>
 
                                 <div className="mt-2 text-sm bg-gray-100 p-2 rounded">
@@ -154,7 +187,9 @@ export default function Cart() {
                                 </div>
                             </div>
 
-                            <button onClick={() => handleRemoveItem(item.id)}>🗑️</button>
+                            <button onClick={() => handleRemoveItem(item.id)}>
+                                🗑️
+                            </button>
                         </div>
                     ))}
                 </div>
@@ -164,7 +199,9 @@ export default function Cart() {
                     <button
                         onClick={handleCheckout}
                         className={`px-4 py-2 rounded text-white ${
-                            selectedItems.length > 0 ? "bg-red-600 hover:bg-red-700" : "bg-gray-400 cursor-not-allowed"
+                            selectedItems.length > 0
+                                ? "bg-red-600 hover:bg-red-700"
+                                : "bg-gray-400 cursor-not-allowed"
                         }`}
                         disabled={selectedItems.length === 0}
                     >
