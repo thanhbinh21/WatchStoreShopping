@@ -75,9 +75,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN")
 
+                        // Orders - Users can create and view their orders, ADMIN can manage all
+                        .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user/**").authenticated()  // Users can view their orders (must be before /api/orders/**)
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
+
                         // Độc quyền (ADMIN)
                         .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
-                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // Orders yêu cầu ADMIN
                         .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
                         .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")

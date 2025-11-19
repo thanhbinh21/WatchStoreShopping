@@ -4,21 +4,27 @@ import iuh.fit.se.backend.dto.request.OrderRequest;
 import iuh.fit.se.backend.dto.request.OrderStatusUpdateRequest;
 import iuh.fit.se.backend.dto.response.OrderResponse;
 import iuh.fit.se.backend.entity.Order;
+import iuh.fit.se.backend.entity.User;
+import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@Slf4j
 public class OrderController {
     private final OrderService orderService;
+    private final UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<Page<OrderResponse>> getOrders(
@@ -48,8 +54,22 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public List<Order> getByUser(@PathVariable Long userId) {
-        return orderService.getOrdersByUser(userId);
+    public ResponseEntity<?> getByUser(
+            @PathVariable Long userId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        // Get current user from authentication using username
+        User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if user is trying to access their own orders or is ADMIN
+        boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+        
+        if (!isAdmin && !currentUser.getId().equals(userId)) {
+            return ResponseEntity.status(403).body("Bạn không có quyền xem đơn hàng của người khác");
+        }
+        
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
     }
 
     @GetMapping("/{id}/detail")

@@ -25,6 +25,9 @@ import Cart from "@/pages/Cart.jsx";
 import { AdminCategories } from "./pages/Admin/AdminCategories";
 import ProductDetail from "./pages/ProductDetail";
 import { Home } from "./pages/Home";
+import Checkout from "./pages/Checkout";
+import Orders from "./pages/Orders";
+import ProductList from "./pages/ProductList";
 
 function App() {
   return (
@@ -41,6 +44,7 @@ function App() {
         />
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/products" element={<ProductList />} />
 
         {/* Private */}
         <Route
@@ -82,6 +86,8 @@ function App() {
 
                 {/* User routes */}
                 <Route path="cart" element={<Cart />} />
+                <Route path="checkout" element={<Checkout />} />
+                <Route path="orders" element={<Orders />} />
                 <Route path="/product/:id" element={<ProductDetail />} />
                 {/* Not Found */}
                 <Route path="*" element={<NotFound />} />

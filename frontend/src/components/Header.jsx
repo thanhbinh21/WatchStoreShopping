@@ -55,7 +55,7 @@ export default function Header() {
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      navigate(`/home?search=${encodeURIComponent(searchTerm)}`);
+      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
     }
   };
 
@@ -67,7 +67,7 @@ export default function Header() {
 
   const handleCategoryClick = (categoryId) => {
     setIsCategoryDropdownOpen(false);
-    navigate(`/home?category=${categoryId}`);
+    navigate(`/products?category=${categoryId}`);
   };
 
   return (
@@ -198,6 +198,17 @@ export default function Header() {
                     >
                       <ShoppingCart size={16} />
                       <span>Giỏ hàng</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        navigate("/orders");
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-red-50 transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                      <span>Đơn hàng</span>
                     </button>
 
                     <button
