@@ -13,7 +13,7 @@ import { AdminSettings } from "./pages/Admin/AdminSettings";
 import { AdminStock } from "./pages/Admin/AdminStock";
 import { AdminTable } from "./pages/Admin/AdminTable";
 import { AdminTeam } from "./pages/Admin/AdminTeam";
-import { AdminTodo } from "./pages/Admin/AdminTodo";
+import { AdminReview } from "./pages/Admin/AdminReview";
 import { AdminUIElements } from "./pages/Admin/AdminUIElements";
 import { Dashboard } from "./pages/Dashboard";
 import { default as Login, default as LoginRegister } from "./pages/Login";
@@ -30,59 +30,59 @@ import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
 
 function App() {
-  return (
-    <Router>
-      <Routes>
-        {/* Public */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <Login />
-            </PublicRoute>
-          }
-        />
-        <Route path="/" element={<Home />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/products" element={<ProductList />} />
+    return (
+        <Router>
+            <Routes>
+                {/* Public */}
+                <Route
+                    path="/login"
+                    element={
+                        <PublicRoute>
+                            <Login />
+                        </PublicRoute>
+                    }
+                />
+                <Route path="/" element={<Home />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/products" element={<ProductList />} />
 
-        {/* Private */}
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+                {/* Private */}
+                <Route
+                    path="/dashboard"
+                    element={
+                        <PrivateRoute>
+                            <Dashboard />
+                        </PrivateRoute>
+                    }
+                />
 
-        {/* Admin routes */}
-        <Route
-          path="/admin"
-          element={
-            <PrivateRoute allowedRoles={["ADMIN"]}>
-              <Admin />
-            </PrivateRoute>
-          }
-        >
-          <Route index element={<AdminDashboard />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProduct />} />
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="favorites" element={<AdminFavorites />} />
-          <Route path="inbox" element={<AdminInbox />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="stock" element={<AdminStock />} />
-          <Route path="pricing" element={<AdminPricing />} />
-          <Route path="calendar" element={<AdminCalendar />} />
-          <Route path="todo" element={<AdminTodo />} />
-          <Route path="contact" element={<AdminContact />} />
-          <Route path="invoice" element={<AdminInvoice />} />
-          <Route path="ui-elements" element={<AdminUIElements />} />
-          <Route path="team" element={<AdminTeam />} />
-          <Route path="table" element={<AdminTable />} />
-          <Route path="settings" element={<AdminSettings />} />
-        </Route>
+                {/* Admin routes */}
+                <Route
+                    path="/admin"
+                    element={
+                        <PrivateRoute allowedRoles={["ADMIN"]}>
+                            <Admin />
+                        </PrivateRoute>
+                    }
+                >
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="products" element={<AdminProduct />} />
+                    <Route path="categories" element={<AdminCategories />} />
+                    <Route path="favorites" element={<AdminFavorites />} />
+                    <Route path="inbox" element={<AdminInbox />} />
+                    <Route path="orders" element={<AdminOrders />} />
+                    <Route path="stock" element={<AdminStock />} />
+                    <Route path="pricing" element={<AdminPricing />} />
+                    <Route path="calendar" element={<AdminCalendar />} />
+                    <Route path="reviews" element={<AdminReview />} />
+                    <Route path="contact" element={<AdminContact />} />
+                    <Route path="invoice" element={<AdminInvoice />} />
+                    <Route path="ui-elements" element={<AdminUIElements />} />
+                    <Route path="team" element={<AdminTeam />} />
+                    <Route path="table" element={<AdminTable />} />
+                    <Route path="settings" element={<AdminSettings />} />
+                </Route>
 
                 {/* User routes */}
                 <Route path="cart" element={<Cart />} />
@@ -91,8 +91,6 @@ function App() {
                 <Route path="/product/:id" element={<ProductDetail />} />
                 {/* Not Found */}
                 <Route path="*" element={<NotFound />} />
-
-
             </Routes>
         </Router>
     );
