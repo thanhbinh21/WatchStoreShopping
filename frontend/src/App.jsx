@@ -27,6 +27,7 @@ import ProductDetail from "./pages/ProductDetail";
 import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
+import ProductList from "./pages/ProductList";
 
 function App() {
   return (
@@ -43,6 +44,7 @@ function App() {
         />
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
+        <Route path="/products" element={<ProductList />} />
 
         {/* Private */}
         <Route

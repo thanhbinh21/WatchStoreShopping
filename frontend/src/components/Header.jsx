@@ -55,7 +55,7 @@ export default function Header() {
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      navigate(`/home?search=${encodeURIComponent(searchTerm)}`);
+      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
     }
   };
 
@@ -67,7 +67,7 @@ export default function Header() {
 
   const handleCategoryClick = (categoryId) => {
     setIsCategoryDropdownOpen(false);
-    navigate(`/home?category=${categoryId}`);
+    navigate(`/products?category=${categoryId}`);
   };
 
   return (
