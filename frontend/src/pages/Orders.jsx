@@ -5,13 +5,14 @@ import { toast } from 'sonner';
 import Header from '../components/Header';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { Clock, CreditCard, Truck, CheckCircle, XCircle, Package } from 'lucide-react';
 
 const orderStatusLabels = {
-    PENDING: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-    PAID: { label: 'Đã thanh toán', color: 'bg-blue-100 text-blue-800', icon: '💳' },
-    SHIPPED: { label: 'Đang giao hàng', color: 'bg-purple-100 text-purple-800', icon: '🚚' },
-    COMPLETED: { label: 'Hoàn thành', color: 'bg-green-100 text-green-800', icon: '✅' },
-    CANCELLED: { label: 'Đã hủy', color: 'bg-red-100 text-red-800', icon: '❌' }
+    PENDING: { label: 'Chờ xử lý', color: 'bg-yellow-100 text-yellow-800', Icon: Clock },
+    PAID: { label: 'Đã thanh toán', color: 'bg-blue-100 text-blue-800', Icon: CreditCard },
+    SHIPPED: { label: 'Đang giao hàng', color: 'bg-purple-100 text-purple-800', Icon: Truck },
+    COMPLETED: { label: 'Hoàn thành', color: 'bg-green-100 text-green-800', Icon: CheckCircle },
+    CANCELLED: { label: 'Đã hủy', color: 'bg-red-100 text-red-800', Icon: XCircle }
 };
 
 const paymentMethodLabels = {
@@ -97,17 +98,19 @@ export default function Orders() {
                         </button>
                         {Object.entries(orderStatusLabels).map(([status, info]) => {
                             const count = orders.filter(o => o.status === status).length;
+                            const IconComponent = info.Icon;
                             return (
                                 <button
                                     key={status}
                                     onClick={() => setFilterStatus(status)}
-                                    className={`px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${
                                         filterStatus === status
                                             ? 'bg-red-600 text-white'
                                             : 'bg-white text-gray-700 hover:bg-gray-100'
                                     }`}
                                 >
-                                    {info.icon} {info.label} ({count})
+                                    <IconComponent size={16} />
+                                    <span>{info.label} ({count})</span>
                                 </button>
                             );
                         })}
@@ -121,7 +124,7 @@ export default function Orders() {
                     </div>
                 ) : orders.length === 0 ? (
                     <div className="bg-white p-12 rounded-lg shadow text-center">
-                        <div className="text-6xl mb-4">📦</div>
+                        <Package size={80} className="mx-auto mb-4 text-gray-300" />
                         <h2 className="text-xl font-semibold mb-2">Chưa có đơn hàng nào</h2>
                         <p className="text-gray-500 mb-6">Hãy khám phá và mua sắm những sản phẩm yêu thích của bạn</p>
                         <button
@@ -164,16 +167,18 @@ export default function Orders() {
                                                 </p>
                                             )}
                                             {order.paymentMethod && (
-                                                <p className="text-sm text-gray-600">
-                                                    💳 {paymentMethodLabels[order.paymentMethod] || order.paymentMethod}
+                                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                    <CreditCard size={14} />
+                                                    {paymentMethodLabels[order.paymentMethod] || order.paymentMethod}
                                                 </p>
                                             )}
                                         </div>
                                         <div className="flex flex-col items-end gap-2">
                                             <span
-                                                className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
+                                                className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
                                             >
-                                                {statusInfo.icon} {statusInfo.label}
+                                                <statusInfo.Icon size={14} />
+                                                {statusInfo.label}
                                             </span>
                                         </div>
                                     </div>

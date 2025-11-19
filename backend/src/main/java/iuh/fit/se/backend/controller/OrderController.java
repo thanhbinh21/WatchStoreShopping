@@ -28,26 +28,18 @@ public class OrderController {
             @PathVariable Long userId,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
-        log.info("Getting orders for userId: {}, authenticated user: {}", userId, userDetails.getUsername());
-        
         // Get current user from authentication using username
         User currentUser = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        log.info("Current user ID: {}, Role: {}", currentUser.getId(), currentUser.getRole());
         
         // Check if user is trying to access their own orders or is ADMIN
         boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
         
         if (!isAdmin && !currentUser.getId().equals(userId)) {
-            log.warn("User {} trying to access orders of user {}", currentUser.getId(), userId);
             return ResponseEntity.status(403).body("Bạn không có quyền xem đơn hàng của người khác");
         }
         
-        var orders = orderService.getOrdersByUser(userId);
-        log.info("Found {} orders for user {}", orders.size(), userId);
-        
-        return ResponseEntity.ok(orders);
+        return ResponseEntity.ok(orderService.getOrdersByUser(userId));
     }
 
     @GetMapping("/{id}")
