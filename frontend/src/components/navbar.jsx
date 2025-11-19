@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { Home, ChevronRight } from "lucide-react";
 
-export default function Navbar({ selectedCategory }) {
+export default function Navbar({ selectedCategory, currentPage }) {
   const navigate = useNavigate();
 
   return (
@@ -18,7 +18,14 @@ export default function Navbar({ selectedCategory }) {
             <span>Trang chủ</span>
           </button>
           
-          {selectedCategory && (
+          {currentPage && (
+            <>
+              <ChevronRight size={16} className="text-gray-400" />
+              <span className="text-gray-900 font-medium">{currentPage}</span>
+            </>
+          )}
+          
+          {selectedCategory && !currentPage && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
               <span className="text-gray-900 font-medium">{selectedCategory.name}</span>

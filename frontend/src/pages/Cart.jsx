@@ -38,6 +38,27 @@ export default function Cart() {
         else setSelectedItems([...selectedItems, id]);
     };
 
+    const handleCheckout = () => {
+        if (selectedItems.length === 0) return;
+
+        // Lấy các sản phẩm đã chọn
+        const itemsToCheckout = cartItems.filter(item => selectedItems.includes(item.id));
+        
+        // Tính tổng tiền
+        const total = itemsToCheckout.reduce(
+            (sum, item) => sum + item.price * item.quantity,
+            0
+        );
+
+        // Chuyển đến trang thanh toán với dữ liệu
+        navigate('/checkout', {
+            state: {
+                selectedItems: itemsToCheckout,
+                totalPrice: total
+            }
+        });
+    };
+
     const handleQuantityChange = async (cartItemId, delta) => {
         const item = cartItems.find((i) => i.id === cartItemId);
         if (!item) return;
@@ -141,12 +162,13 @@ export default function Cart() {
                 <div className="mt-4 flex justify-between items-center p-2 border-t">
                     <p>Tạm tính: {totalPrice.toLocaleString()}đ</p>
                     <button
+                        onClick={handleCheckout}
                         className={`px-4 py-2 rounded text-white ${
-                            totalPrice > 0 ? "bg-red-600" : "bg-gray-400 cursor-not-allowed"
+                            selectedItems.length > 0 ? "bg-red-600 hover:bg-red-700" : "bg-gray-400 cursor-not-allowed"
                         }`}
-                        disabled={totalPrice === 0}
+                        disabled={selectedItems.length === 0}
                     >
-                        Mua ngay
+                        Mua ngay ({selectedItems.length})
                     </button>
                 </div>
             </div>
