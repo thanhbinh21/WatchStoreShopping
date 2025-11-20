@@ -241,6 +241,12 @@ INSERT INTO `reviews` (`id`, `product_id`, `user_id`, `rating`, `comment`, `crea
 (7, 8, 4, 4, 'Giá rẻ mà chất lượng ok. Đáng mua!', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (8, 3, 5, 5, 'Seiko 5 rất tốt, chạy ổn định!', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
+-- 10b. NOTIFICATIONS TABLE
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `created_at`) VALUES
+(1, 2, 'Chào mừng đến Watch Store', 'Chúc bạn có trải nghiệm mua sắm tuyệt vời cùng Watch Store!', 0, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(2, 3, 'Ưu đãi tháng này', 'Giảm giá 20% cho các mẫu Casio trong tuần này.', 0, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(3, 4, 'Cập nhật đơn hàng', 'Đơn hàng #3 của bạn đã được giao thành công.', 1, DATE_SUB(NOW(), INTERVAL 12 HOUR));
+
 -- ============================================
 -- 11. PROMOTIONS TABLE
 -- ============================================
@@ -339,6 +345,7 @@ ALTER TABLE `product_prices` AUTO_INCREMENT = 16;
 ALTER TABLE `product_specs` AUTO_INCREMENT = 47;
 ALTER TABLE `inventories` AUTO_INCREMENT = 13;
 ALTER TABLE `reviews` AUTO_INCREMENT = 9;
+ALTER TABLE `notifications` AUTO_INCREMENT = 4;
 ALTER TABLE `promotions` AUTO_INCREMENT = 5;
 ALTER TABLE `carts` AUTO_INCREMENT = 5;
 ALTER TABLE `cart_items` AUTO_INCREMENT = 8;

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     ShoppingCart,
@@ -9,8 +9,13 @@ import {
     ChevronDown,
     Grid3x3,
     MapPin,
+    Bell,
 } from "lucide-react";
 import { getCategories } from "../api/categoryAPI.js";
+import {
+    getNotificationsByUser,
+    markAllNotificationsAsRead,
+} from "@/api/notificationAPI";
 import { parseStoredUser } from "@/utils/storage";
 
 export default function Header() {
@@ -20,12 +25,42 @@ export default function Header() {
     const [searchTerm, setSearchTerm] = useState("");
     const [categories, setCategories] = useState([]);
     const [cartCount, setCartCount] = useState(0);
+    const [notifications, setNotifications] = useState([]);
+    const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
+        useState(false);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
     const userDropdownRef = useRef(null);
     const categoryDropdownRef = useRef(null);
+    const notificationDropdownRef = useRef(null);
 
     const token = localStorage.getItem("accessToken");
     const role = localStorage.getItem("role");
     const user = parseStoredUser() || {};
+
+    const formatNotificationDate = (value) =>
+        value ? new Date(value).toLocaleString("vi-VN") : "--";
+
+    const loadNotifications = useCallback(async () => {
+        if (!user?.id || !token) {
+            setNotifications([]);
+            setUnreadNotifications(0);
+            return 0;
+        }
+
+        try {
+            const data = await getNotificationsByUser(user.id);
+            const list = Array.isArray(data) ? data : [];
+            setNotifications(list);
+            const unreadCount = list.filter((item) => !item.read).length;
+            setUnreadNotifications(unreadCount);
+            return unreadCount;
+        } catch (error) {
+            console.error("Lỗi khi tải thông báo:", error);
+            setNotifications([]);
+            setUnreadNotifications(0);
+            return 0;
+        }
+    }, [user?.id, token]);
 
     // Fetch categories
     useEffect(() => {
@@ -47,6 +82,10 @@ export default function Header() {
         fetchCategories();
     }, []);
 
+    useEffect(() => {
+        loadNotifications();
+    }, [loadNotifications]);
+
     // Đóng dropdown khi click ngoài
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -61,6 +100,12 @@ export default function Header() {
                 !categoryDropdownRef.current.contains(event.target)
             ) {
                 setIsCategoryDropdownOpen(false);
+            }
+            if (
+                notificationDropdownRef.current &&
+                !notificationDropdownRef.current.contains(event.target)
+            ) {
+                setIsNotificationDropdownOpen(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -91,6 +136,33 @@ export default function Header() {
     const handleCategoryClick = (categoryId) => {
         setIsCategoryDropdownOpen(false);
         navigate(`/products?category=${categoryId}`);
+    };
+
+    const handleToggleNotifications = async () => {
+        if (!user?.id || !token) {
+            navigate("/login");
+            return;
+        }
+
+        let unreadCount = unreadNotifications;
+        if (!isNotificationDropdownOpen) {
+            unreadCount = await loadNotifications();
+        }
+
+        const nextState = !isNotificationDropdownOpen;
+        setIsNotificationDropdownOpen(nextState);
+
+        if (!isNotificationDropdownOpen && unreadCount > 0) {
+            try {
+                await markAllNotificationsAsRead(user.id);
+                setNotifications((prev) =>
+                    prev.map((item) => ({ ...item, read: true }))
+                );
+                setUnreadNotifications(0);
+            } catch (error) {
+                console.error("Lỗi khi cập nhật trạng thái thông báo:", error);
+            }
+        }
     };
 
     return (
@@ -193,6 +265,71 @@ export default function Header() {
                             </span>
                         )}
                     </button>
+
+                    {/* Notifications */}
+                    <div className="relative" ref={notificationDropdownRef}>
+                        <button
+                            onClick={handleToggleNotifications}
+                            className="relative flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                            <Bell size={20} />
+                            <span className="hidden md:inline font-medium">
+                                Thông báo
+                            </span>
+                            {unreadNotifications > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                    {unreadNotifications > 9
+                                        ? "9+"
+                                        : unreadNotifications}
+                                </span>
+                            )}
+                        </button>
+
+                        {isNotificationDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden z-50">
+                                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                                    <span className="text-sm font-semibold text-gray-900">
+                                        Thông báo
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                        {unreadNotifications > 0
+                                            ? `${unreadNotifications} chưa đọc`
+                                            : "Đã đọc tất cả"}
+                                    </span>
+                                </div>
+                                <div className="max-h-80 overflow-y-auto">
+                                    {notifications.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                                            Chưa có thông báo nào
+                                        </div>
+                                    ) : (
+                                        notifications.map((notification) => (
+                                            <div
+                                                key={notification.id}
+                                                className={`px-4 py-3 text-sm transition-colors ${
+                                                    notification.read
+                                                        ? "bg-white"
+                                                        : "bg-red-50"
+                                                }`}
+                                            >
+                                                <p className="font-medium text-gray-900">
+                                                    {notification.title}
+                                                </p>
+                                                <p className="mt-1 text-xs leading-relaxed text-gray-600">
+                                                    {notification.message}
+                                                </p>
+                                                <p className="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                                                    {formatNotificationDate(
+                                                        notification.createdAt
+                                                    )}
+                                                </p>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </div>
 
                     {/* User Menu */}
                     <div className="relative" ref={userDropdownRef}>
