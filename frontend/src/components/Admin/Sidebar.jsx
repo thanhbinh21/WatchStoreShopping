@@ -6,12 +6,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 export const Sidebar = ({ setCollapsed, collapsed, logout }) => {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [indicatorTop, setIndicatorTop] = useState(0);
   const containerRef = useRef(null);
   const navigate = useNavigate();
   const location = useLocation();
-
-  const itemHeight = 54; // chiều cao nút + gap
 
   // Set activeIndex dựa trên route hiện tại
   useEffect(() => {
@@ -19,78 +16,39 @@ export const Sidebar = ({ setCollapsed, collapsed, logout }) => {
     if (index >= 0) setActiveIndex(index);
   }, [location.pathname]);
 
-  useEffect(() => {
-    setIndicatorTop(activeIndex * itemHeight);
-  }, [activeIndex]);
-
   return (
     <div
+      className="h-screen bg-white border-r border-gray-200 shadow-sm transition-all duration-300 ease-in-out flex flex-col"
       style={{
-        width: collapsed ? "86px" : "240px",
-        border: "1px solid #ccc",
-        transition: "width 0.3s ease",
+        width: collapsed ? "80px" : "260px",
       }}
     >
       {/* Header */}
       <div
-        className="flex items-center justify-center"
+        className="flex items-center justify-center border-b border-gray-200 px-4"
         style={{ height: "70px" }}
       >
         {!collapsed ? (
-          <h1 className="text-3xl font-bold text-center">Nhóm 8</h1>
+          <h1 className="text-2xl font-bold text-gray-800">Nhóm 8</h1>
         ) : (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="bg-transparent cursor-pointer p-2 hover:bg-gray-200 rounded"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
-            <TextAlignJustify className="text-black" />
+            <TextAlignJustify className="text-gray-700" size={24} />
           </button>
         )}
       </div>
 
       <div
         ref={containerRef}
+        className="flex flex-col py-4 overflow-y-auto flex-1"
         style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          position: "relative",
+          paddingLeft: collapsed ? "12px" : "16px",
+          paddingRight: collapsed ? "12px" : "16px",
           gap: "4px",
-          paddingLeft: collapsed ? "8px" : "20px",
-          marginLeft: collapsed ? "8px" : "0px",
         }}
       >
-        {/* Thanh nền trượt */}
-        <div
-          style={{
-            position: "absolute",
-            left: collapsed ? "10px" : "20px",
-            top: indicatorTop,
-            height: "50px",
-            width: collapsed ? "50px" : "192px",
-            backgroundColor: "#4880FF",
-            borderRadius: "6px",
-            transition: "all 0.3s ease",
-            zIndex: 0,
-          }}
-        />
-
-        {/* Thanh indicator bên trái */}
-        <div
-          style={{
-            position: "absolute",
-            left: collapsed ? "-8px" : "0px",
-            top: indicatorTop,
-            height: "50px",
-            width: "4px",
-            backgroundColor: "#4880FF",
-            borderRadius: "0 4px 4px 0",
-            transition: "top 0.3s ease",
-            zIndex: 1,
-          }}
-        />
-
         {/* Danh sách sidebar */}
         {sideBars.map((item, index) => (
           <SidebarItem
@@ -103,7 +61,19 @@ export const Sidebar = ({ setCollapsed, collapsed, logout }) => {
           />
         ))}
 
-        <SidebarItem name={"Logout"} icon={"la-power-off"} onClick={logout} />
+        {/* Spacer để đẩy logout xuống dưới */}
+        <div className="flex-1 min-h-4" />
+
+        {/* Logout item */}
+        <div className="border-t border-gray-200 pt-4 mt-2">
+          <SidebarItem
+            name={collapsed ? "" : "Logout"}
+            icon={"la-power-off"}
+            onClick={logout}
+            collapsed={collapsed}
+            isActive={false}
+          />
+        </div>
       </div>
     </div>
   );
