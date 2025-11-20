@@ -4,6 +4,7 @@ import { AdminPromotions } from "./pages/Admin/AdminPromotions";
 import { AdminContact } from "./pages/Admin/AdminContact";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminFavorites } from "./pages/Admin/AdminFavorites";
+import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
 import { AdminInbox } from "./pages/Admin/AdminInbox";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
@@ -74,6 +75,7 @@ function App() {
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="stock" element={<AdminStock />} />
                     <Route path="pricing" element={<AdminPricing />} />
+                    <Route path="payments" element={<AdminMethodPayments />} />
                     <Route path="promotions" element={<AdminPromotions />} />
                     <Route path="reviews" element={<AdminReview />} />
                     <Route path="contact" element={<AdminContact />} />
