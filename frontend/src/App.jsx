@@ -16,6 +16,7 @@ import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
 import { AdminViewReport } from "./pages/Admin/AdminViewReport";
 import { Dashboard } from "./pages/Dashboard";
+import { AdminBanner } from "./pages/Admin/AdminBanner";
 import { default as Login, default as LoginRegister } from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import { User } from "./pages/User";
@@ -28,7 +29,6 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
-import { AdminBanner } from "./pages/Admin/AdminBanner";
 
 function App() {
   return (

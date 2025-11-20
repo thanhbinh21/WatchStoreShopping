@@ -179,7 +179,10 @@ export const AdminCategories = () => {
             Quản lý danh mục sản phẩm trong cửa hàng
           </p>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button
+          onClick={handleAddNew}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           <PlusIcon className="size-4" />
           Thêm danh mục
         </Button>
