@@ -80,7 +80,7 @@ export const sideBars = [
     { name: "Order Lists", icon: "la-list-alt", path: "/admin/orders" },
     { name: "Product Stock", icon: "la-database", path: "/admin/stock" },
     { name: "Pricing", icon: "la-gift", path: "/admin/pricing" },
-    { name: "Calendar", icon: "la-calendar", path: "/admin/calendar" },
+    { name: "Promotions", icon: "la-calendar", path: "/admin/promotions" },
     { name: "Reviews", icon: "la-star", path: "/admin/reviews" },
     { name: "Contact", icon: "la-user-friends", path: "/admin/contact" },
     { name: "Invoice", icon: "la-wallet", path: "/admin/invoice" },
