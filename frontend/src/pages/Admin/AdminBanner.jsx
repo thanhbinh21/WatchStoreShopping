@@ -90,10 +90,13 @@ export const AdminBanner = () => {
 
   const confirmDelete = async () => {
     if (!deletingBanner) return;
-    
+
     try {
       // Xóa file ảnh nếu là local file
-      if (deletingBanner.imageUrl && deletingBanner.imageUrl.startsWith("/images/banners/")) {
+      if (
+        deletingBanner.imageUrl &&
+        deletingBanner.imageUrl.startsWith("/images/banners/")
+      ) {
         const filename = deletingBanner.imageUrl.split("/").pop();
         try {
           await deleteBannerImage(filename);
@@ -162,7 +165,9 @@ export const AdminBanner = () => {
                 />
               </div>
               <div>
-                <label className="block mb-1">Link URL</label>
+                <label className="block mb-1">
+                  Link URL (ví dụ: /products)
+                </label>
                 <input
                   type="text"
                   className="w-full border rounded px-3 py-2"
