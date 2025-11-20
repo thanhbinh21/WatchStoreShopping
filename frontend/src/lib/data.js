@@ -89,7 +89,7 @@ export const sideBars = [
     { name: "Reviews", icon: "la-star", path: "/admin/reviews" },
     { name: "Users", icon: "la-users-cog", path: "/admin/users" },
     { name: "Invoice", icon: "la-wallet", path: "/admin/invoice" },
-    { name: "UI Elements", icon: "la-chart-bar", path: "/admin/ui-elements" },
+    { name: "Reports", icon: "la-chart-bar", path: "/admin/reports" },
     { name: "Team", icon: "la-user", path: "/admin/team" },
     { name: "Table", icon: "la-table", path: "/admin/table" },
     { name: "Settings", icon: "la-cog", path: "/admin/settings" },

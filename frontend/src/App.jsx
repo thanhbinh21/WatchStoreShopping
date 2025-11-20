@@ -15,7 +15,7 @@ import { AdminStock } from "./pages/Admin/AdminStock";
 import { AdminTable } from "./pages/Admin/AdminTable";
 import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
-import { AdminUIElements } from "./pages/Admin/AdminUIElements";
+import { AdminViewReport } from "./pages/Admin/AdminViewReport";
 import { Dashboard } from "./pages/Dashboard";
 import { default as Login, default as LoginRegister } from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -80,7 +80,7 @@ function App() {
                     <Route path="reviews" element={<AdminReview />} />
                     <Route path="users" element={<AdminUser />} />
                     <Route path="invoice" element={<AdminInvoice />} />
-                    <Route path="ui-elements" element={<AdminUIElements />} />
+                    <Route path="reports" element={<AdminViewReport />} />
                     <Route path="team" element={<AdminTeam />} />
                     <Route path="table" element={<AdminTable />} />
                     <Route path="settings" element={<AdminSettings />} />
