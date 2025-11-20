@@ -33,8 +33,8 @@ export const getCategories = async () => {
 // Nếu muốn thêm các API khác cho category:
 export const getCategoryById = async (id) => {
     try {
-        const category = await axiosInstance.get(`${CATEGORY_URL}/${id}`);
-        return category;
+        const response = await axiosInstance.get(`${CATEGORY_URL}/${id}`);
+        return response.data;
     } catch (err) {
         console.error(`Error fetching category ${id}:`, err);
         return null;
@@ -43,11 +43,11 @@ export const getCategoryById = async (id) => {
 
 export const createCategory = async (categoryData) => {
     try {
-        const newCategory = await axiosInstance.post(
+        const response = await axiosInstance.post(
             CATEGORY_URL,
             categoryData
         );
-        return newCategory;
+        return response.data;
     } catch (err) {
         console.error("Error creating category:", err);
         throw err; // Throw error để component có thể handle
@@ -56,11 +56,11 @@ export const createCategory = async (categoryData) => {
 
 export const updateCategory = async (id, categoryData) => {
     try {
-        const updatedCategory = await axiosInstance.put(
+        const response = await axiosInstance.put(
             `${CATEGORY_URL}/${id}`,
             categoryData
         );
-        return updatedCategory;
+        return response.data;
     } catch (err) {
         console.error(`Error updating category ${id}:`, err);
         throw err; // Throw error để component có thể handle

@@ -51,7 +51,7 @@ export const CategoryDetailPanel = ({ categoryDetail, onClose }) => {
             Số sản phẩm
           </p>
           <Badge variant="secondary" className="text-base">
-            {categoryDetail.products?.length || 0} sản phẩm
+            {categoryDetail.productCount || 0} sản phẩm
           </Badge>
         </div>
 
