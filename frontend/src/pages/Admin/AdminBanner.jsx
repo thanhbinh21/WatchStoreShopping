@@ -4,12 +4,15 @@ import { uploadBannerImages, deleteBannerImage } from "@/api/uploadAPI";
 import { toast } from "sonner";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 
 export const AdminBanner = () => {
   const [banners, setBanners] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingBanner, setDeletingBanner] = useState(null);
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [form, setForm] = useState({
     title: "",
     imageUrl: "",
@@ -80,13 +83,18 @@ export const AdminBanner = () => {
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Xóa banner này?")) return;
+  const handleDelete = (banner) => {
+    setDeletingBanner(banner);
+    setIsDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingBanner) return;
+    
     try {
-      const banner = banners.find((b) => b.id === id);
       // Xóa file ảnh nếu là local file
-      if (banner?.imageUrl && banner.imageUrl.startsWith("/images/banners/")) {
-        const filename = banner.imageUrl.split("/").pop();
+      if (deletingBanner.imageUrl && deletingBanner.imageUrl.startsWith("/images/banners/")) {
+        const filename = deletingBanner.imageUrl.split("/").pop();
         try {
           await deleteBannerImage(filename);
         } catch (err) {
@@ -94,8 +102,10 @@ export const AdminBanner = () => {
         }
       }
 
-      await adminBannerAPI.delete(id);
+      await adminBannerAPI.delete(deletingBanner.id);
       toast.success("Xóa banner thành công");
+      setIsDeleteOpen(false);
+      setDeletingBanner(null);
       loadBanners();
     } catch (error) {
       toast.error("Lỗi xóa banner");
@@ -382,7 +392,7 @@ export const AdminBanner = () => {
                           size="sm"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDelete(banner.id);
+                            handleDelete(banner);
                           }}
                           className="text-red-600 hover:text-red-700 hover:bg-red-50"
                         >
@@ -397,6 +407,15 @@ export const AdminBanner = () => {
           </table>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        itemName={deletingBanner?.title}
+        onConfirm={confirmDelete}
+        title="Xác nhận xóa banner"
+      />
     </div>
   );
 };
