@@ -1,6 +1,7 @@
 package iuh.fit.se.backend.controller;
 
 import iuh.fit.se.backend.dto.request.CategoryRequest;
+import iuh.fit.se.backend.dto.response.CategoryResponse;
 import iuh.fit.se.backend.entity.Category;
 import iuh.fit.se.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
@@ -16,13 +17,13 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @GetMapping
-    public List<Category> getAllCategories() {
+    public List<CategoryResponse> getAllCategories() {
         return categoryService.getAllCategories();
     }
 
     @GetMapping("/{id}")
-    public Category getCategoryById(@PathVariable Long id) {
-        return categoryService.getCategoryById(id);
+    public CategoryResponse getCategoryById(@PathVariable Long id) {
+        return categoryService.getCategoryDetailById(id);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
