@@ -47,12 +47,12 @@ INSERT INTO `suppliers` (`id`, `name`, `contact`) VALUES
 -- ============================================
 -- 4. USERS TABLE (Password: password123)
 -- ============================================
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `full_name`, `role`, `created_at`) VALUES
-(1, 'admin', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'admin@watchstore.com', 'Administrator', 'ADMIN', NOW()),
-(2, 'customer1', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'nguyenvana@gmail.com', 'Nguyễn Văn An', 'USER', NOW()),
-(3, 'customer2', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'tranthib@gmail.com', 'Trần Thị Bình', 'USER', NOW()),
-(4, 'customer3', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'leminhhchau@gmail.com', 'Lê Minh Châu', 'USER', NOW()),
-(5, 'customer4', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'phamthidung@gmail.com', 'Phạm Thị Dung', 'USER', NOW());
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `full_name`, `role`, `is_active`, `created_at`) VALUES
+(1, 'admin', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'admin@watchstore.com', 'Administrator', 'ADMIN', 1, NOW()),
+(2, 'customer1', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'nguyenvana@gmail.com', 'Nguyễn Văn An', 'USER', 1, NOW()),
+(3, 'customer2', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'tranthib@gmail.com', 'Trần Thị Bình', 'USER', 1, NOW()),
+(4, 'customer3', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'leminhhchau@gmail.com', 'Lê Minh Châu', 'USER', 1, NOW()),
+(5, 'customer4', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'phamthidung@gmail.com', 'Phạm Thị Dung', 'USER', 1, NOW());
 
 -- ============================================
 -- 5. PRODUCTS TABLE (ĐÃ SỬA - không có cột 'brand')

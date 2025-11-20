@@ -1,7 +1,7 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Admin } from "./pages/Admin";
 import { AdminPromotions } from "./pages/Admin/AdminPromotions";
-import { AdminContact } from "./pages/Admin/AdminContact";
+import { AdminUser } from "./pages/Admin/AdminUser";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminFavorites } from "./pages/Admin/AdminFavorites";
 import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
@@ -78,7 +78,7 @@ function App() {
                     <Route path="payments" element={<AdminMethodPayments />} />
                     <Route path="promotions" element={<AdminPromotions />} />
                     <Route path="reviews" element={<AdminReview />} />
-                    <Route path="contact" element={<AdminContact />} />
+                    <Route path="users" element={<AdminUser />} />
                     <Route path="invoice" element={<AdminInvoice />} />
                     <Route path="ui-elements" element={<AdminUIElements />} />
                     <Route path="team" element={<AdminTeam />} />
