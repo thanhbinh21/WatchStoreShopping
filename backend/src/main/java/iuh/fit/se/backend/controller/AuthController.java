@@ -1,12 +1,14 @@
 package iuh.fit.se.backend.controller;
 
 import iuh.fit.se.backend.config.JwtService;
+import iuh.fit.se.backend.dto.UserRequest;
 import iuh.fit.se.backend.dto.request.LoginRequest;
-import iuh.fit.se.backend.dto.response.LoginResponse;
 import iuh.fit.se.backend.dto.request.RegisterRequest;
+import iuh.fit.se.backend.dto.response.LoginResponse;
 import iuh.fit.se.backend.entity.User;
-import iuh.fit.se.backend.service.UserServiceImpl;
-import org.springframework.beans.factory.annotation.Autowired;
+import iuh.fit.se.backend.entity.enums.Role;
+import iuh.fit.se.backend.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,12 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@RequiredArgsConstructor
 public class AuthController {
-    @Autowired
-    private UserServiceImpl userService;
-
-    @Autowired
-    private JwtService jwtService;
+    private final UserService userService;
+    private final JwtService jwtService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -44,16 +44,14 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Email đã được sử dụng");
         }
 
-        // Tạo user mới
-        User newUser = User.builder()
-                .username(request.getUsername())
-                .password(request.getPassword()) // TODO: nên mã hóa password
-                .email(request.getEmail())
-                .fullName(request.getFullName())
-//                .role(request.getRole() != null ? request.getRole() : Role.USER)
-                .build();
+        UserRequest userRequest = new UserRequest();
+        userRequest.setUsername(request.getUsername());
+        userRequest.setPassword(request.getPassword());
+        userRequest.setEmail(request.getEmail());
+        userRequest.setFullName(request.getFullName());
+        userRequest.setRole(Role.USER);
 
-        userService.createUser(newUser);
+        userService.createUser(userRequest);
 
         return ResponseEntity.ok("Đăng ký thành công");
     }
