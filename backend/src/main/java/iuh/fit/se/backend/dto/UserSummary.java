@@ -1,22 +1,21 @@
 package iuh.fit.se.backend.dto;
 
+import iuh.fit.se.backend.entity.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class PromotionSummary {
+public class UserSummary {
     private Long id;
-    private String name;
-    private BigDecimal discount;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private List<Long> productIds;
+    private String username;
+    private String email;
+    private String fullName;
+    private Role role;
+    private boolean active;
     private LocalDateTime createdAt;
 }

@@ -47,12 +47,12 @@ INSERT INTO `suppliers` (`id`, `name`, `contact`) VALUES
 -- ============================================
 -- 4. USERS TABLE (Password: password123)
 -- ============================================
-INSERT INTO `users` (`id`, `username`, `password`, `email`, `full_name`, `role`, `created_at`) VALUES
-(1, 'admin', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'admin@watchstore.com', 'Administrator', 'ADMIN', NOW()),
-(2, 'customer1', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'nguyenvana@gmail.com', 'Nguyễn Văn An', 'USER', NOW()),
-(3, 'customer2', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'tranthib@gmail.com', 'Trần Thị Bình', 'USER', NOW()),
-(4, 'customer3', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'leminhhchau@gmail.com', 'Lê Minh Châu', 'USER', NOW()),
-(5, 'customer4', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'phamthidung@gmail.com', 'Phạm Thị Dung', 'USER', NOW());
+INSERT INTO `users` (`id`, `username`, `password`, `email`, `full_name`, `role`, `is_active`, `created_at`) VALUES
+(1, 'admin', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'admin@watchstore.com', 'Administrator', 'ADMIN', 1, NOW()),
+(2, 'customer1', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'nguyenvana@gmail.com', 'Nguyễn Văn An', 'USER', 1, NOW()),
+(3, 'customer2', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'tranthib@gmail.com', 'Trần Thị Bình', 'USER', 1, NOW()),
+(4, 'customer3', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'leminhhchau@gmail.com', 'Lê Minh Châu', 'USER', 1, NOW()),
+(5, 'customer4', '$2a$10$JdHQh9FfYD.V5y6FS1KdCe7F5XTW9HZqN9c8xhTqKSKxJxjpRxUWm', 'phamthidung@gmail.com', 'Phạm Thị Dung', 'USER', 1, NOW());
 
 -- ============================================
 -- 5. PRODUCTS TABLE (ĐÃ SỬA - không có cột 'brand')
@@ -241,6 +241,12 @@ INSERT INTO `reviews` (`id`, `product_id`, `user_id`, `rating`, `comment`, `crea
 (7, 8, 4, 4, 'Giá rẻ mà chất lượng ok. Đáng mua!', DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY)),
 (8, 3, 5, 5, 'Seiko 5 rất tốt, chạy ổn định!', DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY));
 
+-- 10b. NOTIFICATIONS TABLE
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `created_at`) VALUES
+(1, 2, 'Chào mừng đến Watch Store', 'Chúc bạn có trải nghiệm mua sắm tuyệt vời cùng Watch Store!', 0, DATE_SUB(NOW(), INTERVAL 2 DAY)),
+(2, 3, 'Ưu đãi tháng này', 'Giảm giá 20% cho các mẫu Casio trong tuần này.', 0, DATE_SUB(NOW(), INTERVAL 1 DAY)),
+(3, 4, 'Cập nhật đơn hàng', 'Đơn hàng #3 của bạn đã được giao thành công.', 1, DATE_SUB(NOW(), INTERVAL 12 HOUR));
+
 -- ============================================
 -- 11. PROMOTIONS TABLE
 -- ============================================
@@ -339,6 +345,7 @@ ALTER TABLE `product_prices` AUTO_INCREMENT = 16;
 ALTER TABLE `product_specs` AUTO_INCREMENT = 47;
 ALTER TABLE `inventories` AUTO_INCREMENT = 13;
 ALTER TABLE `reviews` AUTO_INCREMENT = 9;
+ALTER TABLE `notifications` AUTO_INCREMENT = 4;
 ALTER TABLE `promotions` AUTO_INCREMENT = 5;
 ALTER TABLE `carts` AUTO_INCREMENT = 5;
 ALTER TABLE `cart_items` AUTO_INCREMENT = 8;

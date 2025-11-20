@@ -1,9 +1,10 @@
 import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { Admin } from "./pages/Admin";
-import { AdminCalendar } from "./pages/Admin/AdminCalendar";
-import { AdminContact } from "./pages/Admin/AdminContact";
+import { AdminPromotions } from "./pages/Admin/AdminPromotions";
+import { AdminUser } from "./pages/Admin/AdminUser";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminFavorites } from "./pages/Admin/AdminFavorites";
+import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
 import { AdminInbox } from "./pages/Admin/AdminInbox";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
@@ -74,9 +75,10 @@ function App() {
                     <Route path="orders" element={<AdminOrders />} />
                     <Route path="stock" element={<AdminStock />} />
                     <Route path="pricing" element={<AdminPricing />} />
-                    <Route path="calendar" element={<AdminCalendar />} />
+                    <Route path="payments" element={<AdminMethodPayments />} />
+                    <Route path="promotions" element={<AdminPromotions />} />
                     <Route path="reviews" element={<AdminReview />} />
-                    <Route path="contact" element={<AdminContact />} />
+                    <Route path="users" element={<AdminUser />} />
                     <Route path="invoice" element={<AdminInvoice />} />
                     <Route path="ui-elements" element={<AdminUIElements />} />
                     <Route path="team" element={<AdminTeam />} />

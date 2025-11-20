@@ -1,51 +1,135 @@
 package iuh.fit.se.backend.controller;
 
-import iuh.fit.se.backend.entity.User;
+import iuh.fit.se.backend.dto.ApiResponse;
+import iuh.fit.se.backend.dto.UserRequest;
+import iuh.fit.se.backend.dto.UserRoleUpdateRequest;
+import iuh.fit.se.backend.dto.UserStatusUpdateRequest;
+import iuh.fit.se.backend.dto.UserSummary;
+import iuh.fit.se.backend.entity.enums.Role;
 import iuh.fit.se.backend.service.UserService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<UserSummary>>> searchUsers(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "keyword", required = false) String keyword,
+            @RequestParam(value = "role", required = false) String role,
+            @RequestParam(value = "includeInactive", defaultValue = "false") boolean includeInactive
+    ) {
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 50);
 
-    @PostMapping
-    public ResponseEntity<User> createUser(@RequestBody User user) {
-        return ResponseEntity.ok(userService.createUser(user));
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
-        User updatedUser = userService.updateUser(id, user);
-        if (updatedUser == null) {
-            return ResponseEntity.notFound().build();
+        Role roleFilter = null;
+        if (StringUtils.hasText(role) && !"ALL".equalsIgnoreCase(role)) {
+            try {
+                roleFilter = Role.valueOf(role.trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException ex) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.failure("Invalid role value"));
+            }
         }
-        return ResponseEntity.ok(updatedUser);
-    }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        Pageable pageable = PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<UserSummary> data = userService.searchUsers(keyword, roleFilter, includeInactive, pageable);
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return userService.getUserById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<UserSummary>> getUser(@PathVariable Long id) {
+        return userService.getUserSummary(id)
+                .map(summary -> ResponseEntity.ok(ApiResponse.success(summary)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.failure("User not found")));
     }
 
-    @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+    @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserSummary>> createUser(@RequestBody UserRequest request) {
+        try {
+            UserSummary summary = userService.createUser(request);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserSummary>> updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
+        try {
+            UserSummary summary = userService.updateUser(id, request);
+            return ResponseEntity.ok(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
+    }
+
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserSummary>> updateUserRole(@PathVariable Long id,
+                                                                   @RequestBody UserRoleUpdateRequest request) {
+        if (request == null || request.getRole() == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.failure("Role is required"));
+        }
+
+        try {
+            UserSummary summary = userService.updateUserRole(id, request.getRole());
+            return ResponseEntity.ok(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<UserSummary>> updateUserStatus(@PathVariable Long id,
+                                                                     @RequestBody UserStatusUpdateRequest request) {
+        if (request == null) {
+            return ResponseEntity.badRequest().body(ApiResponse.failure("Status payload is required"));
+        }
+
+        try {
+            UserSummary summary = userService.updateUserStatus(id, request.isActive());
+            return ResponseEntity.ok(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<String>> deleteUser(@PathVariable Long id) {
+        try {
+            userService.softDeleteUser(id);
+            return ResponseEntity.ok(ApiResponse.success("User deactivated"));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
     }
 }

@@ -24,6 +24,7 @@ public class ReviewService {
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final NotificationService notificationService;
 
     public List<ReviewResponse> getAll() {
         return reviewRepository.findAllWithUserAndProduct()
@@ -70,7 +71,7 @@ public class ReviewService {
     }
 
     public ReviewResponse updateReview(Long id, ReviewRequest dto) {
-        Review review = reviewRepository.findById(id)
+        Review review = reviewRepository.findByIdWithUserAndProduct(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
         if (dto.getComment() != null) {
@@ -102,7 +103,11 @@ public class ReviewService {
         Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Review not found"));
 
+        User user = review.getUser();
+        Product product = review.getProduct();
+
         reviewRepository.delete(review);
+        notificationService.createReviewDeletedNotification(user, product, reason.trim());
         log.info("Review {} deleted by admin. Reason: {}", id, reason.trim());
     }
 
