@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { postAPI } from "@/api/cmsAPI";
 import Header from "@/components/Header";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import { Calendar, Eye, ArrowLeft, Tag } from "lucide-react";
 import { toast } from "sonner";
