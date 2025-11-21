@@ -4,7 +4,6 @@ import { AdminPromotions } from "./pages/Admin/AdminPromotions";
 import { AdminUser } from "./pages/Admin/AdminUser";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
-import { AdminInbox } from "./pages/Admin/AdminInbox";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
 import { AdminPricing } from "./pages/Admin/AdminPricing";
@@ -29,6 +28,9 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
+import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
+import { AdminPosts } from "./pages/Admin/AdminPosts";
+import PostDetail from "./pages/PostDetail";
 import Wishlist from "./pages/Wishlist";
 
 function App() {
@@ -47,6 +49,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<ProductList />} />
+        <Route path="/posts/:slug" element={<PostDetail />} />
         <Route path="/wishlist" element={<Wishlist />} />
 
         {/* Private */}
@@ -73,7 +76,8 @@ function App() {
           <Route path="products" element={<AdminProduct />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="banners" element={<AdminBanner />} />
-          <Route path="inbox" element={<AdminInbox />} />
+          <Route path="post-categories" element={<AdminPostCategory />} />
+          <Route path="posts" element={<AdminPosts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="stock" element={<AdminStock />} />
           <Route path="pricing" element={<AdminPricing />} />

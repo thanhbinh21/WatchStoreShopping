@@ -84,6 +84,9 @@ public class SecurityConfig {
                                 // Banner
                                 .requestMatchers(HttpMethod.GET, "/api/banners/**").permitAll()
 
+                                // Posts
+                                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
+
                                 // Độc quyền (ADMIN)
                                 .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                                 .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
