@@ -74,9 +74,14 @@
 export const sideBars = [
   { name: "Dashboard", icon: "la-tachometer-alt", path: "/admin/dashboard" },
   { name: "Products", icon: "la-th-large", path: "/admin/products" },
-  { name: "Categories", icon: "la-tags", path: "/admin/categories" },
+  { name: "Product Categories", icon: "la-tags", path: "/admin/categories" },
   { name: "Banners", icon: "la-image", path: "/admin/banners" },
-  { name: "Inbox", icon: "la-comments", path: "/admin/inbox" },
+  {
+    name: "Post Categories",
+    icon: "la-folder",
+    path: "/admin/post-categories",
+  },
+  { name: "Posts", icon: "la-newspaper", path: "/admin/posts" },
   { name: "Order Lists", icon: "la-list-alt", path: "/admin/orders" },
   { name: "Product Stock", icon: "la-database", path: "/admin/stock" },
   { name: "Pricing", icon: "la-gift", path: "/admin/pricing" },

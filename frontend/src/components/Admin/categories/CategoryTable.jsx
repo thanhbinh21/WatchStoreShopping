@@ -81,7 +81,7 @@ export const CategoryTable = ({
                           onEdit(category);
                         }}
                       >
-                        <PencilIcon className="size-4" />
+                        <PencilIcon className="size-4 text-blue-600 dark:text-blue-400" />
                       </Button>
                       <Button
                         variant="ghost"

@@ -4,7 +4,6 @@ import { AdminPromotions } from "./pages/Admin/AdminPromotions";
 import { AdminUser } from "./pages/Admin/AdminUser";
 import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
-import { AdminInbox } from "./pages/Admin/AdminInbox";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
 import { AdminPricing } from "./pages/Admin/AdminPricing";
@@ -29,6 +28,8 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
+import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
+import { AdminPost } from "./pages/Admin/AdminPost";
 
 function App() {
   return (
@@ -71,7 +72,8 @@ function App() {
           <Route path="products" element={<AdminProduct />} />
           <Route path="categories" element={<AdminCategories />} />
           <Route path="banners" element={<AdminBanner />} />
-          <Route path="inbox" element={<AdminInbox />} />
+          <Route path="post-categories" element={<AdminPostCategory />} />
+          <Route path="posts" element={<AdminPost />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="stock" element={<AdminStock />} />
           <Route path="pricing" element={<AdminPricing />} />

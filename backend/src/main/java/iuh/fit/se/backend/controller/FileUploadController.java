@@ -20,6 +20,7 @@ public class FileUploadController {
     // Đường dẫn lưu file (tương đối với thư mục frontend/public)
     private static final String PRODUCT_UPLOAD_DIR = "../frontend/public/images/products/";
     private static final String BANNER_UPLOAD_DIR = "../frontend/public/images/banners/";
+    private static final String POST_UPLOAD_DIR = "../frontend/public/images/posts/";
 
     @PostMapping("/product-images")
     public ResponseEntity<?> uploadProductImages(@RequestParam("files") MultipartFile[] files) {
@@ -29,6 +30,11 @@ public class FileUploadController {
     @PostMapping("/banner-images")
     public ResponseEntity<?> uploadBannerImages(@RequestParam("files") MultipartFile[] files) {
         return uploadImages(files, BANNER_UPLOAD_DIR, "banner");
+    }
+
+    @PostMapping("/post-images")
+    public ResponseEntity<?> uploadPostImages(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, POST_UPLOAD_DIR, "post");
     }
 
     private ResponseEntity<?> uploadImages(MultipartFile[] files, String uploadDir, String prefix) {
@@ -94,6 +100,11 @@ public class FileUploadController {
     @DeleteMapping("/banner-images/{filename}")
     public ResponseEntity<?> deleteBannerImage(@PathVariable String filename) {
         return deleteImage(filename, BANNER_UPLOAD_DIR);
+    }
+
+    @DeleteMapping("/post-images/{filename}")
+    public ResponseEntity<?> deletePostImage(@PathVariable String filename) {
+        return deleteImage(filename, POST_UPLOAD_DIR);
     }
 
     private ResponseEntity<?> deleteImage(String filename, String uploadDir) {

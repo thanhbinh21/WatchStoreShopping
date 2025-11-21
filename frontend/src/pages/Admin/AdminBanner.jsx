@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { adminBannerAPI } from "@/api/cmsAPI";
 import { uploadBannerImages, deleteBannerImage } from "@/api/uploadAPI";
 import { toast } from "sonner";
-import { PencilIcon, TrashIcon } from "lucide-react";
+import { Link, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 
@@ -312,21 +312,21 @@ export const AdminBanner = () => {
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 dark:bg-gray-900">
+            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-40">
                   Hình ảnh
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
                   Tiêu đề
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-24">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-28">
                   Thứ tự
                 </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
+                <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-32">
                   Trạng thái
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
+                <th className="px-6 py-4 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider w-36">
                   Thao tác
                 </th>
               </tr>
@@ -336,7 +336,7 @@ export const AdminBanner = () => {
                 <tr>
                   <td
                     colSpan="5"
-                    className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
+                    className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
                   >
                     Không có banner nào
                   </td>
@@ -345,42 +345,48 @@ export const AdminBanner = () => {
                 banners.map((banner) => (
                   <tr
                     key={banner.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <img
                         src={banner.imageUrl}
                         alt={banner.title}
-                        className="h-16 w-24 object-cover rounded border border-gray-200"
+                        className="h-20 w-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
                       />
                     </td>
                     <td className="px-6 py-4">
-                      <div className="font-medium text-gray-900 dark:text-gray-100">
+                      <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
                         {banner.title}
                       </div>
                       {banner.linkUrl && (
-                        <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-md">
+                        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 truncate max-w-md">
+                          <Link className="size-3" />
                           {banner.linkUrl}
                         </div>
                       )}
+                      {banner.description && (
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-1 line-clamp-1">
+                          {banner.description}
+                        </div>
+                      )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <span className="text-sm text-gray-900 dark:text-gray-100">
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center justify-center w-8 h-8 text-sm font-semibold text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-full">
                         {banner.displayOrder}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <td className="px-6 py-4 text-center">
                       <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${
                           banner.active
-                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                            : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
                         }`}
                       >
                         {banner.active ? "Kích hoạt" : "Tắt"}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <Button
                           variant="ghost"
@@ -389,8 +395,9 @@ export const AdminBanner = () => {
                             e.stopPropagation();
                             handleEdit(banner);
                           }}
+                          className="hover:bg-blue-50 dark:hover:bg-blue-900/20"
                         >
-                          <PencilIcon className="size-4" />
+                          <PencilIcon className="size-4 text-blue-600 dark:text-blue-400" />
                         </Button>
                         <Button
                           variant="ghost"
@@ -399,9 +406,9 @@ export const AdminBanner = () => {
                             e.stopPropagation();
                             handleDelete(banner);
                           }}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
-                          <TrashIcon className="size-4" />
+                          <TrashIcon className="size-4 text-red-600 dark:text-red-400" />
                         </Button>
                       </div>
                     </td>
