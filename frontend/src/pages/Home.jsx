@@ -7,6 +7,7 @@ import ProductList from "@/components/ProductList";
 import Footer from "@/components/Footer";
 import BannerSlider from "@/components/BannerSlider";
 import { bannerAPI } from "@/api/cmsAPI";
+import LatestPosts from "@/components/LatestPosts";
 
 export const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -90,6 +91,8 @@ export const Home = () => {
           />
         </div>
       </section>
+
+      <LatestPosts />
 
       {/* Footer */}
       <Footer />
