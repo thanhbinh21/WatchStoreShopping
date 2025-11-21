@@ -31,6 +31,7 @@ import ProductList from "./pages/ProductList";
 import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
 import { AdminPosts } from "./pages/Admin/AdminPosts";
 import PostDetail from "./pages/PostDetail";
+import Wishlist from "./pages/Wishlist";
 
 function App() {
   return (
@@ -49,6 +50,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<ProductList />} />
         <Route path="/posts/:slug" element={<PostDetail />} />
+        <Route path="/wishlist" element={<Wishlist />} />
 
         {/* Private */}
         <Route

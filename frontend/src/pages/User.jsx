@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "../components/Navbar.jsx";
+import Navbar from "../components/Breadcrumb.jsx";
 import ProductList from "../components/ProductList.jsx";
 import HeroSection from "../components/HeroSection.jsx";
 import CollectionsSection from "../components/CollectionsSection.jsx";
 import Footer from "../components/Footer.jsx";
 import { getProducts } from "@/api/productAPI";
+import Breadcrumb from "../components/Breadcrumb.jsx";
 
 export const User = () => {
   const [products, setProducts] = useState([]);
@@ -33,7 +34,7 @@ export const User = () => {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       {/* Navbar */}
-      <Navbar onProductsChange={setProducts} />
+      <Breadcrumb onProductsChange={setProducts} />
 
       {/* Hero Section - Phần 1 */}
       <HeroSection />

@@ -10,6 +10,7 @@ import {
     Grid3x3,
     MapPin,
     Bell,
+    Heart,
 } from "lucide-react";
 import { getCategories } from "../api/categoryAPI.js";
 import {
@@ -17,6 +18,7 @@ import {
     markAllNotificationsAsRead,
 } from "@/api/notificationAPI";
 import { parseStoredUser } from "@/utils/storage";
+import { getWishlistCount } from "@/api/wishlistAPI";
 
 export default function Header() {
     const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function Header() {
     const [searchTerm, setSearchTerm] = useState("");
     const [categories, setCategories] = useState([]);
     const [cartCount, setCartCount] = useState(0);
+    const [wishlistCount, setWishlistCount] = useState(0);
     const [notifications, setNotifications] = useState([]);
     const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
         useState(false);
@@ -85,6 +88,24 @@ export default function Header() {
     useEffect(() => {
         loadNotifications();
     }, [loadNotifications]);
+
+    // Load wishlist count
+    useEffect(() => {
+        const updateWishlistCount = () => {
+            setWishlistCount(getWishlistCount());
+        };
+        
+        updateWishlistCount();
+        
+        // Listen for storage changes to update count
+        window.addEventListener('storage', updateWishlistCount);
+        window.addEventListener('wishlistUpdated', updateWishlistCount);
+        
+        return () => {
+            window.removeEventListener('storage', updateWishlistCount);
+            window.removeEventListener('wishlistUpdated', updateWishlistCount);
+        };
+    }, []);
 
     // Đóng dropdown khi click ngoài
     useEffect(() => {
@@ -250,17 +271,33 @@ export default function Header() {
                         </div>
                     </div>
 
+                    {/* Wishlist */}
+                    <button
+                        onClick={() => navigate("/wishlist")}
+                        className="relative flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                    >
+                        <Heart size={20} />
+                        <span className="hidden md:inline font-medium">
+                            Yêu thích
+                        </span>
+                        {wishlistCount > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                                {wishlistCount > 9 ? "9+" : wishlistCount}
+                            </span>
+                        )}
+                    </button>
+
                     {/* Cart */}
                     <button
                         onClick={() => navigate("/cart")}
                         className="relative flex items-center gap-2 px-3 py-2 text-white hover:bg-white/10 rounded-lg transition-colors"
                     >
-                        <ShoppingCart size={22} />
+                        <ShoppingCart size={20} />
                         <span className="hidden md:inline font-medium">
                             Giỏ hàng
                         </span>
                         {cartCount > 0 && (
-                            <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                            <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                                 {cartCount > 9 ? "9+" : cartCount}
                             </span>
                         )}
@@ -277,7 +314,7 @@ export default function Header() {
                                 Thông báo
                             </span>
                             {unreadNotifications > 0 && (
-                                <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                                <span className="absolute -top-1 -right-1 bg-yellow-400 text-red-600 text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                                     {unreadNotifications > 9
                                         ? "9+"
                                         : unreadNotifications}
@@ -376,6 +413,17 @@ export default function Header() {
                                                 <span>Quản trị</span>
                                             </button>
                                         )}
+
+                                        <button
+                                            onClick={() => {
+                                                navigate("/wishlist");
+                                                setIsUserDropdownOpen(false);
+                                            }}
+                                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-red-50 transition-colors"
+                                        >
+                                            <Heart size={16} />
+                                            <span>Yêu thích</span>
+                                        </button>
 
                                         <button
                                             onClick={() => {

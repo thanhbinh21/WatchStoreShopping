@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { Home, ChevronRight } from "lucide-react";
 
-export default function Navbar({ selectedCategory, currentPage }) {
+export default function Breadcrumb({ selectedCategory, currentPage }) {
   const navigate = useNavigate();
 
   return (

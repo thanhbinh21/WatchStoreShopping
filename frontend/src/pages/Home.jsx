@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Breadcrumb";
 import HeroSection from "@/components/HeroSection";
 import CollectionsSection from "@/components/CollectionsSection";
 import ProductList from "@/components/ProductList";
@@ -8,6 +8,7 @@ import Footer from "@/components/Footer";
 import BannerSlider from "@/components/BannerSlider";
 import { bannerAPI } from "@/api/cmsAPI";
 import LatestPosts from "@/components/LatestPosts";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export const Home = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -54,7 +55,7 @@ export const Home = () => {
       <Header />
 
       {/* Navbar for search and categories */}
-      <Navbar onProductsChange={handleProductsChange} />
+      <Breadcrumb onProductsChange={handleProductsChange} />
 
       {/* Banner Slider from CMS */}
       {hasBanners && (

@@ -5,8 +5,9 @@ import { removeCartItem } from "../api/cartAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { toast } from "sonner";
 import Header from "../components/Header";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Breadcrumb";
 import Footer from "../components/Footer";
+import Breadcrumb from "../components/Breadcrumb";
 
 const paymentMethods = [
     { value: "CASH", label: "Tiền mặt khi nhận hàng (COD)" },
@@ -80,32 +81,49 @@ export default function Checkout() {
             // Prepare order request
             const orderRequest = {
                 userId: user.id,
-                orderItems: selectedItems.map((item) => ({
-                    productId: item.product?.id || item.productId,
-                    quantity: item.quantity,
-                })),
+                orderItems: selectedItems.map((item) => {
+                    // CartItemDto có productId trực tiếp
+                    const productId = item.productId;
+                    if (!productId) {
+                        console.error("Invalid cart item:", item);
+                        throw new Error("Sản phẩm không hợp lệ trong giỏ hàng");
+                    }
+                    return {
+                        productId: productId,
+                        quantity: item.quantity || 1,
+                    };
+                }),
                 // Shipping information
                 fullName: formData.fullName,
                 phone: formData.phone,
                 address: formData.address,
-                ward: formData.ward,
-                district: formData.district,
+                ward: formData.ward || "",
+                district: formData.district || "",
                 city: formData.city,
-                note: formData.note,
+                note: formData.note || "",
                 // Payment method
                 paymentMethod: formData.paymentMethod,
             };
 
+            console.log("Order request:", orderRequest);
+
             // Create order
-            const order = await createOrder(orderRequest);
+            const response = await createOrder(orderRequest);
+            console.log("Order response:", response);
+            
+            // Backend có thể trả về response.data hoặc trực tiếp data
+            const order = response?.data || response;
 
             // Xóa các sản phẩm đã mua khỏi giỏ hàng
             try {
                 for (const item of selectedItems) {
-                    await removeCartItem(item.id);
+                    if (item.id) {
+                        await removeCartItem(item.id);
+                    }
                 }
             } catch (error) {
                 console.error("Error removing cart items:", error);
+                // Không fail order nếu không xóa được cart
             }
 
             // Backend trả về Order object trực tiếp
@@ -134,7 +152,7 @@ export default function Checkout() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
-            <Navbar currentPage="Thanh toán" />
+            <Breadcrumb currentPage="Thanh toán" />
 
             <div className="max-w-7xl mx-auto px-4 py-8 flex-1">
                 <h1 className="text-2xl font-bold mb-6">Thanh toán</h1>
@@ -307,32 +325,36 @@ export default function Checkout() {
                             </h2>
 
                             <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                                {selectedItems.map((item) => (
-                                    <div
-                                        key={item.id}
-                                        className="flex items-start space-x-3 pb-3 border-b"
-                                    >
-                                        <img
-                                            src={
-                                                item.imageUrl ||
-                                                "https://via.placeholder.com/60"
-                                            }
-                                            alt={item.productName}
-                                            className="w-16 h-16 object-cover rounded"
-                                        />
-                                        <div className="flex-1">
-                                            <h3 className="text-sm font-medium line-clamp-2">
-                                                {item.productName}
-                                            </h3>
-                                            <p className="text-sm text-gray-600">
-                                                SL: {item.quantity}
-                                            </p>
-                                            <p className="text-sm font-semibold text-red-600">
-                                                {item.price.toLocaleString()}đ
-                                            </p>
+                                {selectedItems.map((item) => {
+                                    // CartItemDto có imageUrl, productName, price trực tiếp
+                                    const imageUrl = item.imageUrl || "https://via.placeholder.com/60";
+                                    const productName = item.productName || "Sản phẩm";
+                                    const price = Number(item.price) || 0;
+                                    
+                                    return (
+                                        <div
+                                            key={item.id}
+                                            className="flex items-start space-x-3 pb-3 border-b"
+                                        >
+                                            <img
+                                                src={imageUrl}
+                                                alt={productName}
+                                                className="w-16 h-16 object-cover rounded"
+                                            />
+                                            <div className="flex-1">
+                                                <h3 className="text-sm font-medium line-clamp-2">
+                                                    {productName}
+                                                </h3>
+                                                <p className="text-sm text-gray-600">
+                                                    SL: {item.quantity}
+                                                </p>
+                                                <p className="text-sm font-semibold text-red-600">
+                                                    {(price * item.quantity).toLocaleString()}đ
+                                                </p>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
 
                             <div className="space-y-2 text-sm border-t pt-4">

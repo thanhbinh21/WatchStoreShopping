@@ -53,6 +53,12 @@ public class ReviewService {
                 .collect(Collectors.toList());
     }
 
+    public ReviewResponse getByUserAndProduct(Long userId, Long productId) {
+        return reviewRepository.findByUserIdAndProductId(userId, productId)
+                .map(this::toResponse)
+                .orElse(null);
+    }
+
     public ReviewResponse createReview(ReviewRequest dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));

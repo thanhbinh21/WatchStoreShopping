@@ -47,9 +47,9 @@ export default function Cart() {
             selectedItems.includes(item.id)
         );
 
-        // Tính tổng tiền
+        // Tính tổng tiền - price là BigDecimal từ backend, cần convert
         const total = itemsToCheckout.reduce(
-            (sum, item) => sum + item.price * item.quantity,
+            (sum, item) => sum + (Number(item.price) || 0) * item.quantity,
             0
         );
 

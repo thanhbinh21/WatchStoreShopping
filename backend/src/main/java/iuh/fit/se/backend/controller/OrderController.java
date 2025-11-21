@@ -5,6 +5,7 @@ import iuh.fit.se.backend.dto.request.OrderStatusUpdateRequest;
 import iuh.fit.se.backend.dto.response.OrderResponse;
 import iuh.fit.se.backend.entity.Order;
 import iuh.fit.se.backend.entity.User;
+import iuh.fit.se.backend.entity.enums.OrderStatus;
 import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.OrderService;
 import lombok.RequiredArgsConstructor;
@@ -103,6 +104,38 @@ public class OrderController {
             @RequestBody @Validated OrderStatusUpdateRequest request
     ) {
         return ResponseEntity.ok(orderService.updateOrderStatus(id, request.getStatus()));
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelOrder(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        try {
+            // Get current user from authentication
+            User currentUser = userRepository.findByUsername(userDetails.getUsername())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Get the order
+            Order order = orderService.getOrder(id);
+            
+            // Check if user owns this order
+            if (!order.getUser().getId().equals(currentUser.getId())) {
+                return ResponseEntity.status(403).body("Bạn không có quyền hủy đơn hàng này");
+            }
+            
+            // Check if order is in PENDING status
+            if (!order.getStatus().equals(OrderStatus.PENDING)) {
+                return ResponseEntity.badRequest().body("Chỉ có thể hủy đơn hàng đang chờ xử lý");
+            }
+            
+            // Cancel the order
+            OrderResponse response = orderService.updateOrderStatus(id, OrderStatus.CANCELLED);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error cancelling order: ", e);
+            return ResponseEntity.badRequest().body("Không thể hủy đơn hàng: " + e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
