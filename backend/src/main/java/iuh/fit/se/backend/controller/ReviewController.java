@@ -38,6 +38,18 @@ public class ReviewController {
         return reviewService.getByUser(userId);
     }
 
+    @GetMapping("/user/{userId}/product/{productId}")
+    public ResponseEntity<ReviewResponse> getByUserAndProduct(
+            @PathVariable Long userId,
+            @PathVariable Long productId
+    ) {
+        ReviewResponse review = reviewService.getByUserAndProduct(userId, productId);
+        if (review == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(review);
+    }
+
     @PostMapping
     public ReviewResponse create(@Valid @RequestBody ReviewRequest dto) {
         return reviewService.createReview(dto);
