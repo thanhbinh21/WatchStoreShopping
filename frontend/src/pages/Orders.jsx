@@ -4,7 +4,7 @@ import { getOrdersByUserId } from "../api/orderAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { toast } from "sonner";
 import Header from "../components/Header";
-import Navbar from "../components/Navbar";
+import Navbar from "../components/Breadcrumb";
 import Footer from "../components/Footer";
 import {
     Clock,
@@ -14,6 +14,7 @@ import {
     XCircle,
     Package,
 } from "lucide-react";
+import Breadcrumb from "../components/Breadcrumb";
 
 const orderStatusLabels = {
     PENDING: {
@@ -107,7 +108,7 @@ export default function Orders() {
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             <Header />
-            <Navbar currentPage="Đơn hàng của tôi" />
+            <Breadcrumb currentPage="Đơn hàng của tôi" />
 
             <div className="max-w-7xl mx-auto px-4 py-8 flex-1">
                 <div className="mb-6">

@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { parseStoredUser } from "@/utils/storage";
 import Header from "@/components/Header";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import {
     ShoppingCart,
@@ -24,6 +24,7 @@ import {
     RotateCcw,
     Info,
 } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ProductDetail() {
     const { id } = useParams();
@@ -139,7 +140,7 @@ export default function ProductDetail() {
         return (
             <div className="min-h-screen flex flex-col">
                 <Header />
-                <Navbar selectedCategory={null} />
+                <Breadcrumb selectedCategory={null} />
                 <div className="flex-1 flex items-center justify-center bg-gray-50">
                     <div className="text-center">
                         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto"></div>

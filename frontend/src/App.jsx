@@ -29,6 +29,7 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
+import Wishlist from "./pages/Wishlist";
 
 function App() {
   return (
@@ -46,6 +47,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/home" element={<Home />} />
         <Route path="/products" element={<ProductList />} />
+        <Route path="/wishlist" element={<Wishlist />} />
 
         {/* Private */}
         <Route
