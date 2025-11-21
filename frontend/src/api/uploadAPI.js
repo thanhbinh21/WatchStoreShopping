@@ -99,3 +99,50 @@ export const deleteBannerImage = async (filename) => {
     throw err;
   }
 };
+
+// Upload ảnh bài viết (cover image)
+export const uploadPostImages = async (files) => {
+  try {
+    const formData = new FormData();
+
+    // Thêm tất cả files vào FormData
+    Array.from(files).forEach((file) => {
+      formData.append("files", file);
+    });
+
+    // Get token from localStorage
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.post(`${UPLOAD_URL}/post-images`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading post images:", err);
+    throw err;
+  }
+};
+
+// Xóa ảnh bài viết
+export const deletePostImage = async (filename) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    const response = await axios.delete(
+      `${UPLOAD_URL}/post-images/${filename}`,
+      {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting post image:", err);
+    throw err;
+  }
+};
