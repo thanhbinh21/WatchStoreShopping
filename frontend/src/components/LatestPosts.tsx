@@ -108,7 +108,7 @@ export default function LatestPosts() {
         <div className="text-center mt-10">
           <Link
             to="/posts"
-            className="inline-block px-6 py-3 bg-blue-900 text-white font-medium rounded-lg hover:bg-blue-800 transition-colors"
+            className="inline-block px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-800 transition-colors"
           >
             Xem Tất Cả Bài Viết
           </Link>
