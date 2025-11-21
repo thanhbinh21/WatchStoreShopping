@@ -1,0 +1,114 @@
+package iuh.fit.se.backend.controller;
+
+import iuh.fit.se.backend.dto.request.PostRequest;
+import iuh.fit.se.backend.entity.Post;
+import iuh.fit.se.backend.entity.enums.PostStatus;
+import iuh.fit.se.backend.service.PostService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/posts")
+@RequiredArgsConstructor
+public class PostController {
+    private final PostService postService;
+
+    // ==================== PUBLIC ENDPOINTS ====================
+
+    @GetMapping
+    public Page<Post> getPublishedPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return postService.getPublishedPostsPaged(pageable);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public ResponseEntity<Post> getPostBySlug(@PathVariable String slug) {
+        Post post = postService.getPostBySlug(slug);
+        if (post.getStatus() != PostStatus.PUBLISHED) {
+            return ResponseEntity.notFound().build();
+        }
+        postService.incrementViewCount(post.getId());
+        return ResponseEntity.ok(post);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public Page<Post> getPostsByCategory(
+            @PathVariable Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size);
+        return postService.getPostsByCategory(categoryId, pageable);
+    }
+
+    @GetMapping("/latest")
+    public List<Post> getLatestPosts(@RequestParam(defaultValue = "5") int limit) {
+        List<Post> posts = postService.getPublishedPosts();
+        return posts.subList(0, Math.min(limit, posts.size()));
+    }
+
+    // ==================== ADMIN ENDPOINTS ====================
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/all")
+    public Page<Post> getAllPosts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "createdAt") String sortBy,
+            @RequestParam(defaultValue = "DESC") String direction
+    ) {
+        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        return postService.getAllPosts(pageable);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/{id}")
+    public Post getPostById(@PathVariable Long id) {
+        return postService.getPostById(id);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public Post createPost(@RequestBody PostRequest request, Authentication authentication) {
+        Long authorId = 1L; // TODO: Extract from authentication
+        return postService.createPost(request, authorId);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{id}")
+    public Post updatePost(@PathVariable Long id, @RequestBody PostRequest request) {
+        return postService.updatePost(id, request);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deletePost(@PathVariable Long id) {
+        postService.deletePost(id);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/search")
+    public Page<Post> searchPosts(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return postService.searchPosts(keyword, PageRequest.of(page, size));
+    }
+}
