@@ -5,11 +5,14 @@ import { toast } from "sonner";
 import { Link, PencilIcon, TrashIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
+import { AdminPagination } from "@/components/Pagination";
 
 export const AdminBanner = () => {
   const [banners, setBanners] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [uploading, setUploading] = useState(false);
   const [deletingBanner, setDeletingBanner] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -134,6 +137,11 @@ export const AdminBanner = () => {
       setUploading(false);
     }
   };
+
+  // Pagination logic
+  const totalPages = Math.ceil(banners.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedBanners = banners.slice(startIndex, startIndex + itemsPerPage);
 
   return (
     <div className="p-6">
@@ -332,7 +340,7 @@ export const AdminBanner = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {banners.length === 0 ? (
+              {paginatedBanners.length === 0 ? (
                 <tr>
                   <td
                     colSpan="5"
@@ -342,7 +350,7 @@ export const AdminBanner = () => {
                   </td>
                 </tr>
               ) : (
-                banners.map((banner) => (
+                paginatedBanners.map((banner) => (
                   <tr
                     key={banner.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
@@ -419,6 +427,18 @@ export const AdminBanner = () => {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <AdminPagination
+          page={currentPage}
+          totalPages={totalPages}
+          handlePageChange={setCurrentPage}
+          handlePrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          handleNext={() =>
+            setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+          }
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog

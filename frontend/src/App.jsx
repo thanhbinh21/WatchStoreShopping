@@ -29,7 +29,7 @@ import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
 import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
-import { AdminPost } from "./pages/Admin/AdminPost";
+import { AdminPosts } from "./pages/Admin/AdminPosts";
 
 function App() {
   return (
@@ -73,7 +73,7 @@ function App() {
           <Route path="categories" element={<AdminCategories />} />
           <Route path="banners" element={<AdminBanner />} />
           <Route path="post-categories" element={<AdminPostCategory />} />
-          <Route path="posts" element={<AdminPost />} />
+          <Route path="posts" element={<AdminPosts />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="stock" element={<AdminStock />} />
           <Route path="pricing" element={<AdminPricing />} />

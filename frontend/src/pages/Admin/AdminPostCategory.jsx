@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
+import { AdminPagination } from "@/components/Pagination";
 
 export const AdminPostCategory = () => {
   const [categories, setCategories] = useState([]);
@@ -11,6 +12,8 @@ export const AdminPostCategory = () => {
   const [editingId, setEditingId] = useState(null);
   const [deletingCategory, setDeletingCategory] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [form, setForm] = useState({
     name: "",
     slug: "",
@@ -99,6 +102,14 @@ export const AdminPostCategory = () => {
       console.error(error);
     }
   };
+
+  // Pagination logic
+  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCategories = categories.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <div className="p-6">
@@ -198,7 +209,7 @@ export const AdminPostCategory = () => {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {categories.length === 0 ? (
+              {paginatedCategories.length === 0 ? (
                 <tr>
                   <td
                     colSpan="4"
@@ -208,7 +219,7 @@ export const AdminPostCategory = () => {
                   </td>
                 </tr>
               ) : (
-                categories.map((cat) => (
+                paginatedCategories.map((cat) => (
                   <tr
                     key={cat.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -265,6 +276,18 @@ export const AdminPostCategory = () => {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <AdminPagination
+          page={currentPage}
+          totalPages={totalPages}
+          handlePageChange={setCurrentPage}
+          handlePrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          handleNext={() =>
+            setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+          }
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
