@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { getOrdersByUserId } from "../api/orderAPI";
+import { getOrdersByUserId, cancelOrder } from "../api/orderAPI";
+import { getReviewByUserAndProduct } from "../api/reviewAPI";
+import { addToCart } from "../api/cartAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { toast } from "sonner";
 import Header from "../components/Header";
@@ -13,6 +15,12 @@ import {
     CheckCircle,
     XCircle,
     Package,
+    Star,
+    ShoppingCart,
+    RotateCcw,
+    X,
+    User,
+    MapPin,
 } from "lucide-react";
 import Breadcrumb from "../components/Breadcrumb";
 
@@ -61,6 +69,7 @@ export default function Orders() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filterStatus, setFilterStatus] = useState("ALL");
+    const [productReviews, setProductReviews] = useState({});
 
     const { orderId, message } = location.state || {};
 
@@ -86,9 +95,11 @@ export default function Orders() {
 
             if (Array.isArray(orderList)) {
                 setOrders(orderList);
+                // Load reviews cho các sản phẩm trong đơn hàng COMPLETED
+                await loadReviewsForOrders(orderList, user.id);
             } else if (orderList) {
-                // Nếu trả về 1 order thay vì array
                 setOrders([orderList]);
+                await loadReviewsForOrders([orderList], user.id);
             } else {
                 setOrders([]);
             }
@@ -102,6 +113,96 @@ export default function Orders() {
             setOrders([]);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const loadReviewsForOrders = async (orderList, userId) => {
+        const reviews = {};
+        for (const order of orderList) {
+            if (order.status === "COMPLETED" && order.orderItems) {
+                for (const item of order.orderItems) {
+                    if (item.product?.id) {
+                        try {
+                            const review = await getReviewByUserAndProduct(
+                                userId,
+                                item.product.id
+                            );
+                            if (review) {
+                                reviews[item.product.id] = review;
+                            }
+                        } catch (err) {
+                            // Không có review
+                        }
+                    }
+                }
+            }
+        }
+        setProductReviews(reviews);
+    };
+
+    const handleReorder = async (order) => {
+        try {
+            const user = parseStoredUser();
+            if (!user?.id) {
+                toast.error("Vui lòng đăng nhập");
+                navigate("/login");
+                return;
+            }
+
+            let successCount = 0;
+            let failCount = 0;
+
+            // Thêm tất cả sản phẩm vào giỏ hàng
+            for (const item of order.orderItems) {
+                // Lấy productId từ snapshot hoặc từ product object
+                const productId = item.productId || item.product?.id;
+                
+                if (productId) {
+                    try {
+                        await addToCart(user.id, productId, item.quantity);
+                        successCount++;
+                    } catch (err) {
+                        console.error(`Failed to add product ${productId}:`, err);
+                        failCount++;
+                    }
+                } else {
+                    console.warn("Item missing productId:", item);
+                    failCount++;
+                }
+            }
+
+            if (successCount > 0) {
+                toast.success(`Đã thêm ${successCount} sản phẩm vào giỏ hàng!`);
+                navigate("/cart");
+            } else {
+                toast.error("Không thể thêm sản phẩm vào giỏ hàng");
+            }
+
+            if (failCount > 0) {
+                toast.warning(`${failCount} sản phẩm không thể thêm vào giỏ`);
+            }
+        } catch (error) {
+            console.error("Error reordering:", error);
+            toast.error("Đặt lại đơn hàng thất bại");
+        }
+    };
+
+    const handleCancelOrder = async (orderId) => {
+        if (!window.confirm("Đơn hàng sẽ bị hủy. Bạn có chắc chắn?")) {
+            return;
+        }
+
+        try {
+            await cancelOrder(orderId);
+            toast.success("Đã hủy đơn hàng thành công");
+            loadOrders(); // Reload orders
+        } catch (error) {
+            console.error("Error cancelling order:", error);
+            if (error.response?.status === 403) {
+                toast.error("Bạn không có quyền hủy đơn hàng này. Vui lòng liên hệ admin hoặc đợi backend thêm endpoint /cancel");
+            } else {
+                toast.error("Hủy đơn hàng thất bại");
+            }
         }
     };
 
@@ -198,131 +299,187 @@ export default function Orders() {
                                 return (
                                     <div
                                         key={order.id}
-                                        className={`bg-white p-6 rounded-lg shadow ${
+                                        className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow ${
                                             orderId === order.id
                                                 ? "ring-2 ring-red-500"
                                                 : ""
                                         }`}
                                     >
-                                        <div className="flex justify-between items-start mb-4">
-                                            <div>
-                                                <h2 className="text-lg font-semibold">
-                                                    Đơn hàng #{order.id}
-                                                </h2>
-                                                <p className="text-sm text-gray-600">
-                                                    Ngày đặt:{" "}
-                                                    {new Date(
-                                                        order.createdAt
-                                                    ).toLocaleString("vi-VN")}
-                                                </p>
-                                                {order.fullName && (
-                                                    <p className="text-sm text-gray-600 mt-1">
-                                                        Người nhận:{" "}
-                                                        {order.fullName} -{" "}
-                                                        {order.phone}
+                                        <div className="bg-gray-50 px-6 py-4 flex justify-between items-center">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
+                                                    <Package className="text-red-600" size={24} />
+                                                </div>
+                                                <div>
+                                                    <h2 className="text-lg font-bold text-gray-900">
+                                                        Đơn hàng #{order.id}
+                                                    </h2>
+                                                    <p className="text-sm text-gray-500">
+                                                        {new Date(
+                                                            order.createdAt
+                                                        ).toLocaleString("vi-VN", {
+                                                            year: "numeric",
+                                                            month: "2-digit",
+                                                            day: "2-digit",
+                                                            hour: "2-digit",
+                                                            minute: "2-digit"
+                                                        })}
                                                     </p>
-                                                )}
-                                                {order.address && (
-                                                    <p className="text-sm text-gray-600">
-                                                        Địa chỉ: {order.address}
-                                                        ,{" "}
-                                                        {order.ward &&
-                                                            `${order.ward}, `}
-                                                        {order.district &&
-                                                            `${order.district}, `}
-                                                        {order.city}
-                                                    </p>
-                                                )}
-                                                {order.paymentMethod && (
-                                                    <p className="text-sm text-gray-600 flex items-center gap-1">
-                                                        <CreditCard size={14} />
-                                                        {paymentMethodLabels[
-                                                            order.paymentMethod
-                                                        ] ||
-                                                            order.paymentMethod}
-                                                    </p>
-                                                )}
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-end gap-2">
-                                                <span
-                                                    className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${statusInfo.color}`}
-                                                >
-                                                    <statusInfo.Icon
-                                                        size={14}
-                                                    />
-                                                    {statusInfo.label}
-                                                </span>
-                                            </div>
+                                            <span
+                                                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold ${statusInfo.color}`}
+                                            >
+                                                <statusInfo.Icon size={16} />
+                                                {statusInfo.label}
+                                            </span>
                                         </div>
 
-                                        <div className="border-t pt-4">
-                                            <h3 className="font-semibold mb-3 text-sm">
-                                                Sản phẩm:
-                                            </h3>
-                                            <div className="space-y-3">
-                                                {order.orderItems?.map(
-                                                    (item, index) => (
+                                        <div className="px-6 py-4">
+                                            {/* Customer Info */}
+                                            <div className="mb-4 space-y-1">
+                                                {order.fullName && (
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <User className="text-gray-400" size={16} />
+                                                        <span className="text-gray-700">
+                                                            {order.fullName} - {order.phone}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {order.address && (
+                                                    <div className="flex items-start gap-2 text-sm">
+                                                        <MapPin className="text-gray-400 mt-0.5" size={16} />
+                                                        <span className="text-gray-700">
+                                                            {order.address}
+                                                            {order.ward && `, ${order.ward}`}
+                                                            {order.district && `, ${order.district}`}
+                                                            {order.city && `, ${order.city}`}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                {order.paymentMethod && (
+                                                    <div className="flex items-center gap-2 text-sm">
+                                                        <CreditCard className="text-gray-400" size={16} />
+                                                        <span className="text-gray-700">
+                                                            {paymentMethodLabels[order.paymentMethod] || order.paymentMethod}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            
+                                            {/* Products */}
+                                            <div className="mt-4">
+                                                <h3 className="font-semibold text-gray-900 mb-3">
+                                                    Sản phẩm ({order.orderItems?.length || 0})
+                                                </h3>
+                                                <div className="space-y-3">
+                                                    {order.orderItems?.map((item, index) => {
+                                                        // Handle cả Entity và DTO từ backend
+                                                        // DTO: productImageUrl, productName, productId
+                                                        // Entity: product.imageUrl, product.name, product.id
+                                                        const productImage = item.productImageUrl || 
+                                                                           item.product?.imageUrl || 
+                                                                           item.product?.productImages?.[0]?.imageUrl;
+                                                        
+                                                        const productName = item.productName || item.product?.name || "Sản phẩm";
+                                                        const productId = item.productId || item.product?.id;
+                                                        
+                                                        // Fallback image nếu không có ảnh từ backend
+                                                        const finalImage = productImage && productImage.trim() !== '' 
+                                                            ? productImage 
+                                                            : '/images/products/product-1.jpg';
+                                                        
+                                                        return (
                                                         <div
                                                             key={index}
-                                                            className="flex items-center space-x-4"
+                                                            className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                                                            onClick={() => productId && navigate(`/product/${productId}`)}
                                                         >
                                                             <img
-                                                                src={
-                                                                    item.product
-                                                                        ?.imageUrl ||
-                                                                    "https://via.placeholder.com/60"
-                                                                }
-                                                                alt={
-                                                                    item.product
-                                                                        ?.name ||
-                                                                    "Sản phẩm"
-                                                                }
-                                                                className="w-16 h-16 object-cover rounded"
+                                                                src={finalImage}
+                                                                alt={productName}
+                                                                className="w-20 h-20 object-cover rounded-lg"
+                                                                onError={(e) => {
+                                                                    e.target.src = '/images/products/product-1.jpg';
+                                                                }}
                                                             />
-                                                            <div className="flex-1">
-                                                                <h3 className="font-medium">
-                                                                    {item
-                                                                        .product
-                                                                        ?.name ||
-                                                                        "Sản phẩm"}
-                                                                </h3>
-                                                                <p className="text-sm text-gray-600">
-                                                                    Số lượng:{" "}
-                                                                    {
-                                                                        item.quantity
-                                                                    }
-                                                                </p>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h4 className="font-medium text-gray-900 line-clamp-2">
+                                                                    {productName}
+                                                                </h4>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <p className="text-sm text-gray-500">
+                                                                        Số lượng: <span className="font-medium text-gray-700">{item.quantity}</span>
+                                                                    </p>
+                                                                    <span className="text-gray-300">•</span>
+                                                                    <p className="text-sm text-gray-500">
+                                                                        Đơn giá: <span className="font-medium text-gray-700">{item.price?.toLocaleString()}₫</span>
+                                                                    </p>
+                                                                </div>
                                                             </div>
                                                             <div className="text-right">
-                                                                <p className="font-semibold text-red-600">
-                                                                    {(
-                                                                        item.price *
-                                                                        item.quantity
-                                                                    ).toLocaleString()}
-                                                                    đ
+                                                                <p className="font-bold text-red-600 text-lg">
+                                                                    {(item.price * item.quantity).toLocaleString()}₫
                                                                 </p>
                                                             </div>
                                                         </div>
-                                                    )
-                                                )}
+                                                        );
+                                                    })}
+                                                </div>
                                             </div>
 
-                                            <div className="mt-4 pt-4 border-t flex justify-between items-center">
-                                                <span className="font-semibold">
-                                                    Tổng cộng:
-                                                </span>
-                                                <span className="text-xl font-bold text-red-600">
-                                                    {order.orderItems
-                                                        ?.reduce(
-                                                            (sum, item) =>
-                                                                sum +
-                                                                item.price *
-                                                                    item.quantity,
-                                                            0
-                                                        )
-                                                        .toLocaleString()}
-                                                    đ
-                                                </span>
+                                            {/* Total & Actions */}
+                                            <div className="mt-6 pt-4 border-t border-gray-200">
+                                                <div className="flex justify-between items-center mb-4">
+                                                    <span className="text-gray-600 font-medium">
+                                                        Tổng tiền:
+                                                    </span>
+                                                    <span className="text-2xl font-bold text-red-600">
+                                                        {order.orderItems
+                                                            ?.reduce(
+                                                                (sum, item) =>
+                                                                    sum + item.price * item.quantity,
+                                                                0
+                                                            )
+                                                            .toLocaleString()}₫
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex gap-3">
+                                                    {order.status === "PENDING" ? (
+                                                        <button
+                                                            onClick={() => handleCancelOrder(order.id)}
+                                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-sm hover:shadow"
+                                                        >
+                                                            <X size={18} />
+                                                            Hủy đơn hàng
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => handleReorder(order)}
+                                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-medium shadow-sm hover:shadow"
+                                                        >
+                                                            <RotateCcw size={18} />
+                                                            Đặt lại
+                                                        </button>
+                                                    )}
+                                                    {order.status === "COMPLETED" && (
+                                                        <button
+                                                            onClick={() => {
+                                                                const firstItem = order.orderItems?.[0];
+                                                                if (firstItem?.product?.id) {
+                                                                    navigate(`/product/${firstItem.product.id}`);
+                                                                }
+                                                            }}
+                                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-all font-medium shadow-sm hover:shadow"
+                                                        >
+                                                            <Star size={18} />
+                                                            {order.orderItems?.some(item => item.product?.id && productReviews[item.product.id]) 
+                                                                ? "Xem đánh giá" 
+                                                                : "Đánh giá"}
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
