@@ -1,18 +1,45 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Heart, ShoppingCart } from "lucide-react";
 import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { parseStoredUser } from "@/utils/storage";
+import { addToWishlist, removeFromWishlist, isInWishlist } from "@/api/wishlistAPI";
 
 export default function ProductCard({ product, onAddToCart }) {
     const navigate = useNavigate();
     const [favorite, setFavorite] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
 
+    // Kiểm tra sản phẩm có trong wishlist không
+    useEffect(() => {
+        setFavorite(isInWishlist(product.id));
+    }, [product.id]);
+
     const handleFavoriteClick = (e) => {
         e.stopPropagation();
-        setFavorite(!favorite);
+        
+        if (favorite) {
+            // Xóa khỏi wishlist
+            const success = removeFromWishlist(product.id);
+            if (success) {
+                setFavorite(false);
+                toast.success("Đã xóa khỏi danh sách yêu thích");
+                // Dispatch event để cập nhật count ở Header
+                window.dispatchEvent(new Event('wishlistUpdated'));
+            }
+        } else {
+            // Thêm vào wishlist
+            const success = addToWishlist(product);
+            if (success) {
+                setFavorite(true);
+                toast.success("Đã thêm vào danh sách yêu thích ❤️");
+                // Dispatch event để cập nhật count ở Header
+                window.dispatchEvent(new Event('wishlistUpdated'));
+            } else {
+                toast.info("Sản phẩm đã có trong danh sách yêu thích");
+            }
+        }
     };
 
     const handleCardClick = () => {

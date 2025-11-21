@@ -26,6 +26,13 @@ public class OrderItem {
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
 
+    // Snapshot thông tin sản phẩm tại thời điểm đặt hàng
+    @Column(name = "product_name")
+    private String productName;
+
+    @Column(name = "product_image_url", length = 500)
+    private String productImageUrl;
+
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     @JsonBackReference(value = "order-items")
@@ -36,10 +43,25 @@ public class OrderItem {
     @JsonBackReference(value = "product-orderItems")
     private Product product;
 
+    // Getter để serialize productId mà không serialize toàn bộ product object
+    public Long getProductId() {
+        return product != null ? product.getId() : null;
+    }
+
     @PrePersist
     public void prePersist() {
-        if (this.product != null && this.price == null) {
-            this.price = product.getCurrentPrice(); // snapshot giá khi tạo order
+        if (this.product != null) {
+            // Snapshot giá
+            if (this.price == null) {
+                this.price = product.getCurrentPrice();
+            }
+            // Snapshot tên và ảnh
+            if (this.productName == null) {
+                this.productName = product.getName();
+            }
+            if (this.productImageUrl == null) {
+                this.productImageUrl = product.getPrimaryImageUrl();
+            }
         }
     }
 }

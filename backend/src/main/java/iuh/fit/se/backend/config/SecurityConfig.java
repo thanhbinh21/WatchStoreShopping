@@ -78,6 +78,7 @@ public class SecurityConfig {
                                 // Orders - Users can create and view their orders, ADMIN can manage all
                                 .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
                                 .requestMatchers(HttpMethod.GET, "/api/orders/user/**").authenticated()  // Users can view their orders (must be before /api/orders/**)
+                                .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").authenticated()  // Users can cancel their own orders
                                 .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
 
                                 // Banner
