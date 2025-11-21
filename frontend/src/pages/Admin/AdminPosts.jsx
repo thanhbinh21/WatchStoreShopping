@@ -50,12 +50,18 @@ export const AdminPosts = () => {
 
       // Check if response is paginated (Spring Data Page)
       if (response && response.content !== undefined) {
-        // Paginated response
-        setPosts(response.content || []);
+        // Paginated response - sort by createdAt descending (newest first)
+        const sortedContent = (response.content || []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setPosts(sortedContent);
         setTotalPages(response.totalPages || 0);
       } else if (Array.isArray(response)) {
-        // Array response
-        setPosts(response);
+        // Array response - sort by createdAt descending (newest first)
+        const sortedPosts = response.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setPosts(sortedPosts);
         setTotalPages(1);
       } else {
         console.error("Unexpected response format:", response);
