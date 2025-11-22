@@ -119,16 +119,16 @@ export default function Orders() {
     const loadReviewsForOrders = async (orderList, userId) => {
         const reviews = {};
         for (const order of orderList) {
-            if (order.status === "COMPLETED" && order.orderItems) {
-                for (const item of order.orderItems) {
-                    if (item.product?.id) {
+            if (order.status === "COMPLETED" && order.items) {
+                for (const item of order.items) {
+                    if (item.productId) {
                         try {
                             const review = await getReviewByUserAndProduct(
                                 userId,
-                                item.product.id
+                                item.productId
                             );
                             if (review) {
-                                reviews[item.product.id] = review;
+                                reviews[item.productId] = review;
                             }
                         } catch (err) {
                             // Không có review
@@ -153,9 +153,9 @@ export default function Orders() {
             let failCount = 0;
 
             // Thêm tất cả sản phẩm vào giỏ hàng
-            for (const item of order.orderItems) {
-                // Lấy productId từ snapshot hoặc từ product object
-                const productId = item.productId || item.product?.id;
+            for (const item of order.items) {
+                // Backend OrderItemResponse luôn có productId
+                const productId = item.productId;
                 
                 if (productId) {
                     try {
@@ -370,10 +370,10 @@ export default function Orders() {
                                             {/* Products */}
                                             <div className="mt-4">
                                                 <h3 className="font-semibold text-gray-900 mb-3">
-                                                    Sản phẩm ({order.orderItems?.length || 0})
+                                                    Sản phẩm ({order.items?.length || 0})
                                                 </h3>
                                                 <div className="space-y-3">
-                                                    {order.orderItems?.map((item, index) => {
+                                                    {order.items?.map((item, index) => {
                                                         // Handle cả Entity và DTO từ backend
                                                         // DTO: productImageUrl, productName, productId
                                                         // Entity: product.imageUrl, product.name, product.id
@@ -435,7 +435,7 @@ export default function Orders() {
                                                         Tổng tiền:
                                                     </span>
                                                     <span className="text-2xl font-bold text-red-600">
-                                                        {order.orderItems
+                                                        {order.items
                                                             ?.reduce(
                                                                 (sum, item) =>
                                                                     sum + item.price * item.quantity,
@@ -466,15 +466,15 @@ export default function Orders() {
                                                     {order.status === "COMPLETED" && (
                                                         <button
                                                             onClick={() => {
-                                                                const firstItem = order.orderItems?.[0];
-                                                                if (firstItem?.product?.id) {
-                                                                    navigate(`/product/${firstItem.product.id}`);
+                                                                const firstItem = order.items?.[0];
+                                                                if (firstItem?.productId) {
+                                                                    navigate(`/product/${firstItem.productId}`);
                                                                 }
                                                             }}
                                                             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-all font-medium shadow-sm hover:shadow"
                                                         >
                                                             <Star size={18} />
-                                                            {order.orderItems?.some(item => item.product?.id && productReviews[item.product.id]) 
+                                                            {order.items?.some(item => item.productId && productReviews[item.productId]) 
                                                                 ? "Xem đánh giá" 
                                                                 : "Đánh giá"}
                                                         </button>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/api/productAPI";
 import { addToCart } from "@/api/cartAPI";
-import { getReviewsByProduct, getReviewByUserAndProduct, updateReview } from "@/api/reviewAPI";
+import { getReviewsByProduct, getReviewByUserAndProduct, updateReview, createReview } from "@/api/reviewAPI";
 import { getOrdersByUserId } from "@/api/orderAPI";
 import { addToWishlist, removeFromWishlist, isInWishlist } from "@/api/wishlistAPI";
 import { Button } from "@/components/ui/button";
@@ -109,7 +109,7 @@ export default function ProductDetail() {
                     if (userReview) {
                         setExistingReview(userReview);
                         // Kiểm tra xem có thể chỉnh sửa không (trong vòng 30 ngày)
-                        const reviewDate = new Date(userReview.reviewDate);
+                        const reviewDate = new Date(userReview.createdAt);
                         const daysSinceReview = (new Date() - reviewDate) / (1000 * 60 * 60 * 24);
                         setIsEditingReview(daysSinceReview <= 30);
                     }
@@ -140,24 +140,26 @@ export default function ProductDetail() {
             console.log('🎯 Product ID cần kiểm tra:', id);
             
             // Kiểm tra xem user có đơn hàng COMPLETED chứa sản phẩm này không
+            // Backend trả về OrderResponse với field 'items' (không phải 'orderItems')
             const hasPurchased = orders.some(order => {
                 const isCompleted = order.status === "COMPLETED";
-                const hasItems = order.orderItems && order.orderItems.length > 0;
+                const hasItems = order.items && order.items.length > 0;
                 
                 console.log(`📋 Đơn hàng #${order.id}:`, {
                     status: order.status,
                     isCompleted,
                     hasItems,
-                    itemCount: order.orderItems?.length || 0
+                    itemCount: order.items?.length || 0
                 });
                 
                 if (isCompleted && hasItems) {
-                    const hasProduct = order.orderItems.some(item => {
-                        const productId = item.product?.id || item.productId;
+                    const hasProduct = order.items.some(item => {
+                        // OrderItemResponse có productId trực tiếp
+                        const productId = item.productId;
                         const matches = productId === parseInt(id);
                         console.log(`  🔍 Item:`, {
                             productId,
-                            productName: item.product?.name || item.productName,
+                            productName: item.productName,
                             targetId: parseInt(id),
                             matches
                         });
@@ -208,12 +210,16 @@ export default function ProductDetail() {
 
         setSubmittingReview(true);
         try {
+            // ReviewRequest format: { comment, rating, user: { id }, product: { id } }
             const reviewData = {
-                userId: user.id,
-                productId: parseInt(id),
-                rating: reviewRating,
                 comment: reviewComment.trim(),
-                reviewDate: new Date().toISOString()
+                rating: reviewRating,
+                user: {
+                    id: user.id
+                },
+                product: {
+                    id: parseInt(id)
+                }
             };
 
             if (existingReview && isEditingReview) {
@@ -222,16 +228,7 @@ export default function ProductDetail() {
                 toast.success("Đã cập nhật đánh giá của bạn!");
             } else {
                 // Tạo review mới
-                const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'}/reviews`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify(reviewData)
-                });
-
-                if (!response.ok) throw new Error('Failed to submit review');
+                await createReview(reviewData);
                 toast.success("Đánh giá của bạn đã được gửi thành công!");
             }
 
@@ -239,10 +236,12 @@ export default function ProductDetail() {
             setReviewComment("");
             setReviewRating(5);
             setExistingReview(null);
+            setIsEditingReview(false);
             fetchReviews();
+            checkIfCanReview(); // Refresh lại trạng thái canReview
         } catch (err) {
             console.error("Error submitting review:", err);
-            toast.error("Không thể gửi đánh giá. Vui lòng thử lại!");
+            toast.error(err.response?.data?.message || "Không thể gửi đánh giá. Vui lòng thử lại!");
         } finally {
             setSubmittingReview(false);
         }
@@ -669,15 +668,15 @@ export default function ProductDetail() {
                                                         <div>
                                                             <div className="flex items-center gap-2 mb-1">
                                                                 <p className="font-semibold text-gray-900">
-                                                                    {review.userName || review.user?.fullName || "Khách hàng"}
+                                                                    {review.userFullName || review.username || "Khách hàng"}
                                                                 </p>
                                                                 <div className="flex items-center gap-1">
                                                                     {renderStars(review.rating)}
                                                                 </div>
                                                             </div>
                                                             <p className="text-xs text-gray-500">
-                                                                {review.reviewDate
-                                                                    ? new Date(review.reviewDate).toLocaleDateString("vi-VN", {
+                                                                {review.createdAt
+                                                                    ? new Date(review.createdAt).toLocaleDateString("vi-VN", {
                                                                           year: "numeric",
                                                                           month: "long",
                                                                           day: "numeric",
