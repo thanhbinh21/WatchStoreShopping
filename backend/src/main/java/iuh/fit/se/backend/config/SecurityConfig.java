@@ -71,9 +71,11 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
 
-                                // Reviews - GET public, modifications need ADMIN
+                                // Reviews - GET public, POST/PUT authenticated users, DELETE ADMIN only
                                 .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                                .requestMatchers("/api/reviews/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/reviews").authenticated() // Users can create reviews
+                                .requestMatchers(HttpMethod.PUT, "/api/reviews/**").authenticated() // Users can update their reviews
+                                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN") // Only ADMIN can delete
 
                                 // Orders - Users can create and view their orders, ADMIN can manage all
                                 .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
@@ -88,7 +90,6 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 
                                 // Độc quyền (ADMIN)
-                                .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
                                 .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
                                 .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")

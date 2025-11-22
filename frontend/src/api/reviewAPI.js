@@ -22,6 +22,11 @@ export const getReviewByUserAndProduct = async (userId, productId) => {
     return response.data;
 };
 
+export const createReview = async (reviewData) => {
+    const response = await axiosInstance.post(REVIEW_URL, reviewData);
+    return response.data;
+};
+
 export const deleteReview = async (id, reason) => {
     const response = await axiosInstance.delete(`${REVIEW_URL}/${id}`, {
         data: { reason },

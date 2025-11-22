@@ -37,8 +37,11 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
-    public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderResponse> getOrdersByUser(Long userId) {
+        return orderRepository.findByUserId(userId)
+                .stream()
+                .map(this::toOrderResponse)
+                .collect(Collectors.toList());
     }
 
     public Order getOrder(Long id) {
