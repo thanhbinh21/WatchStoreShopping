@@ -32,11 +32,15 @@ import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
 import { AdminPosts } from "./pages/Admin/AdminPosts";
 import Wishlist from "./pages/Wishlist";
 import PostList from "./pages/PostList";
+import AdminChat from "./pages/Admin/AdminChat";
+import { ChatProvider } from "./contexts/ChatContext";
+import ChatWidget from "./components/ChatWidget";
 
 function App() {
   return (
-    <Router>
-      <Routes>
+    <ChatProvider>
+      <Router>
+        <Routes>
         {/* Public */}
         <Route
           path="/login"
@@ -91,6 +95,7 @@ function App() {
           <Route path="team" element={<AdminTeam />} />
           <Route path="table" element={<AdminTable />} />
           <Route path="settings" element={<AdminSettings />} />
+          <Route path="chat" element={<AdminChat />} />
         </Route>
 
         {/* User routes */}
@@ -101,7 +106,9 @@ function App() {
         {/* Not Found */}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <ChatWidget />
     </Router>
+  </ChatProvider>
   );
 }
 
