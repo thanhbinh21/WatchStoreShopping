@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { CustomerReportTab } from "./components/reports/CustomerReportTab";
 import { RevenueReportTab } from "./components/reports/RevenueReportTab";
 import { CustomerRevenueReportTab } from "./components/reports/CustomerRevenueReportTab";
+import { InventoryReportTab } from "./components/reports/InventoryReportTab";
+import { OrderReportTab } from "./components/reports/OrderReportTab";
 
 const tabs = [
     {
@@ -19,6 +21,16 @@ const tabs = [
         id: "customer-revenue",
         label: "Khách hàng trọng điểm",
         description: "Xếp hạng khách hàng mang lại doanh thu cao",
+    },
+    {
+        id: "orders",
+        label: "Đơn hàng",
+        description: "Theo dõi số lượng đơn hàng và trạng thái xử lý",
+    },
+    {
+        id: "inventory",
+        label: "Tồn kho",
+        description: "Giám sát tồn kho và sản lượng xuất kho",
     },
 ];
 
@@ -37,8 +49,8 @@ export const AdminViewReport = () => {
                     Báo cáo & Thống kê
                 </h1>
                 <p className="text-sm text-gray-500 dark:text-gray-400 max-w-2xl">
-                    Tổng hợp chỉ số khách hàng, doanh thu và khách hàng mang lại
-                    doanh thu cao để hỗ trợ quyết định kinh doanh nhanh chóng.
+                    Tổng hợp chỉ số khách hàng, đơn hàng, doanh thu và tồn kho
+                    để hỗ trợ quyết định kinh doanh nhanh chóng.
                 </p>
             </div>
 
@@ -64,6 +76,8 @@ export const AdminViewReport = () => {
                 {activeTab === "customer-revenue" && (
                     <CustomerRevenueReportTab />
                 )}
+                {activeTab === "orders" && <OrderReportTab />}
+                {activeTab === "inventory" && <InventoryReportTab />}
             </div>
         </div>
     );

@@ -6,11 +6,21 @@ import iuh.fit.se.backend.dto.CustomerMonthlySignupPoint;
 import iuh.fit.se.backend.dto.CustomerRevenuePoint;
 import iuh.fit.se.backend.dto.CustomerSummaryReport;
 import iuh.fit.se.backend.dto.CustomerYearlySignupPoint;
+import iuh.fit.se.backend.dto.InventoryDailyPoint;
+import iuh.fit.se.backend.dto.InventoryMonthlyPoint;
+import iuh.fit.se.backend.dto.InventorySummaryReport;
+import iuh.fit.se.backend.dto.InventoryYearlyPoint;
+import iuh.fit.se.backend.dto.OrderDailyPoint;
+import iuh.fit.se.backend.dto.OrderMonthlyPoint;
+import iuh.fit.se.backend.dto.OrderSummaryReport;
+import iuh.fit.se.backend.dto.OrderYearlyPoint;
 import iuh.fit.se.backend.dto.RevenueDailyPoint;
 import iuh.fit.se.backend.dto.RevenueMonthlyPoint;
 import iuh.fit.se.backend.dto.RevenueSummaryReport;
 import iuh.fit.se.backend.dto.RevenueYearlyPoint;
 import iuh.fit.se.backend.service.CustomerReportService;
+import iuh.fit.se.backend.service.InventoryReportService;
+import iuh.fit.se.backend.service.OrderReportService;
 import iuh.fit.se.backend.service.RevenueReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -32,10 +42,24 @@ public class ReportController {
 
     private final CustomerReportService customerReportService;
     private final RevenueReportService revenueReportService;
+    private final InventoryReportService inventoryReportService;
+    private final OrderReportService orderReportService;
 
     @GetMapping("/customers/summary")
     public ResponseEntity<ApiResponse<CustomerSummaryReport>> getCustomerSummary() {
         CustomerSummaryReport summary = customerReportService.getCustomerSummary();
+        return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    @GetMapping("/orders/summary")
+    public ResponseEntity<ApiResponse<OrderSummaryReport>> getOrderSummary() {
+        OrderSummaryReport summary = orderReportService.getOrderSummary();
+        return ResponseEntity.ok(ApiResponse.success(summary));
+    }
+
+    @GetMapping("/inventory/summary")
+    public ResponseEntity<ApiResponse<InventorySummaryReport>> getInventorySummary() {
+        InventorySummaryReport summary = inventoryReportService.getInventorySummary();
         return ResponseEntity.ok(ApiResponse.success(summary));
     }
 
@@ -59,12 +83,70 @@ public class ReportController {
         }
     }
 
+    @GetMapping("/inventory/daily")
+    public ResponseEntity<ApiResponse<List<InventoryDailyPoint>>> getInventoryDailyReport(
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        try {
+            LocalDate today = LocalDate.now();
+            LocalDate resolvedEnd = endDate != null ? endDate : today;
+            LocalDate resolvedStart = startDate != null ? startDate : resolvedEnd.minusDays(6);
+
+            List<InventoryDailyPoint> data = inventoryReportService.getDailyInventory(resolvedStart, resolvedEnd);
+            return ResponseEntity.ok(ApiResponse.success(data));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/orders/daily")
+    public ResponseEntity<ApiResponse<List<OrderDailyPoint>>> getOrderDailyReport(
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate
+    ) {
+        try {
+            LocalDate today = LocalDate.now();
+            LocalDate resolvedEnd = endDate != null ? endDate : today;
+            LocalDate resolvedStart = startDate != null ? startDate : resolvedEnd.minusDays(6);
+
+            List<OrderDailyPoint> data = orderReportService.getDailyOrders(resolvedStart, resolvedEnd);
+            return ResponseEntity.ok(ApiResponse.success(data));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure(ex.getMessage()));
+        }
+    }
+
     @GetMapping("/customers/monthly")
     public ResponseEntity<ApiResponse<List<CustomerMonthlySignupPoint>>> getCustomerMonthlyReport(
             @RequestParam(value = "year", required = false) Integer year
     ) {
         int targetYear = year != null ? year : Year.now().getValue();
         List<CustomerMonthlySignupPoint> data = customerReportService.getMonthlySignups(targetYear);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @GetMapping("/inventory/monthly")
+    public ResponseEntity<ApiResponse<List<InventoryMonthlyPoint>>> getInventoryMonthlyReport(
+            @RequestParam(value = "year", required = false) Integer year
+    ) {
+        int targetYear = year != null ? year : Year.now().getValue();
+        List<InventoryMonthlyPoint> data = inventoryReportService.getMonthlyInventory(targetYear);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
+    @GetMapping("/orders/monthly")
+    public ResponseEntity<ApiResponse<List<OrderMonthlyPoint>>> getOrderMonthlyReport(
+            @RequestParam(value = "year", required = false) Integer year
+    ) {
+        int targetYear = year != null ? year : Year.now().getValue();
+        List<OrderMonthlyPoint> data = orderReportService.getMonthlyOrders(targetYear);
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
@@ -79,6 +161,42 @@ public class ReportController {
 
         try {
             List<CustomerYearlySignupPoint> data = customerReportService.getYearlySignups(resolvedStart, resolvedEnd);
+            return ResponseEntity.ok(ApiResponse.success(data));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/inventory/yearly")
+    public ResponseEntity<ApiResponse<List<InventoryYearlyPoint>>> getInventoryYearlyReport(
+            @RequestParam(value = "startYear", required = false) Integer startYear,
+            @RequestParam(value = "endYear", required = false) Integer endYear
+    ) {
+        int currentYear = Year.now().getValue();
+        int resolvedStart = startYear != null ? startYear : currentYear - 4;
+        int resolvedEnd = endYear != null ? endYear : currentYear;
+
+        try {
+            List<InventoryYearlyPoint> data = inventoryReportService.getYearlyInventory(resolvedStart, resolvedEnd);
+            return ResponseEntity.ok(ApiResponse.success(data));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(ApiResponse.failure(ex.getMessage()));
+        }
+    }
+
+    @GetMapping("/orders/yearly")
+    public ResponseEntity<ApiResponse<List<OrderYearlyPoint>>> getOrderYearlyReport(
+            @RequestParam(value = "startYear", required = false) Integer startYear,
+            @RequestParam(value = "endYear", required = false) Integer endYear
+    ) {
+        int currentYear = Year.now().getValue();
+        int resolvedStart = startYear != null ? startYear : currentYear - 4;
+        int resolvedEnd = endYear != null ? endYear : currentYear;
+
+        try {
+            List<OrderYearlyPoint> data = orderReportService.getYearlyOrders(resolvedStart, resolvedEnd);
             return ResponseEntity.ok(ApiResponse.success(data));
         } catch (IllegalArgumentException ex) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
