@@ -41,6 +41,10 @@ public class SecurityConfig {
                                 // Auth endpoints - Public
                                 .requestMatchers("/api/auth/**").permitAll()
 
+                                // WebSocket - Authenticated users only
+                                .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
+                                .requestMatchers("/api/chat/**").authenticated() // Chat API requires authentication
+
 //                        cart
                                 .requestMatchers(HttpMethod.GET, "/api/cart/**").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
