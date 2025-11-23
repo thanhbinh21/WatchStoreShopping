@@ -1,14 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import Navbar from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 import HeroSection from "@/components/HeroSection";
 import CollectionsSection from "@/components/CollectionsSection";
 import SaleBanner from "@/components/SaleBanner";
 import BrandSection from "@/components/BrandSection";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/Footer";
+import BannerSlider from "@/components/BannerSlider";
+import LatestPosts from "@/components/LatestPosts";
+import { bannerAPI } from "@/api/cmsAPI";
 import { addToCart } from "@/api/cartAPI";
 import { parseStoredUser } from "@/utils/storage";
 
@@ -82,7 +85,6 @@ export const Home = () => {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <Header />
-
 
       {/* Navbar for search and categories */}
       <Breadcrumb onProductsChange={handleProductsChange} />

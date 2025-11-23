@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getCart, updateCartItem, removeCartItem } from "../api/cartAPI.js";
 import { parseStoredUser } from "@/utils/storage";
-import Navbar from "@/components/Navbar";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function Cart() {
   const [cartItems, setCartItems] = useState([]);
@@ -113,8 +113,8 @@ export default function Cart() {
         </div>
       </header>
 
-      {/* Navbar */}
-      <Navbar currentPage="Giỏ hàng" />
+      {/* Breadcrumb */}
+      <Breadcrumb currentPage="Giỏ hàng" />
 
       {/* Body giỏ hàng */}
       <div className="max-w-xl mx-auto p-4 mt-4">
