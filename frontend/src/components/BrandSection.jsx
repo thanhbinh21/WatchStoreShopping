@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getBrands } from "@/api/brandAPI";
 import { Loader2 } from "lucide-react";
 
-export default function BrandSection({ onBrandSelect }) {
+export default function BrandSection() {
+  const navigate = useNavigate();
   const [brands, setBrands] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -70,35 +72,48 @@ export default function BrandSection({ onBrandSelect }) {
     }
   };
 
-  const handleBrandClick = (brand) => {
-    // Select brand
-    if (onBrandSelect) {
-      onBrandSelect({ id: brand.id, name: brand.name });
-    }
-
-    // Scroll to products section
-    setTimeout(() => {
-      const productsSection = document.getElementById("products-section");
-      if (productsSection) {
-        productsSection.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+  // Group brands by first letter
+  const groupBrandsByLetter = (brands) => {
+    const grouped = {};
+    
+    brands.forEach((brand) => {
+      if (!brand.name) return;
+      
+      const firstLetter = brand.name.charAt(0).toUpperCase();
+      if (!grouped[firstLetter]) {
+        grouped[firstLetter] = [];
       }
-    }, 100);
+      grouped[firstLetter].push(brand);
+    });
+
+    // Sort brands within each letter group
+    Object.keys(grouped).forEach((letter) => {
+      grouped[letter].sort((a, b) => a.name.localeCompare(b.name));
+    });
+
+    return grouped;
   };
 
-  // Default logo placeholder
-  const getBrandLogo = (brand) => {
-    if (brand.logoUrl) {
-      return brand.logoUrl;
-    }
-    // SVG placeholder
-    return (
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80'%3E%3Crect width='150' height='80' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E" +
-      encodeURIComponent(brand.name || "Brand") +
-      "%3C/text%3E%3C/svg%3E"
-    );
+  // Get grouped and sorted brands
+  const getGroupedBrands = () => {
+    const grouped = groupBrandsByLetter(brands);
+    const letters = Object.keys(grouped).sort();
+    
+    return letters.map((letter) => ({
+      letter,
+      brands: grouped[letter],
+    }));
+  };
+
+  // Distribute groups into 3 columns
+  const distributeIntoColumns = (groups, numColumns = 3) => {
+    const columns = Array.from({ length: numColumns }, () => []);
+    
+    groups.forEach((group, index) => {
+      columns[index % numColumns].push(group);
+    });
+    
+    return columns;
   };
 
   if (loading) {
@@ -149,6 +164,9 @@ export default function BrandSection({ onBrandSelect }) {
     );
   }
 
+  const groupedBrands = getGroupedBrands();
+  const columns = distributeIntoColumns(groupedBrands, 3);
+
   return (
     <section className="py-12 lg:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4">
@@ -166,40 +184,31 @@ export default function BrandSection({ onBrandSelect }) {
           </p>
         </div>
 
-        {/* Brands Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-4 gap-6 lg:gap-8">
-          {brands.map((brand) => (
-            <div
-              key={brand.id}
-              onClick={() => handleBrandClick(brand)}
-              className="group cursor-pointer bg-white rounded-xl border-2 border-gray-200 hover:border-purple-600 transition-all duration-300 transform hover:-translate-y-2 hover:shadow-lg p-6 flex flex-col items-center justify-center"
-            >
-              {/* Brand Logo */}
-              <div className="relative w-full h-24 mb-4 flex items-center justify-center bg-gray-50 rounded-lg overflow-hidden">
-                <img
-                  src={getBrandLogo(brand)}
-                  alt={brand.name}
-                  className="max-w-full max-h-full object-contain transition-transform duration-300 group-hover:scale-110"
-                  onError={(e) => {
-                    e.target.src =
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='80'%3E%3Crect width='150' height='80' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='14' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3E" +
-                      encodeURIComponent(brand.name || "Brand") +
-                      "%3C/text%3E%3C/svg%3E";
-                  }}
-                />
-              </div>
-
-              {/* Brand Name */}
-              <h3 className="text-base lg:text-lg font-semibold text-gray-900 text-center group-hover:text-purple-600 transition-colors">
-                {brand.name}
-              </h3>
-
-              {/* Brand Description (optional, only if exists) */}
-              {brand.description && (
-                <p className="text-xs text-gray-500 text-center mt-1 line-clamp-2">
-                  {brand.description}
-                </p>
-              )}
+        {/* Brands List - Alphabetical */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+          {columns.map((column, columnIndex) => (
+            <div key={columnIndex} className="space-y-6">
+              {column.map((group) => (
+                <div key={group.letter} className="mb-6">
+                  {/* Letter Header */}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-300">
+                    {group.letter}
+                  </h3>
+                  
+                  {/* Brands List */}
+                  <ul className="space-y-2">
+                    {group.brands.map((brand) => (
+                      <li
+                        key={brand.id}
+                        onClick={() => navigate(`/products?brand=${encodeURIComponent(brand.name)}`)}
+                        className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer"
+                      >
+                        {brand.name}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           ))}
         </div>

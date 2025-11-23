@@ -18,7 +18,6 @@ import { parseStoredUser } from "@/utils/storage";
 export const Home = () => {
   const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
-  const [selectedBrand, setSelectedBrand] = useState(null);
   const [sortBy, setSortBy] = useState("id");
   const [order, setOrder] = useState("desc");
   const [hasBanners, setHasBanners] = useState(false);
@@ -50,12 +49,6 @@ export const Home = () => {
 
   const handleCategorySelect = (category) => {
     setSelectedCategory(category);
-    setSelectedBrand(null); // Clear brand selection when category is selected
-  };
-
-  const handleBrandSelect = (brand) => {
-    setSelectedBrand(brand);
-    setSelectedCategory(null); // Clear category selection when brand is selected
   };
 
   const handleAddToCart = async (productId) => {
@@ -108,7 +101,7 @@ export const Home = () => {
       <SaleBanner onAddToCart={handleAddToCart} />
 
       {/* Brand Section */}
-      <BrandSection onBrandSelect={handleBrandSelect} />
+      <BrandSection />
 
       {/* Collections Section */}
       {/* <CollectionsSection 
@@ -121,21 +114,16 @@ export const Home = () => {
         <div className="max-w-7xl mx-auto px-4">
           <ProductList
             category={selectedCategory}
-            brand={selectedBrand}
             sortBy={sortBy}
             order={order}
             pageSize={8}
             title={
-              selectedBrand
-                ? `Sản Phẩm ${selectedBrand.name}`
-                : selectedCategory
+              selectedCategory
                 ? selectedCategory.name
                 : "Sản Phẩm Mới Nhất"
             }
             description={
-              selectedBrand
-                ? `Khám phá bộ sưu tập đồng hồ ${selectedBrand.name} với thiết kế đẳng cấp và công nghệ tiên tiến`
-                : selectedCategory
+              selectedCategory
                 ? `Khám phá bộ sưu tập ${selectedCategory.name} với thiết kế đẳng cấp và công nghệ tiên tiến`
                 : "Khám phá bộ sưu tập đồng hồ cao cấp với thiết kế đẳng cấp và công nghệ tiên tiến"
             }
