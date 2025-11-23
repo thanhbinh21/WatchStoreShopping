@@ -10,15 +10,18 @@ import { Input } from "@/components/ui/input";
 import { CategoryTable } from "@/components/Admin/categories/CategoryTable";
 import { CategoryDetailPanel } from "@/components/Admin/categories/CategoryDetailPanel";
 import { CategoryFormDialog } from "@/components/Admin/categories/CategoryFormDialog";
-import { DeleteConfirmDialog } from "@/components/Admin/categories/DeleteConfirmDialog";
+import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, SearchIcon } from "lucide-react";
+import { AdminPagination } from "@/components/Pagination";
 
 export const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const [categoryDetail, setCategoryDetail] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -48,6 +51,19 @@ export const AdminCategories = () => {
   const filteredCategories = categories.filter((category) =>
     category.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedCategories = filteredCategories.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const fetchCategoryDetail = useCallback(async (categoryId) => {
     try {
@@ -179,7 +195,10 @@ export const AdminCategories = () => {
             Quản lý danh mục sản phẩm trong cửa hàng
           </p>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button
+          onClick={handleAddNew}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           <PlusIcon className="size-4" />
           Thêm danh mục
         </Button>
@@ -206,12 +225,23 @@ export const AdminCategories = () => {
           className={`${categoryDetail ? "xl:col-span-2" : "xl:col-span-3"}`}
         >
           <CategoryTable
-            categories={filteredCategories}
+            categories={paginatedCategories}
             selectedCategory={selectedCategory}
             onRowClick={handleRowClick}
             onEdit={handleEdit}
             onDelete={handleDelete}
           />
+          {totalPages > 1 && (
+            <AdminPagination
+              page={currentPage}
+              totalPages={totalPages}
+              handlePageChange={setCurrentPage}
+              handlePrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              handleNext={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
+            />
+          )}
         </div>
 
         {/* Category Detail Panel */}
@@ -245,8 +275,14 @@ export const AdminCategories = () => {
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
         onClose={setIsDeleteOpen}
-        categoryName={selectedCategory?.name}
+        itemName={selectedCategory?.name}
         onConfirm={confirmDelete}
+        title="Xác nhận xóa danh mục"
+        description={
+          selectedCategory?.name
+            ? `Bạn có chắc chắn muốn xóa danh mục "${selectedCategory.name}"? Hành động này không thể hoàn tác và có thể ảnh hưởng đến các sản phẩm trong danh mục.`
+            : undefined
+        }
       />
     </div>
   );

@@ -37,8 +37,11 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
-    public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderResponse> getOrdersByUser(Long userId) {
+        return orderRepository.findByUserId(userId)
+                .stream()
+                .map(this::toOrderResponse)
+                .collect(Collectors.toList());
     }
 
     public Order getOrder(Long id) {
@@ -73,7 +76,9 @@ public class OrderService {
                 item.setOrder(order);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getCurrentPrice()); // 🔑 chốt giá tại thời điểm đặt hàng
+                item.setPrice(product.getCurrentPrice()); //  chốt giá tại thời điểm đặt hàng
+                item.setProductName(product.getName()); // snapshot tên sản phẩm
+                item.setProductImageUrl(product.getPrimaryImageUrl()); // snapshot ảnh sản phẩm
 
                 order.getOrderItems().add(item);
             }

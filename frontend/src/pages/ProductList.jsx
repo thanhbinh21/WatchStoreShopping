@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/api/productAPI";
@@ -9,6 +9,7 @@ import { getCategories } from "@/api/categoryAPI";
 import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Loader2, Filter, Star, Heart, Clock, TrendingUp, ChevronDown } from "lucide-react";
+import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ProductList() {
   const [searchParams] = useSearchParams();
@@ -154,7 +155,7 @@ export default function ProductList() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <Navbar 
+      <Breadcrumb 
         selectedCategory={selectedCategory} 
         currentPage={searchQuery ? `Tìm kiếm: ${searchQuery}` : "Sản phẩm"} 
       />

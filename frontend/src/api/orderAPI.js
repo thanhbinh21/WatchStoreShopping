@@ -58,3 +58,20 @@ export const getOrdersByUserId = async (userId) => {
     const response = await axiosInstance.get(`${ORDER_URL}/user/${userId}`);
     return response.data;
 };
+
+export const cancelOrder = async (orderId) => {
+    // Thử endpoint user cancel trước
+    try {
+        const response = await axiosInstance.post(`${ORDER_URL}/${orderId}/cancel`);
+        return response.data;
+    } catch (error) {
+        // Nếu không có endpoint này, thử dùng updateOrderStatus
+        if (error.response?.status === 404) {
+            const response = await axiosInstance.put(`${ORDER_URL}/${orderId}/status`, {
+                status: "CANCELLED"
+            });
+            return response.data;
+        }
+        throw error;
+    }
+};

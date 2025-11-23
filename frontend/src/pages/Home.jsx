@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Breadcrumb";
 import HeroSection from "@/components/HeroSection";
 import CollectionsSection from "@/components/CollectionsSection";
 import SaleBanner from "@/components/SaleBanner";
@@ -18,6 +18,19 @@ export const Home = () => {
   const [selectedBrand, setSelectedBrand] = useState(null);
   const [sortBy, setSortBy] = useState("id");
   const [order, setOrder] = useState("desc");
+  const [hasBanners, setHasBanners] = useState(false);
+
+  useEffect(() => {
+    const checkBanners = async () => {
+      try {
+        const response = await bannerAPI.getActive();
+        setHasBanners(Array.isArray(response) && response.length > 0);
+      } catch {
+        setHasBanners(false);
+      }
+    };
+    checkBanners();
+  }, []);
 
   const handleProductsChange = (newProducts, category = null) => {
     if (category) {
@@ -70,8 +83,21 @@ export const Home = () => {
       {/* Header */}
       <Header />
 
+
       {/* Navbar for search and categories */}
-      <Navbar onProductsChange={handleProductsChange} />
+      <Breadcrumb onProductsChange={handleProductsChange} />
+
+      {/* Banner Slider from CMS */}
+      {hasBanners && (
+        <div className="px-4 pt-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <BannerSlider startIndex={0} />
+            <div className="hidden md:block">
+              <BannerSlider startIndex={2} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <HeroSection />
@@ -115,6 +141,8 @@ export const Home = () => {
           />
         </div>
       </section>
+
+      <LatestPosts />
 
       {/* Footer */}
       <Footer />

@@ -2,7 +2,12 @@ import React from "react";
 import { useNavigate } from "react-router";
 import { Home, ChevronRight } from "lucide-react";
 
-export default function Navbar({ selectedCategory, currentPage }) {
+export default function Breadcrumb({
+  selectedCategory,
+  currentPage,
+  postTitle,
+  onBackToList,
+}) {
   const navigate = useNavigate();
 
   return (
@@ -24,15 +29,33 @@ export default function Navbar({ selectedCategory, currentPage }) {
           {currentPage && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
-              <span className="text-gray-900 font-medium">{currentPage}</span>
+              {postTitle && onBackToList ? (
+                <button
+                  onClick={onBackToList}
+                  className="text-gray-600 hover:text-red-600 transition-colors"
+                >
+                  {currentPage}
+                </button>
+              ) : (
+                <span className="text-gray-900 font-medium">{currentPage}</span>
+              )}
             </>
           )}
 
-          {selectedCategory && !currentPage && (
+          {selectedCategory && !currentPage && !postTitle && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
               <span className="text-gray-900 font-medium">
                 {selectedCategory.name}
+              </span>
+            </>
+          )}
+
+          {postTitle && (
+            <>
+              <ChevronRight size={16} className="text-gray-400" />
+              <span className="text-gray-900 font-medium line-clamp-1">
+                {postTitle}
               </span>
             </>
           )}
