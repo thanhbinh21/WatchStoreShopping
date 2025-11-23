@@ -42,7 +42,7 @@ public class ProductService {
     }
 
     public Page<ProductResponse> searchProducts(
-            String name, String category, String supplier,
+            String name, String category, String brand, String supplier,
             Double minPrice, Double maxPrice,
             int page, int size, String sortBy, String order
     ) {
@@ -54,6 +54,10 @@ public class ProductService {
         if (category != null) {
             spec = (spec == null ? ProductSpecification.hasCategory(category)
                     : spec.and(ProductSpecification.hasCategory(category)));
+        }
+        if (brand != null) {
+            spec = (spec == null ? ProductSpecification.hasBrand(brand)
+                    : spec.and(ProductSpecification.hasBrand(brand)));
         }
         if (supplier != null) {
             spec = (spec == null ? ProductSpecification.hasSupplier(supplier)

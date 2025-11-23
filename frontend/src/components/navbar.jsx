@@ -11,24 +11,29 @@ export default function Navbar({ selectedCategory, currentPage }) {
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 text-sm">
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => {
+              // Refresh trang chủ - reload lại trang
+              window.location.href = "/home";
+            }}
             className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors"
           >
             <Home size={16} />
             <span>Trang chủ</span>
           </button>
-          
+
           {currentPage && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
               <span className="text-gray-900 font-medium">{currentPage}</span>
             </>
           )}
-          
+
           {selectedCategory && !currentPage && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
-              <span className="text-gray-900 font-medium">{selectedCategory.name}</span>
+              <span className="text-gray-900 font-medium">
+                {selectedCategory.name}
+              </span>
             </>
           )}
         </div>

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from "react";
 import { getCategories } from "@/api/categoryAPI";
 import { getProductsByCategoryId } from "@/api/findAPI";
 
-export default function CollectionsSection({ onProductsChange, onCategorySelect }) {
+export default function CollectionsSection({
+  onProductsChange,
+  onCategorySelect,
+}) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -14,13 +18,15 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
         console.log("CollectionsSection - Raw data from API:", data);
         console.log("CollectionsSection - Data type:", typeof data);
         console.log("CollectionsSection - Is array?", Array.isArray(data));
-        
+
         // Handle different response formats
         let categoriesList = [];
-        
+
         // If data is a string, try to parse it as JSON
-        if (typeof data === 'string') {
-          console.log("CollectionsSection - Data is string, attempting to parse JSON");
+        if (typeof data === "string") {
+          console.log(
+            "CollectionsSection - Data is string, attempting to parse JSON"
+          );
           try {
             const parsed = JSON.parse(data);
             console.log("CollectionsSection - Parsed JSON:", parsed);
@@ -32,32 +38,59 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
               categoriesList = parsed.content;
             }
           } catch (parseError) {
-            console.error("CollectionsSection - Failed to parse JSON string:", parseError);
+            console.error(
+              "CollectionsSection - Failed to parse JSON string:",
+              parseError
+            );
           }
         } else if (Array.isArray(data)) {
           categoriesList = data;
-          console.log("CollectionsSection - Using array directly, length:", categoriesList.length);
-        } else if (data && typeof data === 'object') {
+          console.log(
+            "CollectionsSection - Using array directly, length:",
+            categoriesList.length
+          );
+        } else if (data && typeof data === "object") {
           // Check for common response wrappers
           if (Array.isArray(data.data)) {
             categoriesList = data.data;
-            console.log("CollectionsSection - Found data.data array, length:", categoriesList.length);
+            console.log(
+              "CollectionsSection - Found data.data array, length:",
+              categoriesList.length
+            );
           } else if (Array.isArray(data.content)) {
             categoriesList = data.content;
-            console.log("CollectionsSection - Found data.content array, length:", categoriesList.length);
+            console.log(
+              "CollectionsSection - Found data.content array, length:",
+              categoriesList.length
+            );
           } else if (Array.isArray(data.categories)) {
             categoriesList = data.categories;
-            console.log("CollectionsSection - Found data.categories array, length:", categoriesList.length);
+            console.log(
+              "CollectionsSection - Found data.categories array, length:",
+              categoriesList.length
+            );
           } else {
             // If data is an object but not an array, try to convert it
-            console.log("CollectionsSection - Data is object but not array, keys:", Object.keys(data));
-            console.log("CollectionsSection - Data values:", Object.values(data));
+            console.log(
+              "CollectionsSection - Data is object but not array, keys:",
+              Object.keys(data)
+            );
+            console.log(
+              "CollectionsSection - Data values:",
+              Object.values(data)
+            );
           }
         }
-        
-        console.log("CollectionsSection - Final categories list:", categoriesList);
-        console.log("CollectionsSection - Final categories list length:", categoriesList.length);
-        
+
+        console.log(
+          "CollectionsSection - Final categories list:",
+          categoriesList
+        );
+        console.log(
+          "CollectionsSection - Final categories list length:",
+          categoriesList.length
+        );
+
         setCategories(categoriesList);
       } catch (error) {
         console.error("Lỗi khi fetch categories:", error);
@@ -72,6 +105,25 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
     fetchCategories();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        showAllCategories &&
+        !event.target.closest(".category-dropdown-container")
+      ) {
+        setShowAllCategories(false);
+      }
+    };
+
+    if (showAllCategories) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [showAllCategories]);
+
   const handleCategoryClick = async (categoryId, categoryName) => {
     try {
       const products = await getProductsByCategoryId(categoryId);
@@ -85,7 +137,10 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
       setTimeout(() => {
         const productsSection = document.getElementById("products-section");
         if (productsSection) {
-          productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          productsSection.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
         }
       }, 100);
     } catch (err) {
@@ -101,7 +156,11 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
       return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80";
     } else if (name.includes("sport") || name.includes("thể thao")) {
       return "https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=600&q=80";
-    } else if (name.includes("luxury") || name.includes("cao cấp") || name.includes("sang trọng")) {
+    } else if (
+      name.includes("luxury") ||
+      name.includes("cao cấp") ||
+      name.includes("sang trọng")
+    ) {
       return "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=600&q=80";
     } else {
       return "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&q=80";
@@ -115,10 +174,16 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
       return "Timeless designs with traditional craftsmanship";
     } else if (name.includes("sport") || name.includes("thể thao")) {
       return "Rugged performance for active lifestyles";
-    } else if (name.includes("luxury") || name.includes("cao cấp") || name.includes("sang trọng")) {
+    } else if (
+      name.includes("luxury") ||
+      name.includes("cao cấp") ||
+      name.includes("sang trọng")
+    ) {
       return "Exclusive pieces with premium materials";
     } else {
-      return categoryName ? `Discover our ${categoryName} collection` : "Explore our curated selection";
+      return categoryName
+        ? `Discover our ${categoryName} collection`
+        : "Explore our curated selection";
     }
   };
 
@@ -144,7 +209,10 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
 
   if (error) {
     return (
-      <section className="py-16 lg:py-24 bg-white" data-testid="collections-error">
+      <section
+        className="py-16 lg:py-24 bg-white"
+        data-testid="collections-error"
+      >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">
@@ -167,7 +235,10 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
   // Show placeholder if no categories available
   if (!categories || categories.length === 0) {
     return (
-      <section className="py-16 lg:py-24 bg-white" data-testid="collections-empty">
+      <section
+        className="py-16 lg:py-24 bg-white"
+        data-testid="collections-empty"
+      >
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12 lg:mb-16">
             <p className="text-sm lg:text-base uppercase tracking-[0.2em] text-purple-600 font-bold mb-3">
@@ -191,7 +262,10 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
   const displayCategories = categories.slice(0, 3);
 
   return (
-    <section className="py-16 lg:py-24 bg-white" data-testid="collections-section">
+    <section
+      className="py-16 lg:py-24 bg-white"
+      data-testid="collections-section"
+    >
       <div className="max-w-7xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-12 lg:mb-16">
@@ -219,7 +293,8 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   onError={(e) => {
                     // Use SVG placeholder instead of external URL
-                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='20' fill='%236b7280' text-anchor='middle' dominant-baseline='middle'%3EWatch Collection%3C/text%3E%3C/svg%3E";
+                    e.target.src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='400'%3E%3Crect width='600' height='400' fill='%23e5e7eb'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='20' fill='%236b7280' text-anchor='middle' dominant-baseline='middle'%3EWatch Collection%3C/text%3E%3C/svg%3E";
                   }}
                 />
                 {/* Overlay on hover */}
@@ -232,7 +307,8 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
                   {category.name}
                 </h3>
                 <p className="text-gray-600 text-sm lg:text-base leading-relaxed">
-                  {category.description || getCategoryDescription(category.name)}
+                  {category.description ||
+                    getCategoryDescription(category.name)}
                 </p>
               </div>
             </div>
@@ -241,23 +317,65 @@ export default function CollectionsSection({ onProductsChange, onCategorySelect 
 
         {/* Show more categories if there are more than 3 */}
         {categories.length > 3 && (
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 relative category-dropdown-container">
             <button
-              onClick={() => {
-                // Show all categories or navigate to categories page
-                const productsSection = document.getElementById("products-section");
-                if (productsSection) {
-                  productsSection.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-              className="px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-all duration-300"
+              onClick={() => setShowAllCategories(!showAllCategories)}
+              className="px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-all duration-300 flex items-center gap-2 mx-auto"
             >
               Xem tất cả danh mục
+              <svg
+                className={`w-5 h-5 transition-transform duration-300 ${
+                  showAllCategories ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
+
+            {/* Dropdown menu */}
+            {showAllCategories && (
+              <div className="absolute left-1/2 transform -translate-x-1/2 mt-4 w-full max-w-md bg-white rounded-lg shadow-xl border border-gray-200 z-50 max-h-96 overflow-y-auto">
+                <div className="py-2">
+                  {categories.map((category, index) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        handleCategoryClick(category.id, category.name);
+                        setShowAllCategories(false);
+                      }}
+                      className="w-full text-left px-6 py-3 hover:bg-gray-50 transition-colors duration-200 border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-gray-900 font-medium">
+                          {category.name}
+                        </span>
+                        {index < 3 && (
+                          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                            Đã hiển thị
+                          </span>
+                        )}
+                      </div>
+                      {category.description && (
+                        <p className="text-sm text-gray-500 mt-1 truncate">
+                          {category.description}
+                        </p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
     </section>
   );
 }
-

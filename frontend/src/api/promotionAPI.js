@@ -17,6 +17,45 @@ export const getPromotions = async (options = {}) => {
     }
 };
 
+// Lấy danh sách sản phẩm có promotion
+export const getProductsWithPromotions = async () => {
+    try {
+        const response = await axiosInstance.get(PROMOTION_URL);
+        console.log("promotionAPI: Raw response:", response);
+        console.log("promotionAPI: response.data:", response?.data);
+        
+        // Handle different response structures
+        let payload = undefined;
+        
+        if (response?.data) {
+            // If response.data is already an array
+            if (Array.isArray(response.data)) {
+                payload = response.data;
+            }
+            // If response.data has a data property (ApiResponse structure)
+            else if (response.data.data) {
+                payload = response.data.data;
+            }
+            // If response.data has a content property
+            else if (response.data.content) {
+                payload = response.data.content;
+            }
+            // If response.data is an object, try to get the data property
+            else if (typeof response.data === 'object') {
+                payload = response.data;
+            }
+        }
+        
+        console.log("promotionAPI: Parsed payload:", payload);
+        
+        return Array.isArray(payload) ? payload : [];
+    } catch (error) {
+        console.error("Failed to fetch products with promotions:", error);
+        console.error("Error response:", error.response?.data);
+        return [];
+    }
+};
+
 export const getPromotionById = async (id) => {
     try {
         const response = await axiosInstance.get(`${PROMOTION_URL}/${id}`);
