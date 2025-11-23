@@ -7,6 +7,7 @@ export default function Breadcrumb({
   currentPage,
   postTitle,
   onBackToList,
+  selectedBrand,
 }) {
   const navigate = useNavigate();
 
@@ -42,11 +43,20 @@ export default function Breadcrumb({
             </>
           )}
 
-          {selectedCategory && !currentPage && !postTitle && (
+          {selectedCategory && !currentPage && !postTitle && !selectedBrand && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
               <span className="text-gray-900 font-medium">
                 {selectedCategory.name}
+              </span>
+            </>
+          )}
+
+          {selectedBrand && currentPage && (
+            <>
+              <ChevronRight size={16} className="text-gray-400" />
+              <span className="text-gray-900 font-medium">
+                {selectedBrand.name}
               </span>
             </>
           )}

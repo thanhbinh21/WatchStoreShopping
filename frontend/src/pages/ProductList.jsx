@@ -6,19 +6,32 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/api/productAPI";
 import { getCategories } from "@/api/categoryAPI";
+import { getBrands } from "@/api/brandAPI";
 import { addToCart } from "@/api/cartAPI";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Loader2, Filter, Star, Heart, Clock, TrendingUp, ChevronDown } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Filter,
+  Star,
+  Heart,
+  Clock,
+  TrendingUp,
+  ChevronDown,
+} from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
 
 export default function ProductList() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const categoryId = searchParams.get("category");
+  const brandName = searchParams.get("brand");
   const searchQuery = searchParams.get("search");
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(0);
@@ -32,21 +45,46 @@ export default function ProductList() {
 
   // Sort options
   const sortOptions = [
-    { id: "popular", label: "Phổ biến", icon: Star, sortBy: "id", order: "desc" },
-    { id: "newest", label: "Mới nhất", icon: Clock, sortBy: "id", order: "desc" },
-    { id: "priceAsc", label: "Giá Thấp - Cao", icon: TrendingUp, sortBy: "price", order: "asc" },
-    { id: "priceDesc", label: "Giá Cao - Thấp", icon: TrendingUp, sortBy: "price", order: "desc" },
+    {
+      id: "popular",
+      label: "Phổ biến",
+      icon: Star,
+      sortBy: "id",
+      order: "desc",
+    },
+    {
+      id: "newest",
+      label: "Mới nhất",
+      icon: Clock,
+      sortBy: "id",
+      order: "desc",
+    },
+    {
+      id: "priceAsc",
+      label: "Giá Thấp - Cao",
+      icon: TrendingUp,
+      sortBy: "price",
+      order: "asc",
+    },
+    {
+      id: "priceDesc",
+      label: "Giá Cao - Thấp",
+      icon: TrendingUp,
+      sortBy: "price",
+      order: "desc",
+    },
   ];
 
   const [activeSortId, setActiveSortId] = useState("popular");
 
   useEffect(() => {
     fetchCategories();
+    fetchBrands();
   }, []);
 
   useEffect(() => {
     if (categoryId) {
-      const category = categories.find(c => c.id === parseInt(categoryId));
+      const category = categories.find((c) => c.id === parseInt(categoryId));
       setSelectedCategory(category || null);
     } else {
       setSelectedCategory(null);
@@ -55,14 +93,25 @@ export default function ProductList() {
 
   useEffect(() => {
     fetchProducts();
-  }, [currentPage, categoryId, searchQuery, sortBy, order]);
+  }, [currentPage, categoryId, brandName, searchQuery, sortBy, order]);
 
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []);
+      setCategories(
+        Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
+      );
     } catch (error) {
       console.error("Error fetching categories:", error);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const data = await getBrands();
+      setBrands(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Error fetching brands:", error);
     }
   };
 
@@ -77,10 +126,14 @@ export default function ProductList() {
       };
 
       if (categoryId) {
-        const category = categories.find(c => c.id === parseInt(categoryId));
+        const category = categories.find((c) => c.id === parseInt(categoryId));
         if (category?.name) {
           params.category = category.name;
         }
+      }
+
+      if (brandName) {
+        params.brand = brandName;
       }
 
       if (searchQuery) {
@@ -144,30 +197,90 @@ export default function ProductList() {
   };
 
   const handleCategoryFilter = (categoryId) => {
+    const params = new URLSearchParams();
     if (categoryId) {
-      navigate(`/products?category=${categoryId}`);
-    } else {
-      navigate("/products");
+      params.set("category", categoryId);
     }
+    // Giữ brand filter nếu có
+    if (brandName) {
+      params.set("brand", brandName);
+    }
+    // Giữ search query nếu có
+    if (searchQuery) {
+      params.set("search", searchQuery);
+    }
+
+    const queryString = params.toString();
+    navigate(`/products${queryString ? `?${queryString}` : ""}`);
+    setCurrentPage(0);
+  };
+
+  const handleBrandFilter = (brandNameParam) => {
+    const params = new URLSearchParams();
+    if (brandNameParam) {
+      params.set("brand", brandNameParam);
+    }
+    // Giữ category filter nếu có
+    if (categoryId) {
+      params.set("category", categoryId);
+    }
+    // Giữ search query nếu có
+    if (searchQuery) {
+      params.set("search", searchQuery);
+    }
+
+    const queryString = params.toString();
+    navigate(`/products${queryString ? `?${queryString}` : ""}`);
+    setCurrentPage(0);
+  };
+
+  const handleClearAllFilters = () => {
+    const params = new URLSearchParams();
+    // Chỉ giữ search query nếu có
+    if (searchQuery) {
+      params.set("search", searchQuery);
+    }
+
+    const queryString = params.toString();
+    navigate(`/products${queryString ? `?${queryString}` : ""}`);
     setCurrentPage(0);
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <Breadcrumb 
-        selectedCategory={selectedCategory} 
-        currentPage={searchQuery ? `Tìm kiếm: ${searchQuery}` : "Sản phẩm"} 
+      <Breadcrumb
+        selectedCategory={selectedCategory}
+        currentPage={
+          brandName
+            ? "Sản phẩm"
+            : searchQuery
+            ? `Tìm kiếm: ${searchQuery}`
+            : "Sản phẩm"
+        }
+        selectedBrand={brandName ? { name: brandName } : null}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         {/* Page Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            {selectedCategory ? selectedCategory.name : searchQuery ? `Kết quả tìm kiếm: "${searchQuery}"` : "Tất cả sản phẩm"}
+            {brandName
+              ? `Thương hiệu: ${brandName}`
+              : selectedCategory
+              ? selectedCategory.name
+              : searchQuery
+              ? `Kết quả tìm kiếm: "${searchQuery}"`
+              : "Tất cả sản phẩm"}
           </h1>
           <p className="text-gray-600">
-            {loading ? "Đang tải..." : `${products.length > 0 ? `Có ${products.length} sản phẩm` : "Không tìm thấy sản phẩm"}`}
+            {loading
+              ? "Đang tải..."
+              : `${
+                  products.length > 0
+                    ? `Có ${products.length} sản phẩm`
+                    : "Không tìm thấy sản phẩm"
+                }`}
           </p>
         </div>
 
@@ -180,16 +293,34 @@ export default function ProductList() {
           >
             <Filter size={20} />
             <span>Bộ lọc</span>
-            <ChevronDown size={16} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            <ChevronDown
+              size={16}
+              className={`transition-transform ${
+                showFilters ? "rotate-180" : ""
+              }`}
+            />
           </button>
 
           {/* Filter Content */}
-          <div className={`${showFilters ? 'block' : 'hidden'} lg:block`}>
+          <div className={`${showFilters ? "block" : "hidden"} lg:block`}>
+            {/* Clear All Filters Button */}
+            {(categoryId || brandName) && (
+              <div className="mb-6">
+                <button
+                  onClick={handleClearAllFilters}
+                  className="px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 hover:border-red-600 hover:text-red-600 transition-colors flex items-center gap-2"
+                >
+                  <Filter size={16} />
+                  <span>Bỏ tất cả bộ lọc</span>
+                </button>
+              </div>
+            )}
+
             {/* Category Filters */}
             <div className="mb-6">
               <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
                 <Filter size={16} className="text-red-600" />
-                Chọn theo tiêu chí
+                Danh mục
               </h3>
               <div className="flex flex-wrap gap-2">
                 <button
@@ -200,8 +331,7 @@ export default function ProductList() {
                       : "border-gray-300 hover:border-red-600 hover:text-red-600"
                   }`}
                 >
-                  <Filter size={16} className="inline mr-1" />
-                  Bỏ lọc
+                  Tất cả
                 </button>
                 {categories.map((category) => (
                   <button
@@ -219,9 +349,44 @@ export default function ProductList() {
               </div>
             </div>
 
+            {/* Brand Filters */}
+            <div className="mb-6">
+              <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Filter size={16} className="text-red-600" />
+                Thương hiệu
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleBrandFilter(null)}
+                  className={`px-4 py-2 rounded-lg border transition-colors ${
+                    !brandName
+                      ? "bg-red-600 text-white border-red-600"
+                      : "border-gray-300 hover:border-red-600 hover:text-red-600"
+                  }`}
+                >
+                  Tất cả
+                </button>
+                {brands.map((brand) => (
+                  <button
+                    key={brand.id}
+                    onClick={() => handleBrandFilter(brand.name)}
+                    className={`px-4 py-2 rounded-lg border transition-colors ${
+                      brandName === brand.name
+                        ? "bg-red-600 text-white border-red-600"
+                        : "border-gray-300 hover:border-red-600 hover:text-red-600"
+                    }`}
+                  >
+                    {brand.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Sort Options */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-900 mb-3">Sắp xếp theo</h3>
+              <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                Sắp xếp theo
+              </h3>
               <div className="flex flex-wrap gap-2">
                 {sortOptions.map((option) => {
                   const Icon = option.icon;
@@ -255,8 +420,12 @@ export default function ProductList() {
             <div className="text-gray-400 mb-4">
               <Heart size={64} className="mx-auto" />
             </div>
-            <p className="text-gray-500 text-lg mb-2">Không tìm thấy sản phẩm nào</p>
-            <p className="text-gray-400 text-sm">Vui lòng thử lại với từ khóa hoặc bộ lọc khác</p>
+            <p className="text-gray-500 text-lg mb-2">
+              Không tìm thấy sản phẩm nào
+            </p>
+            <p className="text-gray-400 text-sm">
+              Vui lòng thử lại với từ khóa hoặc bộ lọc khác
+            </p>
           </div>
         ) : (
           <>
@@ -290,7 +459,10 @@ export default function ProductList() {
                       (index >= currentPage - 1 && index <= currentPage + 1);
 
                     if (!showPage) {
-                      if (index === currentPage - 2 || index === currentPage + 2) {
+                      if (
+                        index === currentPage - 2 ||
+                        index === currentPage + 2
+                      ) {
                         return (
                           <span key={index} className="px-3 py-2 text-gray-500">
                             ...
