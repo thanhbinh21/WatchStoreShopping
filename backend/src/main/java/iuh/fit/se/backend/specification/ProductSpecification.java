@@ -28,6 +28,14 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Product> hasBrand(String brandName) {
+        return (root, query, cb) -> {
+            if (brandName == null) return null;
+            Join<Object, Object> brand = root.join("brand", JoinType.INNER);
+            return cb.equal(cb.lower(brand.get("name")), brandName.toLowerCase());
+        };
+    }
+
     public static Specification<Product> hasPriceBetween(Double minPrice, Double maxPrice) {
         return (root, query, cb) -> {
             if (minPrice == null && maxPrice == null) return null;

@@ -10,6 +10,7 @@ export const getProducts = async (params = {}) => {
             size = 10,
             name = "",
             category = "",
+            brand = "",
             supplier = "",
             minPrice = null,
             maxPrice = null,
@@ -22,6 +23,7 @@ export const getProducts = async (params = {}) => {
         queryParams.append("size", size);
         if (name) queryParams.append("name", name);
         if (category) queryParams.append("category", category);
+        if (brand) queryParams.append("brand", brand);
         if (supplier) queryParams.append("supplier", supplier);
         if (minPrice !== null) queryParams.append("minPrice", minPrice);
         if (maxPrice !== null) queryParams.append("maxPrice", maxPrice);

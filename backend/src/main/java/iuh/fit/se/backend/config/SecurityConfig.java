@@ -81,30 +81,26 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, "/api/reviews/**").authenticated() // Users can update their reviews
                                 .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN") // Only ADMIN can delete
 
-                                // Orders - Users can create and view their orders, ADMIN can manage all
-                                .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
-                                .requestMatchers(HttpMethod.GET, "/api/orders/user/**").authenticated()  // Users can view their orders (must be before /api/orders/**)
-                                .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").authenticated()  // Users can cancel their own orders
-                                .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
+                        // Orders - Users can create and view their orders, ADMIN can manage all
+                        .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user/**").authenticated()  // Users can view their orders (must be before /api/orders/**)
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
 
-                                // Banner
-                                .requestMatchers(HttpMethod.GET, "/api/banners/**").permitAll()
-
-                                // Posts
-                                .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
-
-                                // Độc quyền (ADMIN)
-                                .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
-                                .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
-                                .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
-                                .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
-                                .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
-                                .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
-                                // Promotions - GET public, modifications need ADMIN
-                                .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
-
+                        // Độc quyền (ADMIN)
+                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
+                        
+                        // Promotions - GET public, modifications need ADMIN (PHẢI đặt trước rule tổng quát)
+                        .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
+                        
+                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
+                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
+                        
 
                                 // Payments - GET public
                                 .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
