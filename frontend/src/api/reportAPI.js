@@ -135,3 +135,94 @@ export const getRevenueByCustomerYearly = async ({ year, limit } = {}) => {
     );
     return Array.isArray(response?.data?.data) ? response.data.data : [];
 };
+
+export const getInventorySummary = async () => {
+    const response = await axiosInstance.get(`${REPORT_URL}/inventory/summary`);
+    return response?.data?.data ?? null;
+};
+
+export const getInventoryDailyReport = async ({ startDate, endDate } = {}) => {
+    const params = {};
+    if (startDate) {
+        params.startDate = startDate;
+    }
+    if (endDate) {
+        params.endDate = endDate;
+    }
+    const response = await axiosInstance.get(`${REPORT_URL}/inventory/daily`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
+
+export const getInventoryMonthlyReport = async ({ year } = {}) => {
+    const params = {};
+    if (year) {
+        params.year = year;
+    }
+    const response = await axiosInstance.get(
+        `${REPORT_URL}/inventory/monthly`,
+        {
+            params,
+        }
+    );
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
+
+export const getInventoryYearlyReport = async ({ startYear, endYear } = {}) => {
+    const params = {};
+    if (startYear) {
+        params.startYear = startYear;
+    }
+    if (endYear) {
+        params.endYear = endYear;
+    }
+    const response = await axiosInstance.get(`${REPORT_URL}/inventory/yearly`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
+
+export const getOrderSummary = async () => {
+    const response = await axiosInstance.get(`${REPORT_URL}/orders/summary`);
+    return response?.data?.data ?? null;
+};
+
+export const getOrderDailyReport = async ({ startDate, endDate } = {}) => {
+    const params = {};
+    if (startDate) {
+        params.startDate = startDate;
+    }
+    if (endDate) {
+        params.endDate = endDate;
+    }
+    const response = await axiosInstance.get(`${REPORT_URL}/orders/daily`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
+
+export const getOrderMonthlyReport = async ({ year } = {}) => {
+    const params = {};
+    if (year) {
+        params.year = year;
+    }
+    const response = await axiosInstance.get(`${REPORT_URL}/orders/monthly`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
+
+export const getOrderYearlyReport = async ({ startYear, endYear } = {}) => {
+    const params = {};
+    if (startYear) {
+        params.startYear = startYear;
+    }
+    if (endYear) {
+        params.endYear = endYear;
+    }
+    const response = await axiosInstance.get(`${REPORT_URL}/orders/yearly`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data) ? response.data.data : [];
+};
