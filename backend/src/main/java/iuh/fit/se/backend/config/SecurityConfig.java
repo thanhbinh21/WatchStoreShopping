@@ -29,72 +29,94 @@ public class SecurityConfig {
                 .cors(cors -> {
                 }) // Bật CORS để dùng CorsConfig
                 .authorizeHttpRequests(auth -> auth
-                        // Swagger/OpenAPI - Public
-                        .requestMatchers(
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/swagger-resources/**",
-                                "/webjars/**"
-                        ).permitAll()
-                        
-                        // Auth endpoints - Public
-                        .requestMatchers("/api/auth/**").permitAll()
+                                // Swagger/OpenAPI - Public
+                                .requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
+                                        "/swagger-ui/**",
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
+                                ).permitAll()
+
+                                // Auth endpoints - Public
+                                .requestMatchers("/api/auth/**").permitAll()
+
+                                // WebSocket - Authenticated users only
+                                .requestMatchers("/ws/**").permitAll() // Allow WebSocket handshake
+                                .requestMatchers("/api/chat/**").authenticated() // Chat API requires authentication
 
 //                        cart
-                        .requestMatchers(HttpMethod.GET, "/api/cart/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/cart/**").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/cart/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/cart/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
+                                .requestMatchers(HttpMethod.PUT, "/api/cart/**").permitAll()
+                                .requestMatchers(HttpMethod.DELETE, "/api/cart/**").permitAll()
 
-                        // Products - GET public, modifications need ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
+                                // Products - GET public, modifications need ADMIN
+                                .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/products/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/products/**").hasRole("ADMIN")
 
-                        // Categories - GET public, modifications need ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
+                                // Categories - GET public, modifications need ADMIN
+                                .requestMatchers(HttpMethod.GET, "/api/categories/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/categories/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/categories/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/categories/**").hasRole("ADMIN")
 
-                        // Brands - GET public, modifications need ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/brands/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
+                                // Brands - GET public, modifications need ADMIN
+                                .requestMatchers(HttpMethod.GET, "/api/brands/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/brands/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/brands/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/brands/**").hasRole("ADMIN")
 
-                        // Suppliers - GET public, modifications need ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
+                                // Suppliers - GET public, modifications need ADMIN
+                                .requestMatchers(HttpMethod.GET, "/api/suppliers/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/suppliers/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/suppliers/**").hasRole("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/suppliers/**").hasRole("ADMIN")
 
-                        // Reviews - GET public, modifications need ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
-                        .requestMatchers("/api/reviews/**").hasRole("ADMIN")
+                                // Reviews - GET public, POST/PUT authenticated users, DELETE ADMIN only
+                                .requestMatchers(HttpMethod.GET, "/api/reviews/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/reviews").authenticated() // Users can create reviews
+                                .requestMatchers(HttpMethod.PUT, "/api/reviews/**").authenticated() // Users can update their reviews
+                                .requestMatchers(HttpMethod.DELETE, "/api/reviews/**").hasRole("ADMIN") // Only ADMIN can delete
 
-                        // Promotions - GET public, modifications need ADMIN
+                        // Orders - Users can create and view their orders, ADMIN can manage all
+                        .requestMatchers(HttpMethod.POST, "/api/orders").authenticated()  // Users can create orders
+                        .requestMatchers(HttpMethod.GET, "/api/orders/user/**").authenticated()  // Users can view their orders (must be before /api/orders/**)
+                        .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
+
+                        // Độc quyền (ADMIN)
+                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
+                        
+                        // Promotions - GET public, modifications need ADMIN (PHẢI đặt trước rule tổng quát)
                         .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
-                        .requestMatchers("/api/promotions/**").hasRole("ADMIN")
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
+                        
+                        .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
+                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
+                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
+                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
+                        
 
-                        // Payments - GET public
-                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
+                                // Payments - GET public
+                                .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
 
-                        // Cart - POST public (add to cart without login)
-                        .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
+                                // Cart - POST public (add to cart without login)
+                                .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
 
-                        // Upload - ADMIN only
-                        .requestMatchers("/api/upload/**").hasRole("ADMIN")
+                                // Upload - ADMIN only
+                                .requestMatchers("/api/upload/**").hasRole("ADMIN")
 
-                        // Admin endpoints - ADMIN only
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/api/orders/**").hasRole("ADMIN")
-                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")
+                                // Admin endpoints - ADMIN only
 
-                        // All other requests need authentication
-                        .anyRequest().authenticated()
+                                .requestMatchers("/api/inventories/**").hasRole("ADMIN")
+
+                                // All other requests need authentication
+                                .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)

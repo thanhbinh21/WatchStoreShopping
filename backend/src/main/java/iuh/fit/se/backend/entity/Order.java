@@ -3,6 +3,7 @@ package iuh.fit.se.backend.entity;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
+import iuh.fit.se.backend.entity.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -35,7 +36,35 @@ public class Order {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
+    @Builder.Default
     private OrderStatus status = OrderStatus.PENDING;
+
+    // Shipping information
+    @Column(name = "full_name")
+    private String fullName;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "address")
+    private String address;
+
+    @Column(name = "ward")
+    private String ward;
+
+    @Column(name = "district")
+    private String district;
+
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "note", columnDefinition = "TEXT")
+    private String note;
+
+    // Payment information
+    @Enumerated(EnumType.STRING)
+    @Column(name = "payment_method")
+    private PaymentMethod paymentMethod;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -44,5 +73,6 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "order-items")
+    @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 }

@@ -68,7 +68,7 @@ export const CategoryTable = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant="secondary">
-                      {category.products?.length || 0} sản phẩm
+                      {category.productCount || 0} sản phẩm
                     </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -81,7 +81,7 @@ export const CategoryTable = ({
                           onEdit(category);
                         }}
                       >
-                        <PencilIcon className="size-4" />
+                        <PencilIcon className="size-4 text-blue-600 dark:text-blue-400" />
                       </Button>
                       <Button
                         variant="ghost"

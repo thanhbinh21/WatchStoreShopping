@@ -18,4 +18,5 @@ public class PromotionSummary {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private List<Long> productIds;
+    private LocalDateTime createdAt;
 }

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ProductTable } from "@/components/Admin/products/ProductTable";
 import { ProductDetailPanel } from "@/components/Admin/products/ProductDetailPanel";
 import { ProductFormDialog } from "@/components/Admin/products/ProductFormDialog";
-import { DeleteConfirmDialog } from "@/components/Admin/products/DeleteConfirmDialog";
+import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, SearchIcon } from "lucide-react";
@@ -254,7 +254,10 @@ export const AdminProduct = () => {
             Quản lý danh sách sản phẩm trong cửa hàng
           </p>
         </div>
-        <Button onClick={handleAddNew}>
+        <Button
+          onClick={handleAddNew}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        >
           <PlusIcon className="size-4" />
           Thêm sản phẩm
         </Button>
@@ -332,8 +335,9 @@ export const AdminProduct = () => {
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
         onClose={setIsDeleteOpen}
-        productName={selectedProduct?.name}
+        itemName={selectedProduct?.name}
         onConfirm={confirmDelete}
+        title="Xác nhận xóa sản phẩm"
       />
     </div>
   );

@@ -4,7 +4,7 @@ import { PencilIcon, TrashIcon } from "lucide-react";
 import productImg from "@/assets/images/product.png";
 
 export const ProductTable = ({
-  products,
+  products = [],
   selectedProduct,
   onRowClick,
   onEdit,
@@ -120,7 +120,7 @@ export const ProductTable = ({
                         }}
                         title="Chỉnh sửa"
                       >
-                        <PencilIcon className="size-4" />
+                        <PencilIcon className="size-4 text-blue-600 dark:text-blue-400" />
                       </Button>
                       <Button
                         variant="ghost"

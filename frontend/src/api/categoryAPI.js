@@ -6,32 +6,20 @@ const CATEGORY_URL = "/categories";
 export const getCategories = async () => {
   try {
     const res = await axiosInstance.get(CATEGORY_URL);
-    console.log("categoryAPI - Raw response:", res);
-    console.log("categoryAPI - Response type:", typeof res);
-    console.log("categoryAPI - Is array?", Array.isArray(res));
-    
-    // axiosConfig interceptor already returns response.data
-    // But if it's a string, we need to parse it
-    let data = res;
-    
-    if (typeof res === 'string') {
-      console.log("categoryAPI - Response is string, length:", res.length);
-      console.log("categoryAPI - First 200 chars:", res.substring(0, 200));
-      console.log("categoryAPI - Attempting to parse JSON");
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.content)) return res.content;
+    if (typeof res === "string") {
       try {
-        data = JSON.parse(res);
-        console.log("categoryAPI - Parsed data:", data);
-        console.log("categoryAPI - Parsed data type:", typeof data);
-        console.log("categoryAPI - Is parsed data array?", Array.isArray(data));
-      } catch (parseError) {
-        console.error("categoryAPI - Failed to parse JSON:", parseError);
-        console.error("categoryAPI - String content:", res);
-        return [];
+        const parsed = JSON.parse(res);
+        if (Array.isArray(parsed)) return parsed;
+        if (Array.isArray(parsed?.data)) return parsed.data;
+        if (Array.isArray(parsed?.content)) return parsed.content;
+      } catch (e) {
+        console.error("categoryAPI - Failed to parse string response", e);
       }
     }
-    
-    // Return the data (should be array or object)
-    return data || [];
+    return [];
   } catch (err) {
     console.error("Error fetching categories:", err);
     console.error("Error details:", err.response?.data || err.message);
@@ -42,8 +30,8 @@ export const getCategories = async () => {
 // Nếu muốn thêm các API khác cho category:
 export const getCategoryById = async (id) => {
   try {
-    const category = await axiosInstance.get(`${CATEGORY_URL}/${id}`);
-    return category;
+    const response = await axiosInstance.get(`${CATEGORY_URL}/${id}`);
+    return response.data;
   } catch (err) {
     console.error(`Error fetching category ${id}:`, err);
     return null;
@@ -52,8 +40,8 @@ export const getCategoryById = async (id) => {
 
 export const createCategory = async (categoryData) => {
   try {
-    const newCategory = await axiosInstance.post(CATEGORY_URL, categoryData);
-    return newCategory;
+    const response = await axiosInstance.post(CATEGORY_URL, categoryData);
+    return response.data;
   } catch (err) {
     console.error("Error creating category:", err);
     throw err; // Throw error để component có thể handle
@@ -62,11 +50,11 @@ export const createCategory = async (categoryData) => {
 
 export const updateCategory = async (id, categoryData) => {
   try {
-    const updatedCategory = await axiosInstance.put(
+    const response = await axiosInstance.put(
       `${CATEGORY_URL}/${id}`,
       categoryData
     );
-    return updatedCategory;
+    return response.data;
   } catch (err) {
     console.error(`Error updating category ${id}:`, err);
     throw err; // Throw error để component có thể handle

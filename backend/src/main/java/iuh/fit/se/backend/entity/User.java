@@ -1,5 +1,7 @@
 package iuh.fit.se.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import iuh.fit.se.backend.entity.enums.Role;
 import jakarta.persistence.*;
@@ -17,6 +19,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class User {
 
     @Id
@@ -39,6 +42,10 @@ public class User {
     @Column(nullable = false, length = 20)
     private Role role = Role.USER;
 
+    @Builder.Default
+    @Column(name = "is_active", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 1")
+    private boolean active = true;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -47,17 +54,20 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "user-orders")
     @ToString.Exclude
+    @JsonIgnore
     private List<Order> orders = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "user-carts")
     @ToString.Exclude
+    @JsonIgnore
     private List<Cart> carts = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "user-reviews")
     @ToString.Exclude
+    @JsonIgnore
     private List<Review> reviews = new ArrayList<>();
 }

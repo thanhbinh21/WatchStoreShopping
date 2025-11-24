@@ -26,21 +26,23 @@ public class PromotionController {
         return ResponseEntity.ok(ApiResponse.success(data));
     }
 
+    @GetMapping("/summaries")
+    public ResponseEntity<ApiResponse<List<PromotionSummary>>> getSummaries(
+            @RequestParam(value = "search", required = false) String search
+    ) {
+        List<PromotionSummary> data = promotionService.getPromotionSummaries(search);
+        return ResponseEntity.ok(ApiResponse.success(data));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PromotionSummary>> getOne(@PathVariable Long id) {
-    return promotionService.get(id)
-        .map(promotion -> ResponseEntity.ok(ApiResponse.success(
-            new PromotionSummary(
-                promotion.getId(),
-                promotion.getName(),
-                promotion.getDiscount(),
-                promotion.getStartDate(),
-                promotion.getEndDate(),
-                promotion.getProducts().stream().map(product -> product.getId()).toList()
-            )
-        )))
-        .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-            .body(ApiResponse.<PromotionSummary>failure("Promotion not found")));
+        try {
+            PromotionSummary summary = promotionService.getSummary(id);
+            return ResponseEntity.ok(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
     }
 
     @PostMapping
@@ -86,7 +88,12 @@ public class PromotionController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(@PathVariable Long id) {
-    promotionService.delete(id);
-    return ResponseEntity.ok(ApiResponse.success("Promotion deleted"));
+        try {
+            promotionService.delete(id);
+            return ResponseEntity.ok(ApiResponse.success("Promotion deleted"));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode())
+                    .body(ApiResponse.failure(ex.getReason()));
+        }
     }
 }

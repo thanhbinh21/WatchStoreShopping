@@ -35,6 +35,7 @@ public class ProductController {
     public Page<ProductResponse> searchProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
             @RequestParam(required = false) String supplier,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
@@ -43,7 +44,7 @@ public class ProductController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String order
     ) {
-        return productService.searchProducts(name, category, supplier, minPrice, maxPrice, page, size, sortBy, order);
+        return productService.searchProducts(name, category, brand, supplier, minPrice, maxPrice, page, size, sortBy, order);
     }
 
     @GetMapping("/{id}")
