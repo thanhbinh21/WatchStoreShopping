@@ -1,10 +1,12 @@
-package iuh.fit.se.backend.service;
+package iuh.fit.se.backend.service.impl;
 
 import iuh.fit.se.backend.dto.UserRequest;
 import iuh.fit.se.backend.dto.UserSummary;
 import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.entity.enums.Role;
 import iuh.fit.se.backend.repository.UserRepository;
+import iuh.fit.se.backend.service.EmailService;
+import iuh.fit.se.backend.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
