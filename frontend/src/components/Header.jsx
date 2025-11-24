@@ -438,7 +438,7 @@ export default function Header() {
             ) : (
               <button
                 onClick={() => navigate("/login")}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-foreground text-brand-accent rounded-lg font-semibold hover:bg-brand-accent-soft transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-brand-foreground rounded-lg font-semibold bg-brand-primary-foreground/10 hover:bg-brand-primary-foreground/20 text-brand-primary-foreground transition-colors"
               >
                 <User size={18} />
                 <span className="hidden sm:inline">Đăng nhập</span>

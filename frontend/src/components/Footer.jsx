@@ -1,210 +1,78 @@
 // Footer.jsx
 import React from "react";
-import {
-  Facebook,
-  Instagram,
-  Twitter,
-  Mail,
-  Phone,
-  MapPin,
-  Clock,
-} from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-16">
-      <div className="container mx-auto px-4 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-          {/* Brand Column */}
-          <div className="lg:col-span-1">
-            <h3 className="text-2xl font-bold text-white mb-4">WATCH STORE</h3>
-            <p className="text-sm leading-relaxed mb-4">
-              Chuyên cung cấp các sản phẩm đồng hồ cao cấp, từ các thương hiệu
-              nổi tiếng trên thế giới.
-            </p>
-            <div className="flex gap-4 mt-6">
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-600 transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook size={18} />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-pink-600 transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram size={18} />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-blue-400 transition-colors"
-                aria-label="Twitter"
-              >
-                <Twitter size={18} />
-              </a>
-            </div>
-          </div>
+    <footer className="bg-gray-100 text-gray-800 mt-16 w-full">
+      {/* Nội dung chính */}
+      <div className="w-full max-w-[1280px] mx-auto px-4 py-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {/* Tổng đài hỗ trợ */}
+        <div>
+          <h3 className="font-semibold mb-3">Tổng đài hỗ trợ miễn phí</h3>
+          <p>
+            Mua hàng - bảo hành <strong>1800.2097</strong> (7h30 - 22h00)
+          </p>
+          <p>
+            Khiếu nại <strong>1800.2063</strong> (8h00 - 21h30)
+          </p>
 
-          {/* Quick Links */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">
-              Liên kết nhanh
-            </h4>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="/"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Trang chủ
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/products"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Sản phẩm
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/collections"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Bộ sưu tập
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/about"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Về chúng tôi
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/contact"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Liên hệ
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Categories */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">Danh mục</h4>
-            <ul className="space-y-2">
-              <li>
-                <a
-                  href="/categories/mechanical"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Đồng hồ Cơ khí
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/categories/quartz"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Đồng hồ Pin
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/categories/smartwatch"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Đồng hồ Thông minh
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/categories/diving"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Đồng hồ Lặn
-                </a>
-              </li>
-              <li>
-                <a
-                  href="/categories/fashion"
-                  className="hover:text-white transition-colors text-sm"
-                >
-                  Đồng hồ Thời trang
-                </a>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h4 className="text-lg font-semibold text-white mb-4">
-              Thông tin liên hệ
-            </h4>
-            <ul className="space-y-3">
-              <li className="flex items-start gap-3">
-                <MapPin size={18} className="mt-0.5 flex-shrink-0" />
-                <span className="text-sm">
-                  123 Đường Lê Lợi, Quận 1<br />
-                  Thành phố Hồ Chí Minh
-                </span>
-              </li>
-              <li className="flex items-center gap-3">
-                <Phone size={18} className="flex-shrink-0" />
-                <a
-                  href="tel:+84901234567"
-                  className="text-sm hover:text-white transition-colors"
-                >
-                  +84 90 123 4567
-                </a>
-              </li>
-              <li className="flex items-center gap-3">
-                <Mail size={18} className="flex-shrink-0" />
-                <a
-                  href="mailto:info@watchstore.com"
-                  className="text-sm hover:text-white transition-colors"
-                >
-                  info@watchstore.com
-                </a>
-              </li>
-              <li className="flex items-start gap-3">
-                <Clock size={18} className="mt-0.5 flex-shrink-0" />
-                <span className="text-sm">Thứ 2 - Chủ nhật: 9:00 - 22:00</span>
-              </li>
-            </ul>
+          <h3 className="font-semibold mt-4 mb-3">Phương thức thanh toán</h3>
+          <div className="flex flex-wrap gap-2">
+            <img src="/icons/apple-pay.png" alt="Apple Pay" className="h-8" />
+            <img src="/icons/vnpay.png" alt="VNPay" className="h-8" />
+            <img src="/icons/momo.png" alt="MoMo" className="h-8" />
+            <img src="/icons/onepay.png" alt="OnePay" className="h-8" />
+            <img src="/icons/mpos.png" alt="mPOS" className="h-8" />
+            <img src="/icons/kredivo.png" alt="Kredivo" className="h-8" />
+            <img src="/icons/zalopay.png" alt="ZaloPay" className="h-8" />
+            <img src="/icons/alepay.png" alt="AlePay" className="h-8" />
+            <img src="/icons/fundin.png" alt="Fundiin" className="h-8" />
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="border-t border-gray-800 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-gray-400">
-              © {currentYear} WATCH STORE. Tất cả quyền được bảo lưu.
-            </p>
-            <div className="flex gap-6 text-sm">
-              <a href="/privacy" className="hover:text-white transition-colors">
-                Chính sách bảo mật
-              </a>
-              <a href="/terms" className="hover:text-white transition-colors">
-                Điều khoản sử dụng
-              </a>
-              <a href="/returns" className="hover:text-white transition-colors">
-                Chính sách đổi trả
-              </a>
-            </div>
+        {/* Thông tin & chính sách */}
+        <div>
+          <h3 className="font-semibold mb-3">Thông tin và chính sách</h3>
+          <ul className="space-y-1 text-sm">
+            <li>Mua hàng và thanh toán Online</li>
+            <li>Mua hàng trả góp Online</li>
+            <li>Mua hàng trả góp bằng thẻ tín dụng</li>
+            <li>Chính sách giao hàng</li>
+            <li>Chính sách đổi trả</li>
+            <li>Tra điểm Smember</li>
+            <li>Xem ưu đãi Smember</li>
+            <li>Tra thông tin bảo hành</li>
+          </ul>
+        </div>
+
+        {/* Dịch vụ & thông tin khác */}
+        <div>
+          <h3 className="font-semibold mb-3">Dịch vụ và thông tin khác</h3>
+          <ul className="space-y-1 text-sm">
+            <li>Khách hàng doanh nghiệp (B2B)</li>
+            <li>Ưu đãi thanh toán</li>
+            <li>Quy chế hoạt động</li>
+            <li>Chính sách bảo mật thông tin cá nhân</li>
+            <li>Chính sách Bảo hành</li>
+            <li>Liên hệ hợp tác kinh doanh</li>
+            <li>Tuyển dụng</li>
+            <li>Dịch vụ bảo hành mở rộng</li>
+          </ul>
+        </div>
+
+        {/* Kết nối */}
+        <div>
+          <h3 className="font-semibold mb-3">Kết nối với CellphoneS</h3>
+          <div className="flex gap-2 mb-4">
+            <img src="/icons/youtube.png" alt="YouTube" className="h-8 w-8" />
+            <img src="/icons/facebook.png" alt="Facebook" className="h-8 w-8" />
+            <img
+              src="/icons/instagram.png"
+              alt="Instagram"
+              className="h-8 w-8"
+            />
+            <img src="/icons/tiktok.png" alt="TikTok" className="h-8 w-8" />
+            <img src="/icons/zalo.png" alt="Zalo" className="h-8 w-8" />
           </div>
           <h3 className="font-semibold mb-1">Website thành viên</h3>
           <p className="text-sm">
