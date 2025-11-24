@@ -173,8 +173,22 @@ public class UserServiceImpl implements UserService {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
             return null;
         }
+        String input = normalize(username);
 
-        Optional<User> optionalUser = userRepository.findByUsername(normalize(username));
+        Optional<User> optionalUser;
+        // If input looks like an email, try email lookup first
+        if (input != null && input.contains("@")) {
+            optionalUser = userRepository.findByEmail(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByUsername(input);
+            }
+        } else {
+            optionalUser = userRepository.findByUsername(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByEmail(input);
+            }
+        }
+
         if (optionalUser.isEmpty()) {
             return null;
         }
