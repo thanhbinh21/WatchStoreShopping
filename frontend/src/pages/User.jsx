@@ -3,7 +3,6 @@ import Navbar from "../components/Navbar.jsx";
 import ProductList from "../components/ProductList.jsx";
 import HeroSection from "../components/HeroSection.jsx";
 import CollectionsSection from "../components/CollectionsSection.jsx";
-import Footer from "../components/Footer.jsx";
 import { getProducts } from "@/api/productAPI";
 
 export const User = () => {
