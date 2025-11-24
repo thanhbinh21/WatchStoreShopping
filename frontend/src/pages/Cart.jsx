@@ -96,7 +96,7 @@ export default function Cart() {
   return (
     <div>
       {/* Header giống Navbar */}
-      <header className="fixed top-0 z-50 w-full bg-red-600 shadow-md">
+      <header className="fixed top-0 z-50 w-full bg-brand-primary shadow-md">
         <div className="container mx-auto flex items-center justify-between h-16 px-4">
           <div
             className="text-white text-2xl font-bold cursor-pointer"
@@ -191,7 +191,7 @@ export default function Cart() {
             onClick={handleCheckout}
             className={`px-4 py-2 rounded text-white ${
               selectedItems.length > 0
-                ? "bg-red-600 hover:bg-red-700"
+                ? "bg-brand-primary hover:bg-brand-primary-soft"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
             disabled={selectedItems.length === 0}

@@ -75,10 +75,10 @@ export default function BrandSection() {
   // Group brands by first letter
   const groupBrandsByLetter = (brands) => {
     const grouped = {};
-    
+
     brands.forEach((brand) => {
       if (!brand.name) return;
-      
+
       const firstLetter = brand.name.charAt(0).toUpperCase();
       if (!grouped[firstLetter]) {
         grouped[firstLetter] = [];
@@ -98,7 +98,7 @@ export default function BrandSection() {
   const getGroupedBrands = () => {
     const grouped = groupBrandsByLetter(brands);
     const letters = Object.keys(grouped).sort();
-    
+
     return letters.map((letter) => ({
       letter,
       brands: grouped[letter],
@@ -108,11 +108,11 @@ export default function BrandSection() {
   // Distribute groups into 3 columns
   const distributeIntoColumns = (groups, numColumns = 3) => {
     const columns = Array.from({ length: numColumns }, () => []);
-    
+
     groups.forEach((group, index) => {
       columns[index % numColumns].push(group);
     });
-    
+
     return columns;
   };
 
@@ -194,13 +194,17 @@ export default function BrandSection() {
                   <h3 className="text-lg font-semibold text-gray-900 mb-3 pb-2 border-b border-gray-300">
                     {group.letter}
                   </h3>
-                  
+
                   {/* Brands List */}
                   <ul className="space-y-2">
                     {group.brands.map((brand) => (
                       <li
                         key={brand.id}
-                        onClick={() => navigate(`/products?brand=${encodeURIComponent(brand.name)}`)}
+                        onClick={() =>
+                          navigate(
+                            `/products?brand=${encodeURIComponent(brand.name)}`
+                          )
+                        }
                         className="text-gray-700 hover:text-red-600 transition-colors cursor-pointer"
                       >
                         {brand.name}

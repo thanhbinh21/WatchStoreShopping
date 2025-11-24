@@ -248,7 +248,7 @@ export const AdminPosts = () => {
         <h1 className="text-2xl font-bold">Quản lý bài viết</h1>
         <button
           onClick={handleNew}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-brand-primary text-white px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           + Tạo bài viết
         </button>
@@ -317,7 +317,9 @@ export const AdminPosts = () => {
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                     {uploading ? (
                       <div className="text-center">
-                        <div className="text-blue-600 mb-1">Đang upload...</div>
+                        <div className="text-brand-primary mb-1">
+                          Đang upload...
+                        </div>
                       </div>
                     ) : form.coverImageUrl ? (
                       <div className="relative w-full h-full p-2">
