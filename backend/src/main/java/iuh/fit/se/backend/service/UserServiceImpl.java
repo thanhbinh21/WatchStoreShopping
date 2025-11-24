@@ -22,10 +22,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Override
@@ -80,7 +82,18 @@ public class UserServiceImpl implements UserService {
                 .active(true)
                 .build();
 
-        return toSummary(userRepository.save(user));
+        User saved = userRepository.save(user);
+
+        // Send welcome email (best-effort). Exceptions from mail sending should not
+        // prevent user creation; catch and log them.
+        try {
+            emailService.sendRegistrationEmail(saved.getEmail(), saved.getFullName());
+        } catch (Exception ex) {
+            // Log the exception; keep lightweight to avoid adding logging framework changes
+            System.err.println("Failed to send registration email to " + saved.getEmail() + ": " + ex.getMessage());
+        }
+
+        return toSummary(saved);
     }
 
     @Override
@@ -160,8 +173,22 @@ public class UserServiceImpl implements UserService {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
             return null;
         }
+        String input = normalize(username);
 
-        Optional<User> optionalUser = userRepository.findByUsername(normalize(username));
+        Optional<User> optionalUser;
+        // If input looks like an email, try email lookup first
+        if (input != null && input.contains("@")) {
+            optionalUser = userRepository.findByEmail(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByUsername(input);
+            }
+        } else {
+            optionalUser = userRepository.findByUsername(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByEmail(input);
+            }
+        }
+
         if (optionalUser.isEmpty()) {
             return null;
         }
