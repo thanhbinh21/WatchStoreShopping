@@ -9,8 +9,12 @@ export default function Footer() {
         {/* Tổng đài hỗ trợ */}
         <div>
           <h3 className="font-semibold mb-3">Tổng đài hỗ trợ miễn phí</h3>
-          <p>Mua hàng - bảo hành <strong>1800.2097</strong> (7h30 - 22h00)</p>
-          <p>Khiếu nại <strong>1800.2063</strong> (8h00 - 21h30)</p>
+          <p>
+            Mua hàng - bảo hành <strong>1800.2097</strong> (7h30 - 22h00)
+          </p>
+          <p>
+            Khiếu nại <strong>1800.2063</strong> (8h00 - 21h30)
+          </p>
 
           <h3 className="font-semibold mt-4 mb-3">Phương thức thanh toán</h3>
           <div className="flex flex-wrap gap-2">
@@ -62,12 +66,18 @@ export default function Footer() {
           <div className="flex gap-2 mb-4">
             <img src="/icons/youtube.png" alt="YouTube" className="h-8 w-8" />
             <img src="/icons/facebook.png" alt="Facebook" className="h-8 w-8" />
-            <img src="/icons/instagram.png" alt="Instagram" className="h-8 w-8" />
+            <img
+              src="/icons/instagram.png"
+              alt="Instagram"
+              className="h-8 w-8"
+            />
             <img src="/icons/tiktok.png" alt="TikTok" className="h-8 w-8" />
             <img src="/icons/zalo.png" alt="Zalo" className="h-8 w-8" />
           </div>
           <h3 className="font-semibold mb-1">Website thành viên</h3>
-          <p className="text-sm">Hệ thống bảo hành và chăm sóc Điện thoại - Máy tính</p>
+          <p className="text-sm">
+            Hệ thống bảo hành và chăm sóc Điện thoại - Máy tính
+          </p>
           <p className="text-red-600 font-bold">dienthoaivui</p>
         </div>
       </div>

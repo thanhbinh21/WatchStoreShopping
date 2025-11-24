@@ -21,7 +21,7 @@ export default function Breadcrumb({
               // Refresh trang chủ - reload lại trang
               window.location.href = "/home";
             }}
-            className="flex items-center gap-1 text-gray-600 hover:text-red-600 transition-colors"
+            className="cursor-pointer flex items-center gap-1 text-foreground/60 hover:text-brand-primary transition-colors"
           >
             <Home size={16} />
             <span>Trang chủ</span>
@@ -33,12 +33,14 @@ export default function Breadcrumb({
               {postTitle && onBackToList ? (
                 <button
                   onClick={onBackToList}
-                  className="text-gray-600 hover:text-red-600 transition-colors"
+                  className="text-foreground/60 hover:text-red-600 transition-colors"
                 >
                   {currentPage}
                 </button>
               ) : (
-                <span className="text-gray-900 font-medium">{currentPage}</span>
+                <span className="text-foreground font-medium">
+                  {currentPage}
+                </span>
               )}
             </>
           )}
@@ -46,7 +48,7 @@ export default function Breadcrumb({
           {selectedCategory && !currentPage && !postTitle && !selectedBrand && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
-              <span className="text-gray-900 font-medium">
+              <span className="text-foreground font-medium">
                 {selectedCategory.name}
               </span>
             </>
@@ -55,7 +57,7 @@ export default function Breadcrumb({
           {selectedBrand && currentPage && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
-              <span className="text-gray-900 font-medium">
+              <span className="text-foreground font-medium">
                 {selectedBrand.name}
               </span>
             </>
@@ -64,7 +66,7 @@ export default function Breadcrumb({
           {postTitle && (
             <>
               <ChevronRight size={16} className="text-gray-400" />
-              <span className="text-gray-900 font-medium line-clamp-1">
+              <span className="text-foreground font-medium line-clamp-1">
                 {postTitle}
               </span>
             </>

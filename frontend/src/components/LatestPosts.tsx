@@ -65,7 +65,7 @@ export default function LatestPosts() {
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                   />
                   {post.postCategory && (
-                    <span className="absolute top-3 left-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-medium">
+                    <span className="absolute top-3 left-3 bg-brand-primary text-white px-3 py-1 rounded-full text-xs font-medium">
                       {post.postCategory.name}
                     </span>
                   )}
@@ -74,7 +74,7 @@ export default function LatestPosts() {
 
               {/* Content */}
               <div className="p-5">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-blue-900 transition-colors line-clamp-2">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2 group-hover:text-brand-primary transition-colors line-clamp-2">
                   {post.title}
                 </h3>
 
@@ -108,7 +108,7 @@ export default function LatestPosts() {
         <div className="text-center mt-10">
           <Link
             to="/posts"
-            className="inline-block px-6 py-3 bg-red-600 text-white font-medium rounded-lg hover:bg-red-800 transition-colors"
+            className="inline-block px-6 py-3 bg-brand-primary text-white font-medium rounded-lg hover:bg-brand-primary-soft transition-colors"
           >
             Xem Tất Cả Bài Viết
           </Link>
