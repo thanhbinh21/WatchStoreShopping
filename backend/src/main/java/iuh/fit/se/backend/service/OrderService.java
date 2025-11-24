@@ -36,6 +36,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
     public List<OrderResponse> getOrdersByUser(Long userId) {
         return orderRepository.findByUserId(userId)
@@ -84,7 +85,9 @@ public class OrderService {
             }
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        emailService.sendOrderConfirmationEmail(savedOrder);
+        return savedOrder;
     }
 
     public Order updateOrder(Long id, OrderRequest request) {
