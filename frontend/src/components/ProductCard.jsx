@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { parseStoredUser } from "@/utils/storage";
 import { addToWishlist, removeFromWishlist, isInWishlist } from "@/api/wishlistAPI";
+import { addToGuestCart} from "@/api/guestCart.js";
 
 export default function ProductCard({ product, onAddToCart }) {
     const navigate = useNavigate();
@@ -46,31 +47,26 @@ export default function ProductCard({ product, onAddToCart }) {
         // Điều hướng đến trang chi tiết sản phẩm
         navigate(`/product/${product.id}`);
     };
-
     const handleAddToCart = async (e) => {
         e.stopPropagation();
 
-        // Kiểm tra đăng nhập
         const token = localStorage.getItem("accessToken");
         const user = parseStoredUser();
 
+        // ❌ CHƯA LOGIN → lưu “guest cart”
         if (!token || !user?.id) {
-            toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
-            // Chuyển đến trang login
-            setTimeout(() => {
-                navigate("/login");
-            }, 1000);
+            addToGuestCart(product, 1);
+            toast.success("Đã thêm vào giỏ hàng (Khách) 🛒");
             return;
         }
 
+        // ✅ ĐÃ LOGIN → call API thật
         setIsAdding(true);
         try {
             await addToCart(user.id, product.id, 1);
             toast.success("Đã thêm vào giỏ hàng ✅");
-            // Gọi callback nếu có
-            if (onAddToCart) {
-                onAddToCart(product.id);
-            }
+
+            if (onAddToCart) onAddToCart(product.id);
         } catch (err) {
             console.error(err);
             toast.error("Thêm vào giỏ hàng thất bại 😢");
@@ -78,6 +74,37 @@ export default function ProductCard({ product, onAddToCart }) {
             setIsAdding(false);
         }
     };
+    // const handleAddToCart = async (e) => {
+    //     e.stopPropagation();
+    //
+    //     // Kiểm tra đăng nhập
+    //     const token = localStorage.getItem("accessToken");
+    //     const user = parseStoredUser();
+    //
+    //     if (!token || !user?.id) {
+    //         toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
+    //         // Chuyển đến trang login
+    //         setTimeout(() => {
+    //             navigate("/login");
+    //         }, 1000);
+    //         return;
+    //     }
+    //
+    //     setIsAdding(true);
+    //     try {
+    //         await addToCart(user.id, product.id, 1);
+    //         toast.success("Đã thêm vào giỏ hàng ✅");
+    //         // Gọi callback nếu có
+    //         if (onAddToCart) {
+    //             onAddToCart(product.id);
+    //         }
+    //     } catch (err) {
+    //         console.error(err);
+    //         toast.error("Thêm vào giỏ hàng thất bại 😢");
+    //     } finally {
+    //         setIsAdding(false);
+    //     }
+    // };
 
     // Determine badge based on product data
     const getBadge = () => {
