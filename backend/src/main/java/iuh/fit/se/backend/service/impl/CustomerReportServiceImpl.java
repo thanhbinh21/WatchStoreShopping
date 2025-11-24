@@ -1,10 +1,11 @@
-package iuh.fit.se.backend.service;
+package iuh.fit.se.backend.service.impl;
 
 import iuh.fit.se.backend.dto.CustomerDailySignupPoint;
 import iuh.fit.se.backend.dto.CustomerMonthlySignupPoint;
 import iuh.fit.se.backend.dto.CustomerSummaryReport;
 import iuh.fit.se.backend.dto.CustomerYearlySignupPoint;
 import iuh.fit.se.backend.repository.UserRepository;
+import iuh.fit.se.backend.service.CustomerReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
