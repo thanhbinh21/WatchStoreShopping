@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { GoogleIcon } from "@/components/ui/GoogleIcon";
 import { ZaloIcon } from "@/components/ui/ZaloIcon";
+import { getGuestCart, clearGuestCart } from "@/api/guestCart";
+import { addToCart } from "@/api/cartAPI";
+
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true);
@@ -32,6 +35,22 @@ export default function LoginRegister() {
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotLoading, setForgotLoading] = useState(false);
   const navigate = useNavigate();
+
+  const syncGuestCart = async (userId) => {
+    const guestItems = getGuestCart();
+    if (!guestItems || guestItems.length === 0) return;
+
+    for (const item of guestItems) {
+      try {
+        await addToCart(userId, item.id, item.quantity);
+      } catch (err) {
+        console.error("Sync cart error:", err);
+      }
+    }
+
+    clearGuestCart();
+  };
+
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -66,6 +85,8 @@ export default function LoginRegister() {
         if (data.refreshToken) {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
+
+        await syncGuestCart(data.user.id);
 
         // Chuyển đến /home cho cả admin và user
         navigate("/home");
