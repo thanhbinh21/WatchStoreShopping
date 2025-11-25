@@ -15,7 +15,7 @@ export default function HeroSection() {
   };
 
   return (
-    <section className="relative w-full min-h-[700px] flex items-center bg-gradient-to-b from-blue-50/50 via-purple-50/30 to-white pt-20 pb-16">
+    <section className="relative w-full min-h-[700px] flex items-center bg-linear-to-b from-blue-50/50 via-purple-50/30 to-white pt-20 pb-16">
       <div className="max-w-7xl mx-auto px-4 py-8 lg:py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* Left Section - Text Content */}
@@ -34,9 +34,9 @@ export default function HeroSection() {
 
             {/* Body Text */}
             <p className="text-base lg:text-lg text-gray-600 leading-relaxed max-w-xl font-light">
-              Discover our curated collection of premium electronic watches, where Swiss precision
-              meets contemporary design. Each timepiece is a masterpiece of engineering and
-              craftsmanship.
+              Discover our curated collection of premium electronic watches,
+              where Swiss precision meets contemporary design. Each timepiece is
+              a masterpiece of engineering and craftsmanship.
             </p>
 
             {/* Call-to-Action Buttons */}
@@ -58,16 +58,28 @@ export default function HeroSection() {
             {/* Statistics */}
             <div className="grid grid-cols-3 gap-4 lg:gap-8 pt-8 border-t border-gray-200 mt-4">
               <div>
-                <p className="text-3xl lg:text-4xl font-bold text-gray-900">500+</p>
-                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">Premium Watches</p>
+                <p className="text-3xl lg:text-4xl font-bold text-gray-900">
+                  500+
+                </p>
+                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
+                  Premium Watches
+                </p>
               </div>
               <div>
-                <p className="text-3xl lg:text-4xl font-bold text-gray-900">25k+</p>
-                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">Happy Customers</p>
+                <p className="text-3xl lg:text-4xl font-bold text-gray-900">
+                  25k+
+                </p>
+                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
+                  Happy Customers
+                </p>
               </div>
               <div>
-                <p className="text-3xl lg:text-4xl font-bold text-gray-900">99%</p>
-                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">Satisfaction Rate</p>
+                <p className="text-3xl lg:text-4xl font-bold text-gray-900">
+                  99%
+                </p>
+                <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
+                  Satisfaction Rate
+                </p>
               </div>
             </div>
           </div>
@@ -77,7 +89,7 @@ export default function HeroSection() {
             <div className="relative w-full max-w-lg lg:max-w-xl">
               {/* Background gradient */}
               <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-800 to-orange-900/80 rounded-[2rem] transform rotate-2 opacity-95 shadow-2xl"></div>
-              
+
               {/* Image container */}
               <div className="relative rounded-[2rem] overflow-hidden shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-700">
                 <img
@@ -86,7 +98,8 @@ export default function HeroSection() {
                   className="w-full h-auto object-cover aspect-square"
                   onError={(e) => {
                     // Use SVG placeholder instead of external URL
-                    e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='600' height='600' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3EPremium Watch%3C/text%3E%3C/svg%3E";
+                    e.target.src =
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='600' height='600' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3EPremium Watch%3C/text%3E%3C/svg%3E";
                   }}
                 />
               </div>
@@ -101,4 +114,3 @@ export default function HeroSection() {
     </section>
   );
 }
-

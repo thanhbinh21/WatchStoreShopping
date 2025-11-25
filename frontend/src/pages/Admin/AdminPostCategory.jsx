@@ -117,7 +117,7 @@ export const AdminPostCategory = () => {
         <h1 className="text-2xl font-bold">Danh mục bài viết</h1>
         <button
           onClick={handleNew}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="cursor-pointer bg-brand-primary text-brand-primary-foreground px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           + Tạo danh mục
         </button>

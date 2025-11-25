@@ -214,8 +214,8 @@ export default function PostList() {
                     onClick={() => handleCategoryChange(null)}
                     className={`cursor-pointer w-full text-left px-4 py-3 rounded-lg text-md font-medium transition-colors ${
                       !selectedCategory
-                        ? "bg-[#fff1f0] text-[#df092f]"
-                        : "text-[#212b36] hover:bg-gray-50"
+                        ? "bg-brand-accent-soft text-brand-accent"
+                        : "text-brand-ink hover:bg-gray-50"
                     }`}
                   >
                     Trang chủ
@@ -226,8 +226,8 @@ export default function PostList() {
                       onClick={() => handleCategoryChange(category)}
                       className={`cursor-pointer w-full text-left px-4 py-3 rounded-lg text-md font-medium transition-colors ${
                         selectedCategory?.id === category.id
-                          ? "bg-[#fff1f0] text-[#df092f]"
-                          : "text-[#212b36] hover:bg-gray-50"
+                          ? "bg-brand-accent-soft text-brand-accent"
+                          : "text-brand-ink hover:bg-gray-50"
                       }`}
                     >
                       {category.name}
@@ -247,11 +247,11 @@ export default function PostList() {
                 />
               ) : loading ? (
                 <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
                 </div>
               ) : loadingPost ? (
                 <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
                   <p className="ml-4 text-gray-600">Đang tải bài viết...</p>
                 </div>
               ) : posts.length === 0 ? (
@@ -271,7 +271,7 @@ export default function PostList() {
                             Chủ đề hot
                           </h2>
                           <div
-                            className="h-1 bg-red-600"
+                            className="h-1 bg-brand-primary"
                             style={{ width: "100px" }}
                           ></div>
                         </div>
@@ -300,7 +300,7 @@ export default function PostList() {
                             Nổi bật nhất
                           </h2>
                           <div
-                            className="h-1 bg-red-600"
+                            className="h-1 bg-brand-primary"
                             style={{ width: "120px" }}
                           ></div>
                         </div>
@@ -355,12 +355,12 @@ export default function PostList() {
                                   </div>
                                 )}
                                 <div className="absolute top-4 left-4">
-                                  <span className="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold uppercase">
+                                  <span className="bg-brand-primary text-white px-3 py-1 rounded text-xs font-bold uppercase">
                                     Đánh giá
                                   </span>
                                 </div>
                                 <div className="p-6">
-                                  <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-red-600 transition-colors line-clamp-2">
+                                  <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-brand-primary transition-colors line-clamp-2">
                                     {
                                       posts
                                         .slice()
@@ -449,7 +449,7 @@ export default function PostList() {
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                       {post.title}
                                     </h3>
                                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
@@ -479,7 +479,7 @@ export default function PostList() {
                               Tin tức mới nhất
                             </h2>
                             <div
-                              className="h-1 bg-red-600"
+                              className="h-1 bg-brand-primary"
                               style={{ width: "150px" }}
                             ></div>
                           </div>
@@ -508,7 +508,7 @@ export default function PostList() {
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                       {post.title}
                                     </h3>
                                     <p className="text-sm text-gray-600 mb-2 line-clamp-2">
@@ -535,7 +535,7 @@ export default function PostList() {
                               Góc Chọn & Mua
                             </h2>
                             <div
-                              className="h-1 bg-red-600"
+                              className="h-1 bg-brand-primary"
                               style={{ width: "130px" }}
                             ></div>
                           </div>
@@ -566,7 +566,7 @@ export default function PostList() {
                                         </div>
                                       )}
                                       <div className="p-4">
-                                        <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                        <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                           {post.title}
                                         </h3>
                                       </div>
@@ -583,7 +583,7 @@ export default function PostList() {
                                         </div>
                                       )}
                                       <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                        <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                           {post.title}
                                         </h3>
                                       </div>
@@ -602,7 +602,7 @@ export default function PostList() {
                             Xem nhiều tuần qua
                           </h2>
                           <div
-                            className="h-1 bg-red-600"
+                            className="h-1 bg-brand-primary"
                             style={{ width: "180px" }}
                           ></div>
                         </div>
@@ -630,7 +630,7 @@ export default function PostList() {
                                   </div>
                                 )}
                                 <div className="p-3">
-                                  <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                  <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                     {post.title}
                                   </h3>
                                   <p className="text-xs text-gray-500 mt-2">
@@ -652,7 +652,7 @@ export default function PostList() {
                         <div className="flex flex-col gap-3 mb-4">
                           <h2 className="text-2xl font-bold">NỔI BẬT NHẤT</h2>
                           <div
-                            className="h-1 bg-red-600"
+                            className="h-1 bg-brand-primary"
                             style={{
                               width: `${selectedCategory.name.length * 16}px`,
                             }}
@@ -690,7 +690,7 @@ export default function PostList() {
                                           </div>
                                         )}
                                         <div className="p-6 flex flex-col justify-center">
-                                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 hover:text-red-600 transition-colors line-clamp-3">
+                                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 hover:text-brand-primary transition-colors line-clamp-3">
                                             {post.title}
                                           </h2>
                                           {post.summary && (
@@ -758,7 +758,7 @@ export default function PostList() {
                                     onClick={() => setCurrentSlide(index)}
                                     className={`w-2 h-2 rounded-full transition-all ${
                                       currentSlide === index
-                                        ? "bg-red-600 w-8"
+                                        ? "bg-brand-primary w-8"
                                         : "bg-white/60 hover:bg-white/80"
                                     }`}
                                   />
@@ -777,7 +777,7 @@ export default function PostList() {
                               Tin tức cập nhật
                             </h2>
                             <div
-                              className="h-1 bg-red-600"
+                              className="h-1 bg-brand-primary"
                               style={{ width: "140px" }}
                             ></div>
                           </div>
@@ -799,7 +799,7 @@ export default function PostList() {
                                   </div>
                                 )}
                                 <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                     {post.title}
                                   </h3>
                                   <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -823,7 +823,7 @@ export default function PostList() {
                               Xem nhiều tuần qua
                             </h2>
                             <div
-                              className="h-1 bg-red-600"
+                              className="h-1 bg-brand-primary"
                               style={{ width: "160px" }}
                             ></div>
                           </div>
@@ -852,7 +852,7 @@ export default function PostList() {
                                     </div>
                                   )}
                                   <div className="p-4">
-                                    <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-red-600 transition-colors">
+                                    <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
                                       {post.title}
                                     </h3>
                                   </div>
