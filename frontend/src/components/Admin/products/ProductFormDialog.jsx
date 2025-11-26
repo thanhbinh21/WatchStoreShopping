@@ -112,6 +112,41 @@ export const ProductFormDialog = ({
     }
   };
 
+  // Product specs local state (array of { name, value })
+  const [specs, setSpecs] = useState(
+    Array.isArray(formData.productSpecs) ? formData.productSpecs : []
+  );
+
+  // Keep specs in sync when formData changes (e.g., when opening edit form)
+  useEffect(() => {
+    setSpecs(Array.isArray(formData.productSpecs) ? formData.productSpecs : []);
+  }, [formData.productSpecs]);
+
+  const emitSpecsChange = (nextSpecs) => {
+    setSpecs(nextSpecs);
+    // Emit synthetic event to parent onChange so formData gets updated
+    if (typeof onChange === "function") {
+      onChange({ target: { name: "productSpecs", value: nextSpecs } });
+    }
+  };
+
+  const addSpec = () => {
+    const next = [...specs, { name: "", value: "" }];
+    emitSpecsChange(next);
+  };
+
+  const updateSpec = (index, field, value) => {
+    const next = specs.map((s, i) =>
+      i === index ? { ...s, [field]: value } : s
+    );
+    emitSpecsChange(next);
+  };
+
+  const removeSpec = (index) => {
+    const next = specs.filter((_, i) => i !== index);
+    emitSpecsChange(next);
+  };
+
   // Set primary image
   const setPrimaryImage = (index) => {
     setUploadedImages(
@@ -371,6 +406,56 @@ export const ProductFormDialog = ({
                 placeholder="Nhập mô tả sản phẩm..."
                 rows={3}
               />
+            </div>
+
+            {/* Product Specs (key/value pairs) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Thông số kỹ thuật</Label>
+                <Button type="button" onClick={addSpec} className="px-2 py-1">
+                  Thêm
+                </Button>
+              </div>
+
+              {specs.length === 0 ? (
+                <p className="text-sm text-gray-500">Chưa có thông số nào.</p>
+              ) : (
+                <div className="space-y-2">
+                  {specs.map((spec, idx) => (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-12 gap-2 items-center"
+                    >
+                      <input
+                        type="text"
+                        placeholder="Tên thông số (ví dụ: Màn hình)"
+                        value={spec.name || ""}
+                        onChange={(e) =>
+                          updateSpec(idx, "name", e.target.value)
+                        }
+                        className="col-span-5 px-3 py-2 border rounded"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Giá trị (ví dụ: 6.1 inch)"
+                        value={spec.value || ""}
+                        onChange={(e) =>
+                          updateSpec(idx, "value", e.target.value)
+                        }
+                        className="col-span-6 px-3 py-2 border rounded"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeSpec(idx)}
+                        className="col-span-1 text-red-500"
+                        title="Xóa thông số"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Trạng thái */}
