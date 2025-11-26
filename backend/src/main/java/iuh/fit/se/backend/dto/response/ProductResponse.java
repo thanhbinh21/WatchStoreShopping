@@ -3,6 +3,7 @@ package iuh.fit.se.backend.dto.response;
 import iuh.fit.se.backend.entity.ProductImage;
 import iuh.fit.se.backend.entity.ProductPrice;
 import iuh.fit.se.backend.entity.Inventory;
+import iuh.fit.se.backend.entity.ProductSpec;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -38,5 +39,6 @@ public class ProductResponse {
     private List<ProductImage> productImages;
     private List<ProductPrice> productPrices;
     private List<Inventory> inventories;
+    private List<ProductSpec> productSpecs;
 
 }
