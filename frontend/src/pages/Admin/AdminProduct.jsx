@@ -522,9 +522,10 @@ export const AdminProduct = () => {
               setMinPriceInput("");
               setMaxPriceInput(String(priceMaxLimit));
               setStatusFilter("");
+              setSearchTerm("");
               setPage(1);
             }}
-            className="px-3 py-2"
+            className="cursor-pointer px-3 py-2"
           >
             Clear filters
           </Button>
