@@ -6,11 +6,21 @@ export const adminPostAPI = {
     page = 0,
     size = 10,
     sortBy = "createdAt",
-    direction = "DESC"
+    direction = "DESC",
+    filters = {}
   ) => {
-    const response = await axios.get(
-      `/posts/admin/all?page=${page}&size=${size}&sortBy=${sortBy}&direction=${direction}`
-    );
+    const params = new URLSearchParams();
+    params.append("page", page);
+    params.append("size", size);
+    params.append("sortBy", sortBy);
+    params.append("direction", direction);
+    if (filters.title) params.append("title", filters.title);
+    if (filters.categoryId) params.append("categoryId", filters.categoryId);
+    if (filters.status) params.append("status", filters.status);
+    if (filters.createdFrom) params.append("createdFrom", filters.createdFrom);
+    if (filters.createdTo) params.append("createdTo", filters.createdTo);
+
+    const response = await axios.get(`/posts/admin/all?${params.toString()}`);
     return response.data;
   },
   getById: async (id) => {
