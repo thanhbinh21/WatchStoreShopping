@@ -62,7 +62,13 @@ export const AdminPosts = () => {
         createdTo: createdTo || undefined,
       };
 
-      const response = await adminPostAPI.getAll(page - 1, 10, "createdAt", "DESC", filters);
+      const response = await adminPostAPI.getAll(
+        page - 1,
+        10,
+        "createdAt",
+        "DESC",
+        filters
+      );
       console.log("Posts response:", response);
 
       // Check if response is paginated (Spring Data Page)
@@ -279,7 +285,10 @@ export const AdminPosts = () => {
             type="text"
             className="w-full border rounded px-3 py-2"
             value={searchTitle}
-            onChange={(e) => { setSearchTitle(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setSearchTitle(e.target.value);
+              setPage(1);
+            }}
             placeholder="Tìm theo tiêu đề..."
           />
         </div>
@@ -289,11 +298,16 @@ export const AdminPosts = () => {
           <select
             className="w-full border rounded px-3 py-2"
             value={categoryFilter}
-            onChange={(e) => { setCategoryFilter(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="">Tất cả</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
             ))}
           </select>
         </div>
@@ -303,7 +317,10 @@ export const AdminPosts = () => {
           <select
             className="w-full border rounded px-3 py-2"
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
           >
             <option value="">Tất cả</option>
             <option value="PUBLISHED">Xuất bản</option>
@@ -318,7 +335,10 @@ export const AdminPosts = () => {
             type="date"
             className="w-full border rounded px-3 py-2"
             value={createdFrom}
-            onChange={(e) => { setCreatedFrom(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setCreatedFrom(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
 
@@ -328,7 +348,10 @@ export const AdminPosts = () => {
             type="date"
             className="w-full border rounded px-3 py-2"
             value={createdTo}
-            onChange={(e) => { setCreatedTo(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setCreatedTo(e.target.value);
+              setPage(1);
+            }}
           />
         </div>
 
