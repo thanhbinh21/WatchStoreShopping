@@ -80,7 +80,8 @@ public class ProductController {
         response.setProductPrices(product.getProductPrices());
         response.setInventories(product.getInventories());
         response.setProductImages(product.getProductImages());
-        
+        response.setProductSpecs(product.getProductSpecs());
+
         // Current price and stock
         if (!product.getProductPrices().isEmpty()) {
             ProductPrice currentPrice = product.getProductPrices().stream()
@@ -173,6 +174,17 @@ public class ProductController {
                 product.getProductImages().add(image);
             }
         }
+
+        // Add product specs if provided
+        if (request.getProductSpecs() != null && !request.getProductSpecs().isEmpty()) {
+            for (ProductRequest.ProductSpecRequest specReq : request.getProductSpecs()) {
+                ProductSpec spec = new ProductSpec();
+                spec.setProduct(product);
+                spec.setKeyName(specReq.getKeyName());
+                spec.setValue(specReq.getValue());
+                product.getProductSpecs().add(spec);
+            }
+        }
         
         return productService.saveProduct(product);
     }
@@ -247,6 +259,19 @@ public class ProductController {
                         .isPrimary(imgReq.getIsPrimary() != null ? imgReq.getIsPrimary() : false)
                         .build();
                 product.getProductImages().add(image);
+            }
+        }
+
+        // Update product specs if provided
+        if (request.getProductSpecs() != null) {
+            // clear existing specs (orphanRemoval will delete)
+            product.getProductSpecs().clear();
+            for (ProductRequest.ProductSpecRequest specReq : request.getProductSpecs()) {
+                ProductSpec spec = new ProductSpec();
+                spec.setProduct(product);
+                spec.setKeyName(specReq.getKeyName());
+                spec.setValue(specReq.getValue());
+                product.getProductSpecs().add(spec);
             }
         }
         

@@ -81,6 +81,12 @@ export const createProduct = async (productData) => {
         ? Number(productData.stockQuantity)
         : null,
       images: productData.images || [], // Array of {imageUrl, isPrimary}
+      productSpecs: Array.isArray(productData.productSpecs)
+        ? productData.productSpecs.map((s) => ({
+            keyName: s.name || s.keyName || s.key,
+            value: s.value || s.val || s.specValue || "",
+          }))
+        : undefined,
     };
 
     const newProduct = await axiosInstance.post(PRODUCT_URL, payload);
@@ -107,6 +113,12 @@ export const updateProduct = async (id, productData) => {
         ? Number(productData.stockQuantity)
         : null,
       images: productData.images || [],
+      productSpecs: Array.isArray(productData.productSpecs)
+        ? productData.productSpecs.map((s) => ({
+            keyName: s.name || s.keyName || s.key,
+            value: s.value || s.val || s.specValue || "",
+          }))
+        : undefined,
     };
 
     const updatedProduct = await axiosInstance.put(

@@ -268,6 +268,12 @@ export const AdminProduct = () => {
         price: currentPrice,
         stockQuantity: stockQuantity,
         images: fullProduct.productImages || [],
+        productSpecs: Array.isArray(fullProduct.productSpecs)
+          ? fullProduct.productSpecs.map((s) => ({
+              name: s.keyName || s.name,
+              value: s.value,
+            }))
+          : [],
       });
       setIsEditOpen(true);
     } catch (err) {
@@ -292,6 +298,7 @@ export const AdminProduct = () => {
       price: "",
       stockQuantity: "",
       images: [],
+      productSpecs: [],
     });
     setIsAddOpen(true);
   };

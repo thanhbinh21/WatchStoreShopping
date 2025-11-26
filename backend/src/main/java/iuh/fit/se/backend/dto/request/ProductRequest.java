@@ -25,6 +25,15 @@ public class ProductRequest {
     
     // Multiple images support
     private List<ImageRequest> images;  // Danh sách ảnh
+    private List<ProductSpecRequest> productSpecs;
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ProductSpecRequest {
+        private String keyName;
+        private String value;
+    }
     
     @Data
     @NoArgsConstructor
