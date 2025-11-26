@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Data
 @AllArgsConstructor
@@ -28,6 +29,7 @@ public class ProductResponse {
     private Long supplierId;  // Thêm supplierId
     private String status;
     private Integer stockQuantity;
+    private LocalDateTime createdAt;
 
     private Double rating;       // trung bình rating
     private Long numOfRating;    // tổng số review
