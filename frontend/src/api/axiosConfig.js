@@ -27,7 +27,14 @@ axiosInstance.interceptors.response.use(
     const originalRequest = error.config;
 
     // Nếu lỗi là token expired
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Do not try refresh for auth endpoints (login/register/refresh-token)
+    const isAuthRequest =
+      originalRequest?.url && originalRequest.url.includes("/auth");
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthRequest
+    ) {
       originalRequest._retry = true;
       try {
         const refreshToken = localStorage.getItem("refreshToken");

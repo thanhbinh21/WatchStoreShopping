@@ -166,7 +166,7 @@ export default function SaleBanner({ onAddToCart }) {
       <section className="py-12 bg-gradient-to-br from-red-50 to-orange-50">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex justify-center items-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+            <Loader2 className="w-8 h-8 animate-spin text-brand-primary" />
           </div>
         </div>
       </section>
@@ -190,7 +190,7 @@ export default function SaleBanner({ onAddToCart }) {
       <div className="max-w-7xl mx-auto px-4 relative z-10">
         {/* Header */}
         <div className="text-center mb-8 lg:mb-12">
-          <div className="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-full mb-4">
+          <div className="inline-flex items-center gap-2 bg-brand-primary text-brand-primary-foreground px-4 py-2 rounded-full mb-4">
             <Tag className="w-5 h-5" />
             <span className="font-bold text-sm uppercase tracking-wide">
               Ưu đãi đặc biệt
@@ -201,7 +201,7 @@ export default function SaleBanner({ onAddToCart }) {
           </h2>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Khám phá những ưu đãi hấp dẫn - Giảm giá lên đến{" "}
-            <span className="font-bold text-red-600">
+            <span className="font-bold text-brand-primary">
               {Math.max(...discountedProducts.map((p) => p.discountPercent))}%
             </span>
           </p>
@@ -212,7 +212,7 @@ export default function SaleBanner({ onAddToCart }) {
           {discountedProducts.map((product) => (
             <div key={product.id} className="relative">
               {/* Discount Badge */}
-              <div className="absolute top-2 left-2 z-20 bg-red-600 text-white px-3 py-1 rounded-full font-bold text-sm shadow-lg">
+              <div className="absolute top-2 left-2 z-20 bg-brand-primary text-brand-primary-foreground px-3 py-1 rounded-full font-bold text-sm shadow-lg">
                 -{product.discountPercent}%
               </div>
 
@@ -263,7 +263,7 @@ export default function SaleBanner({ onAddToCart }) {
                           {product.originalPrice.toLocaleString("vi-VN")}₫
                         </p>
                       </div>
-                      <p className="text-xs text-red-600 font-medium mt-1">
+                      <p className="text-xs text-brand-primary font-medium mt-1">
                         Tiết kiệm{" "}
                         {(
                           product.originalPrice - product.discountedPrice
@@ -296,7 +296,7 @@ export default function SaleBanner({ onAddToCart }) {
                         onAddToCart(product.id);
                       }
                     }}
-                    className="mt-auto w-full bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-lg py-2.5 hover:from-red-700 hover:to-orange-700 transition-all duration-300 font-medium text-sm lg:text-base shadow-md hover:shadow-lg"
+                    className="mt-auto w-full bg-linear-to-r from-brand-primary to-orange-600 text-brand-primary-foreground rounded-lg py-2.5 hover:from-red-700 hover:to-orange-700 transition-all duration-300 font-medium text-sm lg:text-base shadow-md hover:shadow-lg"
                   >
                     Thêm vào giỏ hàng
                   </button>
@@ -316,7 +316,7 @@ export default function SaleBanner({ onAddToCart }) {
                 productsSection.scrollIntoView({ behavior: "smooth" });
               }
             }}
-            className="px-8 py-3 bg-white text-red-600 border-2 border-red-600 rounded-lg font-semibold hover:bg-red-600 hover:text-white transition-all duration-300 shadow-md"
+            className="px-8 py-3 bg-brand-primary-foreground text-brand-primary border-2 border-brand-primary rounded-lg font-semibold hover:bg-brand-primary hover:text-brand-primary-foreground transition-all duration-300 shadow-md"
           >
             Xem tất cả sản phẩm
           </button>

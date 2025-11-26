@@ -23,7 +23,7 @@ export default function PostDetailContent({ post, formatDate }) {
       >
         <article className="bg-white rounded-3xl shadow-2xl p-6 lg:p-8 mb-8">
           {post.postCategory && (
-            <span className="inline-block bg-red-600 text-white px-3 py-1 rounded text-xs font-bold mb-3 uppercase">
+            <span className="inline-block bg-brand-primary text-white px-3 py-1 rounded text-xs font-bold mb-3 uppercase">
               {post.postCategory.name}
             </span>
           )}
@@ -51,7 +51,7 @@ export default function PostDetailContent({ post, formatDate }) {
                   )}
                 </div>
                 <div>
-                  <div className="font-semibold text-red-600 text-sm">
+                  <div className="font-semibold text-brand-primary text-sm">
                     {post.author.fullName || post.author.username}
                   </div>
                   <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -70,7 +70,7 @@ export default function PostDetailContent({ post, formatDate }) {
           </div>
 
           {post.summary && (
-            <div className="bg-gray-50 p-5 mb-8 rounded-lg border-l-4 border-red-600">
+            <div className="bg-gray-50 p-5 mb-8 rounded-lg border-l-4 border-brand-primary">
               <p className="text-base text-gray-700 leading-relaxed font-medium">
                 {post.summary}
               </p>

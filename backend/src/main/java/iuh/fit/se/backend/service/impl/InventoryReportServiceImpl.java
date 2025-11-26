@@ -1,4 +1,4 @@
-package iuh.fit.se.backend.service;
+package iuh.fit.se.backend.service.impl;
 
 import iuh.fit.se.backend.dto.InventoryDailyPoint;
 import iuh.fit.se.backend.dto.InventoryMonthlyPoint;
@@ -7,6 +7,7 @@ import iuh.fit.se.backend.dto.InventoryYearlyPoint;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
 import iuh.fit.se.backend.repository.InventoryRepository;
 import iuh.fit.se.backend.repository.OrderRepository;
+import iuh.fit.se.backend.service.InventoryReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

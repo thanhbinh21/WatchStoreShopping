@@ -66,7 +66,7 @@ export default function BannerSlider({ startIndex = 0 }) {
                 className="w-full h-full object-cover"
               />
               {banner.title && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-8">
+                <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-8">
                   <h2 className="text-white text-2xl md:text-4xl font-bold mb-2">
                     {banner.title}
                   </h2>
@@ -86,7 +86,7 @@ export default function BannerSlider({ startIndex = 0 }) {
                 className="w-full h-full object-cover"
               />
               {banner.title && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-8">
+                <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/70 to-transparent p-8">
                   <h2 className="text-white text-2xl md:text-4xl font-bold mb-2">
                     {banner.title}
                   </h2>
@@ -107,17 +107,17 @@ export default function BannerSlider({ startIndex = 0 }) {
         <>
           <button
             onClick={goToPrevious}
-            className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+            className="cursor-pointer absolute left-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all"
             aria-label="Previous banner"
           >
-            <ChevronLeft className="w-6 h-6 text-gray-800" />
+            <ChevronLeft className="w-6 h-6 text-brand-ink" />
           </button>
           <button
             onClick={goToNext}
-            className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white p-2 rounded-full shadow-lg transition-all"
+            className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all"
             aria-label="Next banner"
           >
-            <ChevronRight className="w-6 h-6 text-gray-800" />
+            <ChevronRight className="w-6 h-6 text-brand-ink" />
           </button>
         </>
       )}
@@ -129,10 +129,10 @@ export default function BannerSlider({ startIndex = 0 }) {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`cursor-pointer w-2 h-2 rounded-full transition-all ${
                 index === currentIndex
-                  ? "bg-white w-8"
-                  : "bg-white/50 hover:bg-white/75"
+                  ? "bg-brand-accent w-8"
+                  : "bg-brand-accent-soft/50 hover:bg-brand-accent-soft/75"
               }`}
               aria-label={`Go to banner ${index + 1}`}
             />

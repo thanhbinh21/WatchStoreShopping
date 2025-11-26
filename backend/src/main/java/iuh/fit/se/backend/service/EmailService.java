@@ -25,6 +25,54 @@ public class EmailService {
     @Value("${app.mail.from:no-reply@watchstore.local}")
     private String fromEmail;
 
+    // Gửi email đăng ký
+    public void sendRegistrationEmail(String to, String fullName) {
+        try {
+            String subject = "Chào mừng đến với Watch Store";
+            String text = String.format(
+                    "Xin chào %s,\n\nCám ơn bạn đã đăng ký tài khoản tại Watch Store.\n\nTrân trọng,\nWatch Store Team",
+                    fullName != null ? fullName : ""
+            );
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            if (StringUtils.hasText(fromEmail)) message.setFrom(fromEmail);
+            message.setSubject(subject);
+            message.setText(text);
+
+            mailSender.send(message);
+            log.info("Sent registration email to {}", to);
+        } catch (MailException e) {
+            log.error("Failed to send registration email to {}", to, e);
+        }
+    }
+
+    // Gửi email reset password
+    public void sendPasswordResetEmail(String to, String fullName, String token, String frontendBaseUrl) {
+        try {
+            String subject = "Yêu cầu đặt lại mật khẩu - Watch Store";
+            String resetUrl = String.format("%s/reset-password?token=%s", frontendBaseUrl, token);
+            String text = String.format(
+                    "Xin chào %s,\n\nChúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản của bạn.\n\n" +
+                            "Để đặt lại mật khẩu, vui lòng truy cập link sau (hết hạn trong 1 giờ):\n%s\n\n" +
+                            "Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.\n\nTrân trọng,\nWatch Store Team",
+                    fullName != null ? fullName : "", resetUrl
+            );
+
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(to);
+            if (StringUtils.hasText(fromEmail)) message.setFrom(fromEmail);
+            message.setSubject(subject);
+            message.setText(text);
+
+            mailSender.send(message);
+            log.info("Sent password reset email to {}", to);
+        } catch (MailException e) {
+            log.error("Failed to send password reset email to {}", to, e);
+        }
+    }
+
+    // Gửi email xác nhận đơn hàng
     public void sendOrderConfirmationEmail(Order order) {
         if (order == null) {
             log.warn("Skipping order confirmation email because order is null");
@@ -40,9 +88,7 @@ public class EmailService {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(user.getEmail());
-            if (StringUtils.hasText(fromEmail)) {
-                message.setFrom(fromEmail);
-            }
+            if (StringUtils.hasText(fromEmail)) message.setFrom(fromEmail);
             message.setSubject(String.format("[Watch Store] Xác nhận đơn hàng #%s", order.getId()));
             message.setText(buildEmailBody(order));
 
@@ -56,23 +102,17 @@ public class EmailService {
     private String buildEmailBody(Order order) {
         StringBuilder body = new StringBuilder();
         body.append("Xin chào ").append(
-                StringUtils.hasText(order.getFullName()) ? order.getFullName() : "quý khách"
-        ).append(",\n\n");
+                        StringUtils.hasText(order.getFullName()) ? order.getFullName() : "quý khách"
+                ).append(",\n\n");
         body.append("Cảm ơn bạn đã đặt hàng tại Watch Store. Thông tin đơn hàng của bạn:\n");
         body.append(String.format("Mã đơn hàng: #%s\n", order.getId()));
 
         if (StringUtils.hasText(order.getAddress())) {
             body.append("Địa chỉ giao hàng: ")
                     .append(order.getAddress());
-            if (StringUtils.hasText(order.getWard())) {
-                body.append(", ").append(order.getWard());
-            }
-            if (StringUtils.hasText(order.getDistrict())) {
-                body.append(", ").append(order.getDistrict());
-            }
-            if (StringUtils.hasText(order.getCity())) {
-                body.append(", ").append(order.getCity());
-            }
+            if (StringUtils.hasText(order.getWard())) body.append(", ").append(order.getWard());
+            if (StringUtils.hasText(order.getDistrict())) body.append(", ").append(order.getDistrict());
+            if (StringUtils.hasText(order.getCity())) body.append(", ").append(order.getCity());
             body.append("\n");
         }
 
@@ -80,8 +120,7 @@ public class EmailService {
         BigDecimal total = BigDecimal.ZERO;
         List<OrderItem> items = order.getOrderItems() == null ? List.of() : order.getOrderItems();
         for (OrderItem item : items) {
-            BigDecimal lineTotal = item.getPrice()
-                    .multiply(BigDecimal.valueOf(item.getQuantity()));
+            BigDecimal lineTotal = item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity()));
             total = total.add(lineTotal);
             body.append(String.format("- %s x%d: %s VND\n",
                     item.getProductName(),
@@ -100,4 +139,3 @@ public class EmailService {
         return body.toString();
     }
 }
-

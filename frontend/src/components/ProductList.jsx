@@ -85,7 +85,7 @@ export default function ProductList({
   if (loading) {
     return (
       <div className="flex justify-center items-center py-20">
-        <Loader2 className="w-10 h-10 animate-spin text-red-600" />
+        <Loader2 className="w-10 h-10 animate-spin text-brand-primary" />
       </div>
     );
   }
@@ -170,7 +170,7 @@ export default function ProductList({
                         onClick={() => handlePageChange(index)}
                         className={`min-w-10 px-3 py-2 rounded-lg border transition-colors ${
                           currentPage === index
-                            ? "bg-red-600 text-white border-red-600 font-semibold"
+                            ? "bg-brand-primary text-white border-brand-pribg-brand-primary font-semibold"
                             : "border-gray-300 hover:bg-gray-100 text-gray-700"
                         }`}
                         aria-label={`Go to page ${index + 1}`}
@@ -203,7 +203,7 @@ export default function ProductList({
                         onClick={() => handlePageChange(index)}
                         className={`min-w-10 px-3 py-2 rounded-lg border transition-colors ${
                           currentPage === index
-                            ? "bg-red-600 text-white border-red-600 font-semibold"
+                            ? "bg-brand-primary text-white border-brand-primary font-semibold"
                             : "border-gray-300 hover:bg-gray-100 text-gray-700"
                         }`}
                         aria-label={`Go to page ${index + 1}`}
