@@ -68,11 +68,29 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String direction
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo
     ) {
         Sort.Direction sortDirection = Sort.Direction.fromString(direction);
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        return postService.getAllPosts(pageable);
+        java.time.LocalDateTime from = null;
+        java.time.LocalDateTime to = null;
+        try {
+            if (createdFrom != null && !createdFrom.isEmpty()) from = java.time.LocalDate.parse(createdFrom).atStartOfDay();
+            if (createdTo != null && !createdTo.isEmpty()) to = java.time.LocalDate.parse(createdTo).atTime(23,59,59);
+        } catch (Exception e) {
+            // ignore parse errors, service will return results without date filter
+        }
+
+        if (title == null && categoryId == null && (status == null || status.isEmpty()) && from == null && to == null) {
+            return postService.getAllPosts(pageable);
+        }
+
+        return postService.getAllPostsFiltered(title, categoryId, status, from, to, pageable);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

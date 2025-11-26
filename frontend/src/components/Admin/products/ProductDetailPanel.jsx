@@ -122,7 +122,7 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
               </div>
               <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
                 <p className="text-sm font-medium text-gray-900 dark:text-white">
-                  {productDetail.brand.name}
+                  {productDetail.brand}
                 </p>
                 {productDetail.brand.description && (
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">

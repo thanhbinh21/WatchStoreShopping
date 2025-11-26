@@ -387,6 +387,7 @@ export const ProductFormDialog = ({
                 <option value="ACTIVE">Hoạt động</option>
                 <option value="INACTIVE">Tạm ngưng</option>
                 <option value="DISCONTINUED">Ngừng bán</option>
+                <option value="OUT_OF_STOCK">Hết hàng</option>
               </select>
             </div>
 

@@ -37,6 +37,7 @@ public class ProductController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) String brand,
             @RequestParam(required = false) String supplier,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "0") int page,
@@ -44,7 +45,12 @@ public class ProductController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String order
     ) {
-        return productService.searchProducts(name, category, brand, supplier, minPrice, maxPrice, page, size, sortBy, order);
+        return productService.searchProducts(name, category, brand, supplier, minPrice, maxPrice, status, page, size, sortBy, order);
+    }
+
+    @GetMapping("/price-range")
+    public iuh.fit.se.backend.dto.response.PriceRangeResponse getPriceRange() {
+        return productService.getPriceRange();
     }
 
     @GetMapping("/{id}")
@@ -97,6 +103,9 @@ public class ProductController {
                 .orElse(product.getProductImages().get(0).getImageUrl());
             response.setImageUrl(primaryImage);
         }
+
+        // CreatedAt
+        response.setCreatedAt(product.getCreatedAt());
         
         return response;
     }

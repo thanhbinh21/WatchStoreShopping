@@ -4,6 +4,7 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  getPriceRange,
 } from "@/api/productAPI";
 import { AdminPagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,32 @@ import { ProductFormDialog } from "@/components/Admin/products/ProductFormDialog
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
-import { PlusIcon, SearchIcon } from "lucide-react";
+import { PlusIcon, SearchIcon, Loader2 } from "lucide-react";
+import { getBrands } from "@/api/brandAPI";
+import { getCategories } from "@/api/categoryAPI";
 
 export const AdminProduct = () => {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  // price & status filters
+  const PRICE_MAX = 10000000;
+  // applied filters used when fetching
+  const [appliedMinPrice, setAppliedMinPrice] = useState(0);
+  const [appliedMaxPrice, setAppliedMaxPrice] = useState(PRICE_MAX);
+  // input values (editable by admin) — keep as raw strings so user can clear the field
+  const [minPriceInput, setMinPriceInput] = useState(String(appliedMinPrice));
+  const [maxPriceInput, setMaxPriceInput] = useState(String(appliedMaxPrice));
+  const [priceMaxLimit, setPriceMaxLimit] = useState(PRICE_MAX);
+  const [isApplyingPrice, setIsApplyingPrice] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
+  // filters
+  const [brandFilter, setBrandFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productDetail, setProductDetail] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -50,22 +70,140 @@ export const AdminProduct = () => {
 
   const fetchProducts = useCallback(async () => {
     try {
-      const res = await getProducts({
+      const params = {
         page: page - 1,
         size: 10,
-        name: searchTerm,
-      });
-      setProducts(res.content);
-      setTotalPages(res.totalPages);
+      };
+
+      if (debouncedSearch) params.name = debouncedSearch;
+      if (brandFilter) params.brand = brandFilter;
+      if (categoryFilter) params.category = categoryFilter;
+      // price filters: only send if user narrowed the range
+      if (appliedMinPrice > 0) params.minPrice = appliedMinPrice;
+      if (appliedMaxPrice < priceMaxLimit) params.maxPrice = appliedMaxPrice;
+      if (statusFilter) params.status = statusFilter;
+
+      console.log("[AdminProduct] fetchProducts params:", params);
+      const res = await getProducts(params);
+      console.log("[AdminProduct] fetchProducts response:", res);
+      const content = res?.content ?? res?.data ?? res;
+      setProducts(content?.content ?? content ?? []);
+      setTotalPages(
+        (res && res.totalPages) || (content && content.totalPages) || 0
+      );
     } catch (err) {
       console.error("Lỗi khi lấy sản phẩm:", err);
-      toast.error("Không thể tải danh sách sản phẩm");
+      const status = err?.response?.status;
+      if (status === 403) {
+        toast.error("Bạn không có quyền xem dữ liệu với bộ lọc này (403).");
+      } else if (status === 401) {
+        toast.error(
+          "Chưa đăng nhập hoặc token hết hạn (401). Vui lòng đăng nhập."
+        );
+      } else {
+        toast.error("Không thể tải danh sách sản phẩm");
+      }
     }
-  }, [page, searchTerm]);
+  }, [
+    page,
+    debouncedSearch,
+    brandFilter,
+    categoryFilter,
+    appliedMinPrice,
+    appliedMaxPrice,
+    priceMaxLimit,
+    statusFilter,
+  ]);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  // debounce searchTerm
+  useEffect(() => {
+    const id = setTimeout(() => setDebouncedSearch(searchTerm), 400);
+    return () => clearTimeout(id);
+  }, [searchTerm]);
+
+  // auto-apply price inputs (debounced) — applies after admin stops typing for 600ms
+  useEffect(() => {
+    // when inputs change, show spinner until debounce finishes
+    setIsApplyingPrice(true);
+    const id = setTimeout(() => {
+      const min = Math.max(0, Number(minPriceInput) || 0);
+      const max = Math.min(
+        priceMaxLimit,
+        Number(maxPriceInput) || priceMaxLimit
+      );
+
+      if (min > max) {
+        // If user swapped values, normalize by swapping them
+        setMinPriceInput(max);
+        setMaxPriceInput(min);
+        setAppliedMinPrice(max);
+        setAppliedMaxPrice(min);
+      } else {
+        setAppliedMinPrice(min);
+        setAppliedMaxPrice(max);
+      }
+
+      setIsApplyingPrice(false);
+      setPage(1);
+    }, 600);
+
+    return () => clearTimeout(id);
+  }, [minPriceInput, maxPriceInput, priceMaxLimit]);
+
+  // load brands & categories for filter selects
+  useEffect(() => {
+    let mounted = true;
+    const loadMeta = async () => {
+      try {
+        const [bRes, cRes] = await Promise.all([getBrands(), getCategories()]);
+        if (!mounted) return;
+        const normalize = (v) =>
+          Array.isArray(v)
+            ? v
+            : Array.isArray(v?.data)
+            ? v.data
+            : Array.isArray(v?.content)
+            ? v.content
+            : [];
+        setBrands(normalize(bRes));
+        setCategories(normalize(cRes));
+      } catch (e) {
+        console.error("Error loading brands/categories", e);
+      }
+    };
+    loadMeta();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // load price range from server (current prices)
+  useEffect(() => {
+    let mounted = true;
+    const loadRange = async () => {
+      try {
+        const range = await getPriceRange();
+        if (!mounted || !range) return;
+        const max = Number(range.maxPrice) || PRICE_MAX;
+        const min = Number(range.minPrice) || 0;
+        setPriceMaxLimit(max);
+        setAppliedMaxPrice(max);
+        setAppliedMinPrice(min);
+        setMaxPriceInput(String(max));
+        setMinPriceInput(min === 0 ? "" : String(min));
+      } catch (e) {
+        console.error("Error loading price range", e);
+      }
+    };
+    loadRange();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleNext = () => {
     if (page < totalPages) {
@@ -274,6 +412,123 @@ export const AdminProduct = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
           />
+        </div>
+      </div>
+
+      {/* Filters Row */}
+      <div className="flex flex-wrap items-end gap-3 mt-3">
+        <div className="min-w-40">
+          <label className="block text-xs text-gray-500 mb-1">
+            Thương hiệu
+          </label>
+          <select
+            value={brandFilter}
+            onChange={(e) => {
+              console.log("[AdminProduct] brand selected", e.target.value);
+              setBrandFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-border px-3 py-2 bg-white"
+          >
+            <option value="">Tất cả</option>
+            {brands.map((b) => (
+              <option key={b.id} value={b.name}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="min-w-40">
+          <label className="block text-xs text-gray-500 mb-1">Danh mục</label>
+          <select
+            value={categoryFilter}
+            onChange={(e) => {
+              console.log("[AdminProduct] category selected", e.target.value);
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-border px-3 py-2 bg-white"
+          >
+            <option value="">Tất cả</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.name}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Status filter */}
+        <div className="min-w-40">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-border px-3 py-2 bg-white"
+          >
+            <option value="">Tất cả</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="INACTIVE">Tạm ngưng</option>
+            <option value="DISCONTINUED">Ngừng bán</option>
+            <option value="OUT_OF_STOCK">Hết hàng</option>
+          </select>
+        </div>
+
+        {/* Price filter: precise inputs (auto-apply, debounced) */}
+        <div className="min-w-64 w-72">
+          <label className="block text-xs text-gray-500 mb-1">Giá (₫)</label>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              step={1000}
+              value={minPriceInput}
+              onChange={(e) => setMinPriceInput(e.target.value)}
+              className="w-1/2"
+              placeholder="Min"
+            />
+            <Input
+              type="number"
+              min={0}
+              step={1000}
+              value={maxPriceInput}
+              onChange={(e) => setMaxPriceInput(e.target.value)}
+              className="w-1/2"
+              placeholder="Max"
+            />
+          </div>
+        </div>
+        <div className="mt-2 text-xs text-gray-500 flex items-center gap-2">
+          {isApplyingPrice && (
+            <Loader2 className="size-4 animate-spin text-gray-400" />
+          )}
+          <div>
+            Đang lọc: {formatCurrency(appliedMinPrice)} —{" "}
+            {formatCurrency(appliedMaxPrice)} ₫
+          </div>
+        </div>
+
+        <div className="ml-auto flex items-end gap-2">
+          <Button
+            onClick={() => {
+              setBrandFilter("");
+              setCategoryFilter("");
+              setAppliedMinPrice(0);
+              setAppliedMaxPrice(priceMaxLimit);
+              setMinPriceInput("");
+              setMaxPriceInput(String(priceMaxLimit));
+              setStatusFilter("");
+              setSearchTerm("");
+              setPage(1);
+            }}
+            className="cursor-pointer px-3 py-2"
+          >
+            Clear filters
+          </Button>
         </div>
       </div>
 

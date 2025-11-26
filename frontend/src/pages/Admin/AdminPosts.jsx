@@ -12,6 +12,12 @@ import { AdminPagination } from "@/components/Pagination";
 export const AdminPosts = () => {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
+  // filters
+  const [searchTitle, setSearchTitle] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -38,14 +44,31 @@ export const AdminPosts = () => {
 
   useEffect(() => {
     loadPosts();
+  }, [page, searchTitle, categoryFilter, statusFilter, createdFrom, createdTo]);
+
+  useEffect(() => {
     loadCategories();
-  }, [page]);
+  }, []);
 
   const loadPosts = async () => {
     try {
       setLoading(true);
       // API uses 0-indexed pages, so subtract 1
-      const response = await adminPostAPI.getAll(page - 1, 10);
+      const filters = {
+        title: searchTitle || undefined,
+        categoryId: categoryFilter || undefined,
+        status: statusFilter || undefined,
+        createdFrom: createdFrom || undefined,
+        createdTo: createdTo || undefined,
+      };
+
+      const response = await adminPostAPI.getAll(
+        page - 1,
+        10,
+        "createdAt",
+        "DESC",
+        filters
+      );
       console.log("Posts response:", response);
 
       // Check if response is paginated (Spring Data Page)
@@ -244,7 +267,7 @@ export const AdminPosts = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Quản lý bài viết</h1>
         <button
           onClick={handleNew}
@@ -252,6 +275,101 @@ export const AdminPosts = () => {
         >
           + Tạo bài viết
         </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label className="block text-xs text-gray-500 mb-1">Tiêu đề</label>
+          <input
+            type="text"
+            className="w-full border rounded px-3 py-2"
+            value={searchTitle}
+            onChange={(e) => {
+              setSearchTitle(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm theo tiêu đề..."
+          />
+        </div>
+
+        <div className="min-w-[180px]">
+          <label className="block text-xs text-gray-500 mb-1">Danh mục</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Tất cả</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="min-w-[160px]">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Tất cả</option>
+            <option value="PUBLISHED">Xuất bản</option>
+            <option value="DRAFT">Nháp</option>
+            <option value="HIDDEN">Ẩn</option>
+          </select>
+        </div>
+
+        <div className="min-w-[140px]">
+          <label className="block text-xs text-gray-500 mb-1">Từ ngày</label>
+          <input
+            type="date"
+            className="w-full border rounded px-3 py-2"
+            value={createdFrom}
+            onChange={(e) => {
+              setCreatedFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="min-w-[140px]">
+          <label className="block text-xs text-gray-500 mb-1">Đến ngày</label>
+          <input
+            type="date"
+            className="w-full border rounded px-3 py-2"
+            value={createdTo}
+            onChange={(e) => {
+              setCreatedTo(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="ml-auto">
+          <Button
+            onClick={() => {
+              setSearchTitle("");
+              setCategoryFilter("");
+              setStatusFilter("");
+              setCreatedFrom("");
+              setCreatedTo("");
+              setPage(1);
+            }}
+            className="px-3 py-2 cursor-pointer"
+          >
+            Clear filters
+          </Button>
+        </div>
       </div>
 
       {showForm && (
