@@ -80,7 +80,8 @@ public class ProductController {
         response.setProductPrices(product.getProductPrices());
         response.setInventories(product.getInventories());
         response.setProductImages(product.getProductImages());
-        
+        response.setProductSpecs(product.getProductSpecs());
+
         // Current price and stock
         if (!product.getProductPrices().isEmpty()) {
             ProductPrice currentPrice = product.getProductPrices().stream()
