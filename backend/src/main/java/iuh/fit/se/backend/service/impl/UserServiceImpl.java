@@ -76,13 +76,20 @@ public class UserServiceImpl implements UserService {
         Role role = request.getRole() != null ? request.getRole() : Role.USER;
 
         User user = User.builder()
-                .username(username)
-                .email(email)
-                .fullName(fullName)
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .active(true)
-                .build();
+            .username(username)
+            .email(email)
+            .fullName(fullName)
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(role)
+            .active(true)
+            .phone(request.getPhone())
+            .address(request.getAddress())
+            .city(request.getCity())
+            .country(request.getCountry())
+            .postalCode(request.getPostalCode())
+            .avatarUrl(request.getAvatarUrl())
+            .dateOfBirth(request.getDateOfBirth())
+            .build();
 
         User saved = userRepository.save(user);
 
@@ -126,6 +133,36 @@ public class UserServiceImpl implements UserService {
 
         if (StringUtils.hasText(request.getFullName())) {
             user.setFullName(normalize(request.getFullName()));
+        }
+
+        if (StringUtils.hasText(request.getPhone())) {
+            user.setPhone(normalize(request.getPhone()));
+        } else if (request.getPhone() != null && request.getPhone().isEmpty()) {
+            user.setPhone(null);
+        }
+
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress().trim().isEmpty() ? null : request.getAddress().trim());
+        }
+
+        if (request.getCity() != null) {
+            user.setCity(request.getCity().trim().isEmpty() ? null : request.getCity().trim());
+        }
+
+        if (request.getCountry() != null) {
+            user.setCountry(request.getCountry().trim().isEmpty() ? null : request.getCountry().trim());
+        }
+
+        if (request.getPostalCode() != null) {
+            user.setPostalCode(request.getPostalCode().trim().isEmpty() ? null : request.getPostalCode().trim());
+        }
+
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl().trim().isEmpty() ? null : request.getAvatarUrl().trim());
+        }
+
+        if (request.getDateOfBirth() != null) {
+            user.setDateOfBirth(request.getDateOfBirth());
         }
 
         if (request.getRole() != null) {
@@ -233,13 +270,20 @@ public class UserServiceImpl implements UserService {
 
     private UserSummary toSummary(User user) {
         return new UserSummary(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getRole(),
-                user.isActive(),
-                user.getCreatedAt()
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getFullName(),
+            user.getRole(),
+            user.isActive(),
+            user.getCreatedAt(),
+            user.getPhone(),
+            user.getAddress(),
+            user.getCity(),
+            user.getCountry(),
+            user.getPostalCode(),
+            user.getAvatarUrl(),
+            user.getDateOfBirth()
         );
     }
 

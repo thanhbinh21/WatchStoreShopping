@@ -6,6 +6,9 @@ import iuh.fit.se.backend.dto.request.LoginRequest;
 import iuh.fit.se.backend.dto.request.RegisterRequest;
 import iuh.fit.se.backend.dto.request.ForgotPasswordRequest;
 import iuh.fit.se.backend.dto.request.ResetPasswordRequest;
+import iuh.fit.se.backend.dto.request.ChangePasswordRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import java.security.Principal;
 import iuh.fit.se.backend.service.PasswordResetService;
 import iuh.fit.se.backend.service.EmailService;
 import iuh.fit.se.backend.repository.UserRepository;
@@ -30,6 +33,7 @@ public class AuthController {
     private final EmailService emailService;
     private final org.springframework.core.env.Environment env;
     private final iuh.fit.se.backend.repository.UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -100,5 +104,26 @@ public class AuthController {
             return ResponseEntity.badRequest().body("Invalid or expired token");
         }
         return ResponseEntity.ok("Mật khẩu đã được đặt lại thành công");
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody ChangePasswordRequest request, Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+        if (request == null || request.getCurrentPassword() == null || request.getNewPassword() == null) {
+            return ResponseEntity.badRequest().body("Current and new passwords are required");
+        }
+        String username = principal.getName();
+        iuh.fit.se.backend.entity.User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(404).body("User not found");
+        }
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            return ResponseEntity.badRequest().body("Current password is incorrect");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+        return ResponseEntity.ok("Mật khẩu đã được thay đổi");
     }
 }

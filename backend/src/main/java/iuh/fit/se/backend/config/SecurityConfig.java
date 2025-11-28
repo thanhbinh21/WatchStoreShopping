@@ -112,7 +112,9 @@ public class SecurityConfig {
                                 // Cart - POST public (add to cart without login)
                                 .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
 
-                                // Upload - ADMIN only
+                                // Allow authenticated users to upload their avatar, keep other upload endpoints ADMIN-only
+                                .requestMatchers(HttpMethod.POST, "/api/upload/avatar").authenticated()
+                                // Upload - ADMIN only for other upload operations
                                 .requestMatchers("/api/upload/**").hasRole("ADMIN")
 
                                 // Admin endpoints - ADMIN only

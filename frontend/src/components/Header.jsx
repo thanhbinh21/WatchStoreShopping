@@ -12,6 +12,7 @@ import {
   Bell,
   Heart,
 } from "lucide-react";
+import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
 import {
   getNotificationsByUser,
@@ -38,20 +39,20 @@ export default function Header() {
 
   const token = localStorage.getItem("accessToken");
   const role = localStorage.getItem("role");
-  const user = parseStoredUser() || {};
+  const [userState, setUserState] = useState(parseStoredUser() || {});
 
   const formatNotificationDate = (value) =>
     value ? new Date(value).toLocaleString("vi-VN") : "--";
 
   const loadNotifications = useCallback(async () => {
-    if (!user?.id || !token) {
+    if (!userState?.id || !token) {
       setNotifications([]);
       setUnreadNotifications(0);
       return 0;
     }
 
     try {
-      const data = await getNotificationsByUser(user.id);
+      const data = await getNotificationsByUser(userState.id);
       const list = Array.isArray(data) ? data : [];
       setNotifications(list);
       const unreadCount = list.filter((item) => !item.read).length;
@@ -63,7 +64,7 @@ export default function Header() {
       setUnreadNotifications(0);
       return 0;
     }
-  }, [user?.id, token]);
+  }, [userState?.id, token]);
 
   // Fetch categories
   useEffect(() => {
@@ -100,6 +101,29 @@ export default function Header() {
     return () => {
       window.removeEventListener("storage", updateWishlistCount);
       window.removeEventListener("wishlistUpdated", updateWishlistCount);
+    };
+  }, []);
+
+  // Update user state when profile changes elsewhere in the app
+  useEffect(() => {
+    const onUserUpdated = () => setUserState(parseStoredUser() || {});
+    const onStorage = (e) => {
+      if (
+        !e.key ||
+        e.key === "user" ||
+        e.key === "accessToken" ||
+        e.key === "role"
+      ) {
+        setUserState(parseStoredUser() || {});
+      }
+    };
+
+    window.addEventListener("userUpdated", onUserUpdated);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("userUpdated", onUserUpdated);
+      window.removeEventListener("storage", onStorage);
     };
   }, []);
 
@@ -155,7 +179,7 @@ export default function Header() {
   };
 
   const handleToggleNotifications = async () => {
-    if (!user?.id || !token) {
+    if (!userState?.id || !token) {
       navigate("/login");
       return;
     }
@@ -170,7 +194,7 @@ export default function Header() {
 
     if (!isNotificationDropdownOpen && unreadCount > 0) {
       try {
-        await markAllNotificationsAsRead(user.id);
+        await markAllNotificationsAsRead(userState.id);
         setNotifications((prev) =>
           prev.map((item) => ({ ...item, read: true }))
         );
@@ -348,9 +372,18 @@ export default function Header() {
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
                   className="cursor-pointer flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
                 >
-                  <User size={20} />
+                  {userState.avatarUrl ? (
+                    <img
+                      src={userState.avatarUrl}
+                      alt="avatar"
+                      className="w-10 h-10 rounded-full object-cover border"
+                    />
+                  ) : (
+                    <User size={20} />
+                  )}
+
                   <span className="hidden md:inline font-medium">
-                    {user.fullName || user.username || "User"}
+                    {userState.fullName || userState.username || "User"}
                   </span>
                 </button>
 
@@ -358,10 +391,10 @@ export default function Header() {
                   <div className="absolute right-0 mt-2 w-52 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border">
                     <div className="px-4 py-3 border-b border-border">
                       <p className="text-sm font-semibold text-foreground">
-                        {user.fullName || user.username}
+                        {userState.fullName || userState.username}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {user.email || ""}
+                        {userState.email || ""}
                       </p>
                     </div>
 
@@ -377,6 +410,17 @@ export default function Header() {
                         <span>Quản trị</span>
                       </button>
                     )}
+
+                    <button
+                      onClick={() => {
+                        navigate("/profile");
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
+                    >
+                      <User size={16} />
+                      <span>Hồ sơ</span>
+                    </button>
 
                     <button
                       onClick={() => {

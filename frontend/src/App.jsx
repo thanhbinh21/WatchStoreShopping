@@ -20,6 +20,7 @@ import { default as Login, default as LoginRegister } from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import { User } from "./pages/User";
+import ChangePassword from "./pages/ChangePassword";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
@@ -54,6 +55,14 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route
+            path="/change-password"
+            element={
+              <PrivateRoute>
+                <ChangePassword />
+              </PrivateRoute>
+            }
+          />
           <Route path="/products" element={<ProductList />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
@@ -103,6 +112,14 @@ function App() {
 
           {/* User routes */}
           <Route path="cart" element={<Cart />} />
+          <Route
+            path="/profile"
+            element={
+              <PrivateRoute>
+                <User />
+              </PrivateRoute>
+            }
+          />
           <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
           <Route path="/product/:id" element={<ProductDetail />} />
