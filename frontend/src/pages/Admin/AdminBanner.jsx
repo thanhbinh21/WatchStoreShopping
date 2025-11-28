@@ -127,7 +127,9 @@ export const AdminBanner = () => {
       const result = await uploadBannerImages(files);
       if (result.success && result.fileNames.length > 0) {
         const imageUrl = `/images/banners/${result.fileNames[0]}`;
-        setForm({ ...form, imageUrl });
+        setTimeout(() => {
+          setForm({ ...form, imageUrl });
+        }, 1000);
         toast.success("Upload ảnh thành công");
       }
     } catch (error) {

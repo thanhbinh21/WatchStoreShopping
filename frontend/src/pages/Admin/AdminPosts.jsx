@@ -207,10 +207,12 @@ export const AdminPosts = () => {
 
       if (result.success && result.fileNames && result.fileNames.length > 0) {
         const uploadedFileName = result.fileNames[0];
-        setForm({
-          ...form,
-          coverImageUrl: `/images/posts/${uploadedFileName}`,
-        });
+        setTimeout(() => {
+          setForm({
+            ...form,
+            coverImageUrl: `/images/posts/${uploadedFileName}`,
+          });
+        }, 1000);
         toast.success("Upload ảnh bìa thành công");
       }
     } catch (error) {
