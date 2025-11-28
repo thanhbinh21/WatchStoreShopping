@@ -83,12 +83,12 @@ public class PostCategoryService {
 
     public PostCategory getCategoryById(Long id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElse(null);
     }
 
     public PostCategory getCategoryBySlug(String slug) {
         return categoryRepository.findBySlug(slug)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElse(null);
     }
 
     public List<PostCategory> getAllCategories() {
