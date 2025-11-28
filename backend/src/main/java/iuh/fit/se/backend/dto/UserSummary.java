@@ -18,4 +18,11 @@ public class UserSummary {
     private Role role;
     private boolean active;
     private LocalDateTime createdAt;
+    private String phone;
+    private String address;
+    private String city;
+    private String country;
+    private String postalCode;
+    private String avatarUrl;
+    private java.time.LocalDate dateOfBirth;
 }
