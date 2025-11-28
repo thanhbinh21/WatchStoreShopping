@@ -118,9 +118,7 @@ export const Home = () => {
             order={order}
             pageSize={8}
             title={
-              selectedCategory
-                ? selectedCategory.name
-                : "Sản Phẩm Mới Nhất"
+              selectedCategory ? selectedCategory.name : "Sản Phẩm Mới Nhất"
             }
             description={
               selectedCategory

@@ -8,6 +8,7 @@ import iuh.fit.se.backend.entity.enums.PostStatus;
 import iuh.fit.se.backend.repository.PostCategoryRepository;
 import iuh.fit.se.backend.repository.PostRepository;
 import iuh.fit.se.backend.repository.UserRepository;
+import iuh.fit.se.backend.specification.PostSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -145,6 +146,24 @@ public class PostService {
 
     public Page<Post> getAllPosts(Pageable pageable) {
         return postRepository.findAll(pageable);
+    }
+
+    public Page<Post> getAllPostsFiltered(
+            String title,
+            Long categoryId,
+            String status,
+            java.time.LocalDateTime createdFrom,
+            java.time.LocalDateTime createdTo,
+            Pageable pageable
+    ) {
+        org.springframework.data.jpa.domain.Specification<Post> spec = null;
+
+        spec = PostSpecification.hasTitle(title);
+        spec = (spec == null) ? PostSpecification.hasCategoryId(categoryId) : spec.and(PostSpecification.hasCategoryId(categoryId));
+        spec = (spec == null) ? PostSpecification.hasStatus(status) : spec.and(PostSpecification.hasStatus(status));
+        spec = (spec == null) ? PostSpecification.createdBetween(createdFrom, createdTo) : spec.and(PostSpecification.createdBetween(createdFrom, createdTo));
+
+        return postRepository.findAll(spec, pageable);
     }
 
     public List<Post> getPublishedPosts() {

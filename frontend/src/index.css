@@ -291,3 +291,9 @@ body {
   padding: 0;
   color: inherit;
 }
+
+@layer base {
+  button {
+    @apply cursor-pointer;
+  }
+}

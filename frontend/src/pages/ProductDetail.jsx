@@ -466,7 +466,7 @@ export default function ProductDetail() {
               <Card>
                 <CardContent className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">
-                    Thông số kỹ thuật
+                    Thông tin sản phẩm
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex justify-between py-3 border-b">
@@ -515,6 +515,29 @@ export default function ProductDetail() {
                         </span>
                       </div>
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Specifications */}
+              <Card>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">
+                    Thông số kỹ thuật
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-4">
+                    {product.productSpecs &&
+                      product.productSpecs.length > 0 &&
+                      product.productSpecs.map((spec) => (
+                        <div
+                          key={spec.id || spec.keyName}
+                          className="flex justify-between py-3 border-b"
+                        >
+                          <span className="text-gray-600">{spec.keyName}:</span>
+                          <span className="font-medium">{spec.value}</span>
+                        </div>
+                      ))}
                   </div>
                 </CardContent>
               </Card>
