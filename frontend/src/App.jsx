@@ -56,7 +56,8 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/products" element={<ProductList />} />
           <Route path="/posts" element={<PostList />} />
-          <Route path="/posts/:slug" element={<PostList />} />
+          <Route path="/posts/:categorySlug" element={<PostList />} />
+          <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
           <Route path="/wishlist" element={<Wishlist />} />
 
           {/* Private */}
