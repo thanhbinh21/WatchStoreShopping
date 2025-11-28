@@ -21,6 +21,7 @@ public class FileUploadController {
     private static final String PRODUCT_UPLOAD_DIR = "../frontend/public/images/products/";
     private static final String BANNER_UPLOAD_DIR = "../frontend/public/images/banners/";
     private static final String POST_UPLOAD_DIR = "../frontend/public/images/posts/";
+    private static final String AVATAR_UPLOAD_DIR = "../frontend/public/images/avatars/";
 
     @PostMapping("/product-images")
     public ResponseEntity<?> uploadProductImages(@RequestParam("files") MultipartFile[] files) {
@@ -35,6 +36,44 @@ public class FileUploadController {
     @PostMapping("/post-images")
     public ResponseEntity<?> uploadPostImages(@RequestParam("files") MultipartFile[] files) {
         return uploadImages(files, POST_UPLOAD_DIR, "post");
+    }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file == null || file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is required");
+            }
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("File must be an image");
+            }
+            if (file.getSize() > 5 * 1024 * 1024) {
+                return ResponseEntity.badRequest().body("File must be smaller than 5MB");
+            }
+
+            File dir = new File(AVATAR_UPLOAD_DIR);
+            if (!dir.exists()) dir.mkdirs();
+
+            String originalFilename = file.getOriginalFilename();
+            String extension = "";
+            if (originalFilename != null && originalFilename.contains(".")) {
+                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            }
+            String uniqueFilename = "avatar-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + extension;
+
+            Path target = Paths.get(AVATAR_UPLOAD_DIR + uniqueFilename);
+            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+
+            Map<String, Object> resp = new HashMap<>();
+            resp.put("success", true);
+            resp.put("filename", uniqueFilename);
+            resp.put("url", "/images/avatars/" + uniqueFilename);
+            return ResponseEntity.ok(resp);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("Upload error: " + e.getMessage());
+        }
     }
 
     private ResponseEntity<?> uploadImages(MultipartFile[] files, String uploadDir, String prefix) {
