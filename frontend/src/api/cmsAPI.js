@@ -131,6 +131,10 @@ export const postCategoryAPI = {
     const response = await axios.get(`/post-categories/slug/${slug}`);
     return response.data;
   },
+  getById: async (id) => {
+    const response = await axios.get(`/post-categories/${id}`);
+    return response.data;
+  },
 };
 
 // Banners Public

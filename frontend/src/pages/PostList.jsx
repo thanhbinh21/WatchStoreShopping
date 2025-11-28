@@ -11,7 +11,7 @@ import { AdminPagination } from "@/components/Pagination";
 import { toast } from "sonner";
 
 export default function PostList() {
-  const { slug } = useParams();
+  const { categorySlug, postSlug } = useParams();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -31,15 +31,77 @@ export default function PostList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCategory, currentPage]);
 
-  // Load post from URL parameter
   useEffect(() => {
-    if (slug) {
-      loadPostBySlug(slug);
-    } else {
-      setSelectedPost(null);
+    let active = true;
+
+    async function fetchForParams() {
+      setLoading(true);
+
+      // 1) Two-segment route: /posts/:categorySlug/:postSlug
+      const catSlug = categorySlug;
+      const pSlug = postSlug;
+
+      if (catSlug && pSlug) {
+        try {
+          const category = await postCategoryAPI.getBySlug(catSlug);
+          if (!active) return;
+          setSelectedCategory(category || null);
+        } catch {
+          if (!active) return;
+          setSelectedCategory(null);
+        }
+
+        try {
+          await loadPostBySlug(pSlug);
+        } finally {
+          if (active) setLoading(false);
+        }
+
+        return;
+      }
+
+      // 2) Single-segment: prefer treating `categorySlug` as category, fallback to post
+      const single = categorySlug;
+      if (single) {
+        try {
+          const category = await postCategoryAPI.getBySlug(single);
+          if (!active) return;
+          if (category && category.id) {
+            setSelectedCategory(category);
+            setSelectedPost(null);
+            setCurrentPage(1);
+            setLoading(false);
+            return;
+          }
+        } catch {
+          if (!active) return;
+        }
+
+        // fallback: try post
+        try {
+          await loadPostBySlug(single);
+        } finally {
+          if (active) setLoading(false);
+        }
+
+        return;
+      }
+
+      // no params: clear
+      if (active) {
+        setSelectedPost(null);
+        setSelectedCategory(null);
+        setLoading(false);
+      }
     }
+
+    fetchForParams();
+
+    return () => {
+      active = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slug]);
+  }, [categorySlug, postSlug]);
 
   // Auto-play slider
   useEffect(() => {
@@ -106,7 +168,7 @@ export default function PostList() {
     setSelectedCategory(category);
     setCurrentPage(1);
     setSelectedPost(null);
-    navigate("/posts");
+    navigate(`${category ? `/posts/${category.slug}` : "/posts"}`);
   };
 
   const formatDate = (dateString) => {
@@ -136,6 +198,10 @@ export default function PostList() {
       setLoadingPost(true);
       const response = await postAPI.getBySlug(postSlug);
       setSelectedPost(response);
+      // If post has a category, set it so breadcrumbs and category state are correct
+      if (response?.postCategory) {
+        setSelectedCategory(response.postCategory);
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Error loading post:", error);
@@ -146,9 +212,14 @@ export default function PostList() {
     }
   };
 
-  const handlePostClick = async (e, postSlug) => {
+  const handlePostClick = async (e, post) => {
     if (e) e.preventDefault();
-    navigate(`/posts/${postSlug}`);
+    const catSlug = post.postCategory?.slug || "";
+    if (catSlug) {
+      navigate(`/posts/${catSlug}/${post.slug}`);
+    } else {
+      navigate(`/posts/${post.slug}`);
+    }
   };
 
   const handleBackToList = () => {
@@ -158,13 +229,13 @@ export default function PostList() {
   // Component wrapper for clickable post items
   const PostLink = ({ post, children, className }) => (
     <div
-      onClick={(e) => handlePostClick(e, post.slug)}
+      onClick={(e) => handlePostClick(e, post)}
       className={`${className} cursor-pointer`}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
-          handlePostClick(e, post.slug);
+          handlePostClick(e, post);
         }
       }}
     >
