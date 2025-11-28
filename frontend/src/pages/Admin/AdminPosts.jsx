@@ -446,8 +446,16 @@ export const AdminPosts = () => {
                           alt="Preview"
                           className="w-full h-full object-contain rounded"
                           onError={(e) => {
-                            e.target.src =
-                              "https://via.placeholder.com/300x200?text=Image+Error";
+                            try {
+                              e.currentTarget.onerror = null;
+                              const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><rect fill='#e2e8f0' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#94a3b8' font-size='16'>Image Error</text></svg>`;
+                              e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(
+                                svg
+                              )}`;
+                              // eslint-disable-next-line no-unused-vars
+                            } catch (err) {
+                              e.currentTarget.src = "";
+                            }
                           }}
                         />
                       </div>
