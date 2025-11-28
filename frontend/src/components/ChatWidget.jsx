@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useChatContext } from "@/contexts/ChatContext";
 import { MessageCircle, X, Send, Minimize2 } from "lucide-react";
 import { parseStoredUser } from "@/utils/storage";
@@ -24,11 +25,7 @@ export default function ChatWidget() {
 
   const user = parseStoredUser();
   const userRole = localStorage.getItem("role");
-
-  // Don't show chat widget for admin users
-  if (userRole === "ADMIN" || userRole === "STAFF" || userRole === "MANAGER") {
-    return null;
-  }
+  const location = useLocation();
 
   // Auto scroll to bottom
   useEffect(() => {
@@ -42,7 +39,7 @@ export default function ChatWidget() {
     if (isOpen && !isMinimized && unreadCount > 0) {
       markAsRead();
     }
-  }, [isOpen, isMinimized]);
+  }, [isOpen, isMinimized, unreadCount, markAsRead]);
 
   const handleSend = (e) => {
     e.preventDefault();
@@ -89,7 +86,11 @@ export default function ChatWidget() {
     }
   };
 
-  if (!user) return null;
+  const hideForAdmin =
+    userRole === "ADMIN" || userRole === "STAFF" || userRole === "MANAGER";
+  const hideOnSupportPage = location.pathname.startsWith("/support");
+
+  if (!user || hideForAdmin || hideOnSupportPage) return null;
 
   return (
     <>

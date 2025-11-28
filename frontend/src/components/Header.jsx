@@ -11,6 +11,7 @@ import {
   MapPin,
   Bell,
   Heart,
+  LifeBuoy,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
@@ -442,6 +443,17 @@ export default function Header() {
                     >
                       <ShoppingCart size={16} />
                       <span>Giỏ hàng</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        navigate("/support");
+                        setIsUserDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
+                    >
+                      <LifeBuoy size={16} />
+                      <span>Hỗ trợ khách hàng</span>
                     </button>
 
                     <button

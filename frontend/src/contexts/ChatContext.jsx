@@ -21,18 +21,50 @@ export const ChatProvider = ({ children }) => {
     const [typing, setTyping] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(false);
-    
+
+    const [user, setUser] = useState(parseStoredUser() || null);
+    const [userRole, setUserRole] = useState(localStorage.getItem("role"));
+
     const clientRef = useRef(null);
     const typingTimeoutRef = useRef(null);
-    const user = parseStoredUser();
-    const userRole = localStorage.getItem("role");
+
+    // Theo dõi thay đổi user (login / logout) tương tự Header
+    useEffect(() => {
+        const handleUserUpdated = () => {
+            setUser(parseStoredUser() || null);
+            setUserRole(localStorage.getItem("role"));
+        };
+
+        const handleStorage = (e) => {
+            if (
+                !e.key ||
+                e.key === "user" ||
+                e.key === "accessToken" ||
+                e.key === "role"
+            ) {
+                handleUserUpdated();
+            }
+        };
+
+        window.addEventListener("userUpdated", handleUserUpdated);
+        window.addEventListener("storage", handleStorage);
+
+        return () => {
+            window.removeEventListener("userUpdated", handleUserUpdated);
+            window.removeEventListener("storage", handleStorage);
+        };
+    }, []);
 
     // Initialize WebSocket connection (only for non-admin users)
     useEffect(() => {
-        if (!user?.id) return;
-        
-        // Don't initialize chat for admin/staff users
-        if (userRole === "ADMIN" || userRole === "STAFF" || userRole === "MANAGER") return;
+        if (!user?.id) {
+            return;
+        }
+
+        // Không khởi tạo chat cho admin/staff/manager
+        if (userRole === "ADMIN" || userRole === "STAFF" || userRole === "MANAGER") {
+            return;
+        }
 
         const token = localStorage.getItem("accessToken");
         if (!token) return;
@@ -53,7 +85,7 @@ export const ChatProvider = ({ children }) => {
             loadChatRoom();
         };
 
-        stompClient.onStompError = (frame) => {
+        stompClient.onStompError = () => {
             setConnected(false);
         };
 
@@ -69,7 +101,7 @@ export const ChatProvider = ({ children }) => {
                 clientRef.current.deactivate();
             }
         };
-    }, [user?.id]);
+    }, [user?.id, userRole]);
 
     // Subscribe to room messages
     useEffect(() => {

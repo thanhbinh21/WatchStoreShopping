@@ -37,6 +37,7 @@ import PostList from "./pages/PostList";
 import AdminChat from "./pages/Admin/AdminChat";
 import { ChatProvider } from "./contexts/ChatContext";
 import ChatWidget from "./components/ChatWidget";
+import Support from "./pages/Support";
 
 function App() {
   return (
@@ -112,6 +113,14 @@ function App() {
 
           {/* User routes */}
           <Route path="cart" element={<Cart />} />
+          <Route
+            path="/support"
+            element={
+              <PrivateRoute>
+                <Support />
+              </PrivateRoute>
+            }
+          />
           <Route
             path="/profile"
             element={
