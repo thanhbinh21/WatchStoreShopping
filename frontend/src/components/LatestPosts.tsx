@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { postAPI } from "../api/cmsAPI";
+import { postAPI, postCategoryAPI } from "../api/cmsAPI";
 import { Calendar, Eye } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -14,7 +14,35 @@ export default function LatestPosts() {
   const loadPosts = async () => {
     try {
       const response = await postAPI.getLatest(4);
-      setPosts(Array.isArray(response) ? response : []);
+      const items = Array.isArray(response) ? response : [];
+
+      // Lấy tất cả categoryId duy nhất
+      const categoryIds = items
+        .map((p) => p.categoryId)
+        .filter(Boolean)
+        .reduce((acc, id) => (acc.includes(id) ? acc : [...acc, id]), []);
+
+      // Fetch tất cả category
+      const categoriesById = {};
+      await Promise.all(
+        categoryIds.map(async (id) => {
+          try {
+            const r = await postCategoryAPI.getById(id);
+            const cat = (r && r.data) || r;
+            if (cat) categoriesById[id] = cat;
+          } catch (err) {
+            console.log("Error fetching category for id", id, err);
+          }
+        })
+      );
+
+      const enriched = items.map((p) => {
+        const cat = categoriesById[p.categoryId];
+        console.log("Enrich post", p, "with category", cat);
+        const categorySlug = cat?.slug || "uncategorized";
+        return { ...p, categorySlug };
+      });
+      setPosts(enriched);
     } catch (error) {
       console.error("Error loading posts:", error);
       setPosts([]);
@@ -53,7 +81,7 @@ export default function LatestPosts() {
           {posts.map((post) => (
             <Link
               key={post.id}
-              to={`/posts/${post.slug}`}
+              to={`/posts/${post.postCategory.slug}/${post.slug}`}
               className="group bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
             >
               {/* Cover Image */}

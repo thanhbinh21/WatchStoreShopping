@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import ProductCard from "./ProductCard";
 import { getProducts } from "@/api/productAPI";
 import { toast } from "sonner";
@@ -19,6 +19,7 @@ export default function ProductList({
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
+  const listRef = useRef(null);
 
   // Reset to page 0 when category, brand, sortBy, or order changes
   useEffect(() => {
@@ -78,7 +79,18 @@ export default function ProductList({
     if (newPage >= 0 && newPage < totalPages) {
       setCurrentPage(newPage);
       // Scroll to top
-      window.scrollTo({ behavior: "smooth", top: 0 });
+      // Scroll the product list section into view
+      if (listRef.current) {
+        try {
+          listRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        } catch {
+          // fallback to window scroll if needed
+          window.scrollTo({ behavior: "smooth", top: 0 });
+        }
+      }
     }
   };
 
@@ -99,7 +111,7 @@ export default function ProductList({
   }
 
   return (
-    <div>
+    <div ref={listRef}>
       {/* Section Header */}
       <div className="text-center mb-12">
         <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">

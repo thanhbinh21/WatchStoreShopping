@@ -21,7 +21,9 @@ export default function Breadcrumb({
               // Refresh trang chủ - reload lại trang
               window.location.href = "/home";
             }}
-            className="cursor-pointer flex items-center gap-1 text-foreground/60 hover:text-brand-primary transition-colors"
+            className={`cursor-pointer flex items-center gap-1 ${
+              currentPage ? "text-foreground/60" : ""
+            } hover:text-brand-primary transition-colors`}
           >
             <Home size={16} />
             <span>Trang chủ</span>
@@ -33,7 +35,7 @@ export default function Breadcrumb({
               {postTitle && onBackToList ? (
                 <button
                   onClick={onBackToList}
-                  className="text-foreground/60 hover:text-red-600 transition-colors"
+                  className="text-foreground/60 hover:text-brand-primary transition-colors"
                 >
                   {currentPage}
                 </button>
