@@ -10,10 +10,10 @@ import BrandSection from "@/components/BrandSection";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/Footer";
 import BannerSlider from "@/components/BannerSlider";
-import LatestPosts from "@/components/LatestPosts";
 import { bannerAPI } from "@/api/cmsAPI";
 import { addToCart } from "@/api/cartAPI";
 import { parseStoredUser } from "@/utils/storage";
+import LatestPosts from "@/components/LatestPosts";
 
 export const Home = () => {
   const navigate = useNavigate();
@@ -79,8 +79,8 @@ export const Home = () => {
       {/* Header */}
       <Header />
 
-      {/* Navbar for search and categories */}
-      <Breadcrumb onProductsChange={handleProductsChange} />
+      {/* Navbar for search and categories (breadcrumb items passed explicitly) */}
+      <Breadcrumb items={[]} />
 
       {/* Banner Slider from CMS */}
       {hasBanners && (
