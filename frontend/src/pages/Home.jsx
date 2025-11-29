@@ -79,8 +79,8 @@ export const Home = () => {
       {/* Header */}
       <Header />
 
-      {/* Navbar for search and categories */}
-      <Breadcrumb onProductsChange={handleProductsChange} />
+      {/* Navbar for search and categories (breadcrumb items passed explicitly) */}
+      <Breadcrumb items={[]} />
 
       {/* Banner Slider from CMS */}
       {hasBanners && (

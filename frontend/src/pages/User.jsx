@@ -243,7 +243,7 @@ export const User = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <Breadcrumb />
+      <Breadcrumb items={[{ label: "Hồ sơ", isCurrent: true }]} />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between">
