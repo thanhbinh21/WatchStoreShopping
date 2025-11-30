@@ -332,7 +332,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <Breadcrumb selectedCategory={null} />
+        <Breadcrumb items={[]} />
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-primary mx-auto"></div>
@@ -348,8 +348,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-
-        <Breadcrumb selectedCategory={null} />
+        <Breadcrumb items={[]} />
         <Footer />
       </div>
     );
@@ -362,17 +361,29 @@ export default function ProductDetail() {
     : null;
 
   // Category cho breadcrumb (nếu có)
-  const categoryForNav = product.categoryName
-    ? {
-        id: product.categoryId,
-        name: product.categoryName,
-      }
-    : null;
+  const breadcrumbItems = (() => {
+    if (!product) return [];
+    const items = [{ label: "Sản phẩm", href: "/products" }];
+    if (product.categoryName) {
+      items.push({
+        label: product.categoryName,
+        href: `/products?category=${product.categoryId}`,
+      });
+    }
+    if (product.brand) {
+      items.push({
+        label: product.brand,
+        href: `/products?brand=${product.brand}`,
+      });
+    }
+    items.push({ label: product.name, isCurrent: true });
+    return items;
+  })();
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <Breadcrumb selectedCategory={categoryForNav} />
+      <Breadcrumb items={breadcrumbItems} />
 
       <div className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">

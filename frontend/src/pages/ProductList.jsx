@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import Navbar from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/api/productAPI";
@@ -250,15 +249,25 @@ export default function ProductList() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <Breadcrumb
-        selectedCategory={selectedCategory}
-        currentPage={
-          brandName
-            ? "Sản phẩm"
-            : searchQuery
-            ? `Tìm kiếm: ${searchQuery}`
-            : "Sản phẩm"
-        }
-        selectedBrand={brandName ? { name: brandName } : null}
+        items={(() => {
+          const items = [{ label: "Sản phẩm", href: "/products" }];
+          if (selectedCategory) {
+            items.push({
+              label: selectedCategory.name,
+              href: `/products?category=${selectedCategory.id}`,
+            });
+          }
+          if (brandName) {
+            items.push({ label: brandName, isCurrent: true });
+          } else if (searchQuery) {
+            items.push({ label: `Tìm kiếm: ${searchQuery}`, isCurrent: true });
+          } else if (!selectedCategory) {
+            items[0].isCurrent = true;
+          } else if (!brandName && selectedCategory) {
+            items[items.length - 1].isCurrent = true;
+          }
+          return items;
+        })()}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
