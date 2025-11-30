@@ -30,6 +30,7 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
+import PromotionalProducts from "./pages/PromotionalProducts";
 import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
 import { AdminPosts } from "./pages/Admin/AdminPosts";
 import Wishlist from "./pages/Wishlist";
@@ -65,6 +66,7 @@ function App() {
             }
           />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/promotional-products" element={<PromotionalProducts />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
           <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
