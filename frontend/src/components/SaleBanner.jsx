@@ -310,15 +310,11 @@ export default function SaleBanner({ onAddToCart }) {
         <div className="text-center mt-8">
           <button
             onClick={() => {
-              const productsSection =
-                document.getElementById("products-section");
-              if (productsSection) {
-                productsSection.scrollIntoView({ behavior: "smooth" });
-              }
+              navigate("/promotional-products");
             }}
             className="px-8 py-3 bg-brand-primary-foreground text-brand-primary border-2 border-brand-primary rounded-lg font-semibold hover:bg-brand-primary hover:text-brand-primary-foreground transition-all duration-300 shadow-md"
           >
-            Xem tất cả sản phẩm
+            Xem tất cả sản phẩm khuyến mãi
           </button>
         </div>
       </div>
