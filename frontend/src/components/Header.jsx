@@ -12,6 +12,7 @@ import {
   Bell,
   Heart,
   LifeBuoy,
+  Package,
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
@@ -309,6 +310,17 @@ export default function Header() {
               </span>
             )}
           </button>
+
+          {/* Orders */}
+          {token && (
+            <button
+              onClick={() => navigate("/orders")}
+              className="cursor-pointer flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+            >
+              <Package size={20} />
+              <span className="hidden md:inline font-medium">Đơn hàng</span>
+            </button>
+          )}
 
           {/* Notifications */}
           <div className="relative" ref={notificationDropdownRef}>
