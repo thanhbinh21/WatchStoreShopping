@@ -207,7 +207,6 @@ export default function PromotionalProducts() {
       <Header />
       <Breadcrumb
         items={[
-          { label: "Trang chủ", href: "/" },
           { label: "Sản phẩm khuyến mãi", isCurrent: true },
         ]}
       />

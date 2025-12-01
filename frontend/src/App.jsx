@@ -39,6 +39,7 @@ import AdminChat from "./pages/Admin/AdminChat";
 import { ChatProvider } from "./contexts/ChatContext";
 import ChatWidget from "./components/ChatWidget";
 import Support from "./pages/Support";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -66,6 +67,7 @@ function App() {
             }
           />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/about" element={<About />} />
           <Route path="/promotional-products" element={<PromotionalProducts />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
