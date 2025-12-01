@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/api/productAPI";
-import { addToCart } from "@/api/cartAPI";
+import { addToCart, getCart } from "@/api/cartAPI";
 import {
   getReviewsByProduct,
   getReviewByUserAndProduct,
@@ -20,6 +20,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { parseStoredUser } from "@/utils/storage";
 import Header from "@/components/Header";
+import { addToGuestCart } from "@/api/guestCart.js";
+
 
 import Footer from "@/components/Footer";
 import {
@@ -263,22 +265,49 @@ export default function ProductDetail() {
     }
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+  
     const token = localStorage.getItem("accessToken");
     const user = parseStoredUser();
-
+  
+    // 🚨 FIX: Nếu chưa login → lưu vào guest cart
     if (!token || !user?.id) {
-      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      // guest cart flow
+      addToGuestCart(product, 1);
+      toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
+      window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
-
+  
+    // Nếu đăng nhập → xử lý như cũ
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
+  
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+  
     setAddingToCart(true);
     try {
-      await addToCart(user.id, product.id, quantity);
-      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng ✅`);
+      const cart = await getCart(user.id);
+      const existingItem = (cart.items || []).find(
+        (i) => i.productId === product.id || i.id === product.id
+      );
+      const currentQty = existingItem ? existingItem.quantity : 0;
+  
+      if (currentQty + 1 > maxStock) {
+        toast.error("Không thể thêm vượt quá tồn kho");
+        return;
+      }
+  
+      await addToCart(user.id, product.id, 1);
+      toast.success("Đã thêm vào giỏ hàng");
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
       toast.error("Thêm vào giỏ hàng thất bại 😢");
@@ -827,7 +856,9 @@ export default function ProductDetail() {
                   <div className="space-y-3 pt-4">
                     <Button
                       onClick={handleAddToCart}
-                      disabled={addingToCart || product.status !== "ACTIVE"}
+                      disabled={
+                        addingToCart || product.status !== "ACTIVE" || (Number.isFinite(product?.stockQuantity) ? product.stockQuantity <= 0 : product.stock <= 0)
+                      }
                       className="cursor-pointer w-full bg-brand-primary hover:bg-brand-primary-soft text-white py-6 text-base font-semibold"
                     >
                       {addingToCart ? (

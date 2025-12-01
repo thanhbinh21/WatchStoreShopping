@@ -42,7 +42,16 @@ export default function LoginRegister() {
 
     for (const item of guestItems) {
       try {
-        await addToCart(userId, item.id, item.quantity);
+        const maxStock = Number.isFinite(item?.stock) ? item.stock : Infinity;
+        if (maxStock <= 0) {
+          toast.error(`Sản phẩm ${item.productName || item.id} đã hết hàng`);
+          continue;
+        }
+        const qty = Math.min(item.quantity, maxStock);
+        if (qty < item.quantity) {
+          toast.warning(`Số lượng sản phẩm ${item.productName || item.id} đã được điều chỉnh theo tồn kho`);
+        }
+        await addToCart(userId, item.id, qty);
       } catch (err) {
         console.error("Sync cart error:", err);
       }

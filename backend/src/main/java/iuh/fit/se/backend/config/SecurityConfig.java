@@ -42,6 +42,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/**").permitAll()
 
                                 .requestMatchers(HttpMethod.GET, "/api/banners/**").permitAll()
+                                                                // AI endpoint - allow unauthenticated usage for public AI queries
+                                                                .requestMatchers("/api/ai/**").permitAll()
+                                
                                 .requestMatchers(HttpMethod.GET, "/api/post-categories/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/posts/**").permitAll()
 

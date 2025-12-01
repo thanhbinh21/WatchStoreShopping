@@ -293,7 +293,7 @@ export default function SaleBanner({ onAddToCart }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onAddToCart) {
-                        onAddToCart(product.id);
+                        onAddToCart(product);
                       }
                     }}
                     className="mt-auto w-full bg-linear-to-r from-brand-primary to-orange-600 text-brand-primary-foreground rounded-lg py-2.5 hover:from-red-700 hover:to-orange-700 transition-all duration-300 font-medium text-sm lg:text-base shadow-md hover:shadow-lg"

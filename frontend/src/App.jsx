@@ -38,6 +38,7 @@ import PostList from "./pages/PostList";
 import AdminChat from "./pages/Admin/AdminChat";
 import { ChatProvider } from "./contexts/ChatContext";
 import ChatWidget from "./components/ChatWidget";
+import AIChatWidget from "./components/AIChat/AIChatWidget";
 import Support from "./pages/Support";
 
 function App() {
@@ -137,6 +138,7 @@ function App() {
           {/* Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AIChatWidget />
         <ChatWidget />
       </Router>
     </ChatProvider>

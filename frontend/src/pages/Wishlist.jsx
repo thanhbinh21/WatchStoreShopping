@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getWishlist, removeFromWishlist } from "@/api/wishlistAPI";
-import { addToCart } from "@/api/cartAPI";
+import { addToCart, getCart } from "@/api/cartAPI";
+import { addToGuestCart } from "@/api/guestCart";
 import { parseStoredUser } from "@/utils/storage";
 import Breadcrumb from "@/components/Breadcrumb";
 
@@ -44,17 +45,39 @@ export default function Wishlist() {
     const token = localStorage.getItem("accessToken");
     const user = parseStoredUser();
 
-    if (!token || !user?.id) {
-      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      // If not logged in -> add to guest cart
+      if (!token || !user?.id) {
+        addToGuestCart(product, 1);
+        toast.success("Đã thêm vào giỏ hàng (Khách) 🛒");
+        window.dispatchEvent(new Event("cartUpdated"));
+        return;
+      }
+
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
       return;
     }
 
     try {
+      try {
+        const cart = await getCart(user.id);
+        const existing = (cart.items || []).find((i) => i.productId === product.id || i.id === product.id);
+        const currentQty = existing ? existing.quantity : 0;
+        if (currentQty + 1 > maxStock) {
+          toast.error("Không thể thêm vượt quá tồn kho");
+          return;
+        }
+      } catch (e) {
+        // ignore
+      }
       await addToCart(user.id, product.id, 1);
       toast.success("Đã thêm vào giỏ hàng ✅");
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
       toast.error("Thêm vào giỏ hàng thất bại 😢");
