@@ -4,6 +4,7 @@ import iuh.fit.se.backend.dto.request.OrderItemRequest;
 import iuh.fit.se.backend.dto.request.OrderRequest;
 import iuh.fit.se.backend.dto.response.OrderItemResponse;
 import iuh.fit.se.backend.dto.response.OrderResponse;
+import iuh.fit.se.backend.entity.Inventory;
 import iuh.fit.se.backend.entity.Order;
 import iuh.fit.se.backend.entity.OrderItem;
 import iuh.fit.se.backend.entity.Product;
@@ -36,9 +37,13 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
 
-    public List<Order> getOrdersByUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public List<OrderResponse> getOrdersByUser(Long userId) {
+        return orderRepository.findByUserId(userId)
+                .stream()
+                .map(this::toOrderResponse)
+                .collect(Collectors.toList());
     }
 
     public Order getOrder(Long id) {
@@ -69,6 +74,29 @@ public class OrderService {
                 Product product = productRepository.findById(itemReq.getProductId())
                         .orElseThrow(() -> new RuntimeException("Product not found: " + itemReq.getProductId()));
 
+                // Kiểm tra số lượng tồn kho
+                int availableStock = product.getStockQuantity();
+                if (availableStock < itemReq.getQuantity()) {
+                    throw new RuntimeException("Sản phẩm " + product.getName() + " chỉ còn " + availableStock + " trong kho");
+                }
+
+                // Trừ số lượng tồn kho
+                if (!product.getInventories().isEmpty()) {
+                    int remainingQuantity = itemReq.getQuantity();
+                    for (Inventory inventory : product.getInventories()) {
+                        if (remainingQuantity <= 0) break;
+                        
+                        int currentStock = inventory.getStock();
+                        int toDeduct = Math.min(currentStock, remainingQuantity);
+                        
+                        inventory.setStock(currentStock - toDeduct);
+                        remainingQuantity -= toDeduct;
+                        
+                        log.info("Trừ {} sản phẩm từ inventory #{}, còn lại: {}", 
+                                toDeduct, inventory.getId(), inventory.getStock());
+                    }
+                }
+
                 OrderItem item = new OrderItem();
                 item.setOrder(order);
                 item.setProduct(product);
@@ -81,7 +109,10 @@ public class OrderService {
             }
         }
 
-        return orderRepository.save(order);
+        Order savedOrder = orderRepository.save(order);
+        emailService.sendOrderConfirmationEmail(savedOrder);
+        log.info("✅ Đơn hàng #{} đã được tạo và số lượng đã được trừ khỏi kho", savedOrder.getId());
+        return savedOrder;
     }
 
     public Order updateOrder(Long id, OrderRequest request) {
@@ -188,6 +219,27 @@ public class OrderService {
     public OrderResponse updateOrderStatus(Long id, OrderStatus status) {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        OrderStatus oldStatus = order.getStatus();
+        
+        // Nếu chuyển sang trạng thái CANCELLED, hoàn lại số lượng vào kho
+        if (status == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED) {
+            log.info("🔄 Hủy đơn hàng #{}, hoàn lại số lượng vào kho", id);
+            
+            for (OrderItem item : order.getOrderItems()) {
+                Product product = item.getProduct();
+                int quantityToRestore = item.getQuantity();
+                
+                // Hoàn lại số lượng vào inventory đầu tiên
+                if (!product.getInventories().isEmpty()) {
+                    Inventory firstInventory = product.getInventories().get(0);
+                    firstInventory.setStock(firstInventory.getStock() + quantityToRestore);
+                    
+                    log.info("✅ Hoàn {} sản phẩm '{}' vào kho, tổng: {}", 
+                            quantityToRestore, product.getName(), firstInventory.getStock());
+                }
+            }
+        }
 
         order.setStatus(status);
 

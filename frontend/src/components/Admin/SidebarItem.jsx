@@ -9,7 +9,7 @@ export const SidebarItem = ({ icon, name, isActive, onClick, collapsed }) => {
     <div
       className={cn(
         "relative h-12 cursor-pointer flex items-center rounded-lg z-10 transition-all duration-300 py-4",
-        isActive ? "bg-blue-600" : "hover:bg-gray-100",
+        isActive ? "bg-brand-primary" : "hover:bg-gray-100",
         collapsed ? "w-14 justify-center" : "w-full px-3"
       )}
       onClick={onClick}

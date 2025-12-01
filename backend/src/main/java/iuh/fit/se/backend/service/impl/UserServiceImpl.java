@@ -1,10 +1,12 @@
-package iuh.fit.se.backend.service;
+package iuh.fit.se.backend.service.impl;
 
 import iuh.fit.se.backend.dto.UserRequest;
 import iuh.fit.se.backend.dto.UserSummary;
 import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.entity.enums.Role;
 import iuh.fit.se.backend.repository.UserRepository;
+import iuh.fit.se.backend.service.EmailService;
+import iuh.fit.se.backend.service.UserService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -22,10 +24,12 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     @Override
@@ -72,15 +76,33 @@ public class UserServiceImpl implements UserService {
         Role role = request.getRole() != null ? request.getRole() : Role.USER;
 
         User user = User.builder()
-                .username(username)
-                .email(email)
-                .fullName(fullName)
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(role)
-                .active(true)
-                .build();
+            .username(username)
+            .email(email)
+            .fullName(fullName)
+            .password(passwordEncoder.encode(request.getPassword()))
+            .role(role)
+            .active(true)
+            .phone(request.getPhone())
+            .address(request.getAddress())
+            .city(request.getCity())
+            .country(request.getCountry())
+            .postalCode(request.getPostalCode())
+            .avatarUrl(request.getAvatarUrl())
+            .dateOfBirth(request.getDateOfBirth())
+            .build();
 
-        return toSummary(userRepository.save(user));
+        User saved = userRepository.save(user);
+
+        // Send welcome email (best-effort). Exceptions from mail sending should not
+        // prevent user creation; catch and log them.
+        try {
+            emailService.sendRegistrationEmail(saved.getEmail(), saved.getFullName());
+        } catch (Exception ex) {
+            // Log the exception; keep lightweight to avoid adding logging framework changes
+            System.err.println("Failed to send registration email to " + saved.getEmail() + ": " + ex.getMessage());
+        }
+
+        return toSummary(saved);
     }
 
     @Override
@@ -111,6 +133,36 @@ public class UserServiceImpl implements UserService {
 
         if (StringUtils.hasText(request.getFullName())) {
             user.setFullName(normalize(request.getFullName()));
+        }
+
+        if (StringUtils.hasText(request.getPhone())) {
+            user.setPhone(normalize(request.getPhone()));
+        } else if (request.getPhone() != null && request.getPhone().isEmpty()) {
+            user.setPhone(null);
+        }
+
+        if (request.getAddress() != null) {
+            user.setAddress(request.getAddress().trim().isEmpty() ? null : request.getAddress().trim());
+        }
+
+        if (request.getCity() != null) {
+            user.setCity(request.getCity().trim().isEmpty() ? null : request.getCity().trim());
+        }
+
+        if (request.getCountry() != null) {
+            user.setCountry(request.getCountry().trim().isEmpty() ? null : request.getCountry().trim());
+        }
+
+        if (request.getPostalCode() != null) {
+            user.setPostalCode(request.getPostalCode().trim().isEmpty() ? null : request.getPostalCode().trim());
+        }
+
+        if (request.getAvatarUrl() != null) {
+            user.setAvatarUrl(request.getAvatarUrl().trim().isEmpty() ? null : request.getAvatarUrl().trim());
+        }
+
+        if (request.getDateOfBirth() != null) {
+            user.setDateOfBirth(request.getDateOfBirth());
         }
 
         if (request.getRole() != null) {
@@ -160,8 +212,22 @@ public class UserServiceImpl implements UserService {
         if (!StringUtils.hasText(username) || !StringUtils.hasText(password)) {
             return null;
         }
+        String input = normalize(username);
 
-        Optional<User> optionalUser = userRepository.findByUsername(normalize(username));
+        Optional<User> optionalUser;
+        // If input looks like an email, try email lookup first
+        if (input != null && input.contains("@")) {
+            optionalUser = userRepository.findByEmail(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByUsername(input);
+            }
+        } else {
+            optionalUser = userRepository.findByUsername(input);
+            if (optionalUser.isEmpty()) {
+                optionalUser = userRepository.findByEmail(input);
+            }
+        }
+
         if (optionalUser.isEmpty()) {
             return null;
         }
@@ -204,13 +270,20 @@ public class UserServiceImpl implements UserService {
 
     private UserSummary toSummary(User user) {
         return new UserSummary(
-                user.getId(),
-                user.getUsername(),
-                user.getEmail(),
-                user.getFullName(),
-                user.getRole(),
-                user.isActive(),
-                user.getCreatedAt()
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getFullName(),
+            user.getRole(),
+            user.isActive(),
+            user.getCreatedAt(),
+            user.getPhone(),
+            user.getAddress(),
+            user.getCity(),
+            user.getCountry(),
+            user.getPostalCode(),
+            user.getAvatarUrl(),
+            user.getDateOfBirth()
         );
     }
 

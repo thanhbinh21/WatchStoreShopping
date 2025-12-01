@@ -3,7 +3,9 @@ package iuh.fit.se.backend.service;
 import iuh.fit.se.backend.dto.response.ProductResponse;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.repository.ProductRepository;
+import iuh.fit.se.backend.repository.ProductPriceRepository;
 import iuh.fit.se.backend.repository.ReviewRepository;
+import iuh.fit.se.backend.dto.response.PriceRangeResponse;
 import iuh.fit.se.backend.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,6 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductService {
     private final ProductRepository productRepository;
+    private final ProductPriceRepository productPriceRepository;
     private final ReviewRepository reviewRepository;
 
     public List<Product> getAllProducts() {
@@ -41,11 +44,11 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public Page<ProductResponse> searchProducts(
-            String name, String category, String supplier,
-            Double minPrice, Double maxPrice,
+        public Page<ProductResponse> searchProducts(
+            String name, String category, String brand, String supplier,
+            Double minPrice, Double maxPrice, String status,
             int page, int size, String sortBy, String order
-    ) {
+        ) {
         Specification<Product> spec = null;
 
         if (name != null) {
@@ -55,6 +58,10 @@ public class ProductService {
             spec = (spec == null ? ProductSpecification.hasCategory(category)
                     : spec.and(ProductSpecification.hasCategory(category)));
         }
+        if (brand != null) {
+            spec = (spec == null ? ProductSpecification.hasBrand(brand)
+                    : spec.and(ProductSpecification.hasBrand(brand)));
+        }
         if (supplier != null) {
             spec = (spec == null ? ProductSpecification.hasSupplier(supplier)
                     : spec.and(ProductSpecification.hasSupplier(supplier)));
@@ -62,6 +69,10 @@ public class ProductService {
         if (minPrice != null || maxPrice != null) {
             spec = (spec == null ? ProductSpecification.hasPriceBetween(minPrice, maxPrice)
                     : spec.and(ProductSpecification.hasPriceBetween(minPrice, maxPrice)));
+        }
+        if (status != null) {
+            spec = (spec == null ? ProductSpecification.hasStatus(status)
+                : spec.and(ProductSpecification.hasStatus(status)));
         }
 
         Sort sort = Sort.by(order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
@@ -86,9 +97,16 @@ public class ProductService {
             response.setSupplierName(p.getSupplier() != null ? p.getSupplier().getName() : null);
             response.setSupplierId(p.getSupplier() != null ? p.getSupplier().getId() : null);
             response.setStatus(p.getStatus() != null ? p.getStatus().toString() : null);
+            response.setCreatedAt(p.getCreatedAt());
             response.setStockQuantity(p.getStockQuantity());
             response.setRating(avg != null ? avg : 0.0);
             response.setNumOfRating(total != null ? total : 0L);
+            
+            // Include inventories for admin to edit stock
+            response.setInventories(p.getInventories());
+            response.setProductImages(p.getProductImages());
+            response.setProductPrices(p.getProductPrices());
+            response.setProductSpecs(p.getProductSpecs());
             
             return response;
         });
@@ -96,5 +114,16 @@ public class ProductService {
 
     public List<Product> getProductsByCategory(Long categoryId) {
         return productRepository.findByCategoryId(categoryId);
+    }
+
+    public PriceRangeResponse getPriceRange() {
+        // get min/max for current prices. If null, return sensible defaults
+        java.math.BigDecimal min = productPriceRepository.findMinCurrentPrice();
+        java.math.BigDecimal max = productPriceRepository.findMaxCurrentPrice();
+
+        if (min == null) min = java.math.BigDecimal.ZERO;
+        if (max == null) max = java.math.BigDecimal.valueOf(10000000L);
+
+        return new PriceRangeResponse(min, max);
     }
 }

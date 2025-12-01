@@ -197,7 +197,7 @@ export const AdminCategories = () => {
         </div>
         <Button
           onClick={handleAddNew}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="cursor-pointer bg-brand-primary text-brand-primary-foreground px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           <PlusIcon className="size-4" />
           Thêm danh mục

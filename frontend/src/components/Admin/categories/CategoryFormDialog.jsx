@@ -65,11 +65,17 @@ export const CategoryFormDialog = ({
             <Button
               type="button"
               variant="outline"
+              className={"cursor-pointer"}
               onClick={() => onClose(false)}
             >
               Hủy
             </Button>
-            <Button type="submit">
+            <Button
+              type="submit"
+              className={
+                "bg-brand-primary hover:bg-brand-primary-soft cursor-pointer"
+              }
+            >
               {isEditMode ? "Cập nhật" : "Thêm danh mục"}
             </Button>
           </DialogFooter>

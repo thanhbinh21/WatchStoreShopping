@@ -12,6 +12,13 @@ public class UserRequest {
     private String fullName;
     private String password;
     private Role role;
+    private String phone;
+    private String address;
+    private String city;
+    private String country;
+    private String postalCode;
+    private String avatarUrl;
+    private java.time.LocalDate dateOfBirth;
 
     public User toEntity() {
         return User.builder()
@@ -20,6 +27,13 @@ public class UserRequest {
                 .fullName(fullName != null ? fullName.trim() : null)
                 .password(password)
                 .role(role)
+                .phone(phone != null ? phone.trim() : null)
+                .address(address != null ? address.trim() : null)
+                .city(city != null ? city.trim() : null)
+                .country(country != null ? country.trim() : null)
+                .postalCode(postalCode != null ? postalCode.trim() : null)
+                .avatarUrl(avatarUrl != null ? avatarUrl.trim() : null)
+                .dateOfBirth(dateOfBirth)
                 .build();
     }
 

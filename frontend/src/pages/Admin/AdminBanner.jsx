@@ -127,7 +127,9 @@ export const AdminBanner = () => {
       const result = await uploadBannerImages(files);
       if (result.success && result.fileNames.length > 0) {
         const imageUrl = `/images/banners/${result.fileNames[0]}`;
-        setForm({ ...form, imageUrl });
+        setTimeout(() => {
+          setForm({ ...form, imageUrl });
+        }, 1000);
         toast.success("Upload ảnh thành công");
       }
     } catch (error) {
@@ -149,7 +151,7 @@ export const AdminBanner = () => {
         <h1 className="text-2xl font-bold">Quản lý Banner / Slideshow</h1>
         <button
           onClick={handleNew}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="cursor-pointer bg-brand-primary text-white px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           + Tạo banner
         </button>
@@ -203,7 +205,9 @@ export const AdminBanner = () => {
                       />
                       <div className="text-gray-600">
                         {uploading ? (
-                          <span className="text-blue-600">Đang upload...</span>
+                          <span className="text-brand-primary">
+                            Đang upload...
+                          </span>
                         ) : (
                           <>
                             <svg

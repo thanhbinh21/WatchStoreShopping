@@ -92,6 +92,7 @@ export const sideBars = [
     path: "/admin/payments",
   },
   { name: "Reviews", icon: "la-star", path: "/admin/reviews" },
+  { name: "Chat Support", icon: "la-comments", path: "/admin/chat" },
   { name: "Users", icon: "la-users-cog", path: "/admin/users" },
   { name: "Invoice", icon: "la-wallet", path: "/admin/invoice" },
   { name: "Reports", icon: "la-chart-bar", path: "/admin/reports" },

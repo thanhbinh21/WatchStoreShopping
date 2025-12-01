@@ -146,3 +146,39 @@ export const deletePostImage = async (filename) => {
     throw err;
   }
 };
+
+// Upload avatar image for user
+export const uploadAvatar = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/avatar`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading avatar:", err);
+    throw err;
+  }
+};
+
+// Delete avatar (if you want to support removing files)
+export const deleteAvatar = async (filename) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(
+      `${UPLOAD_URL}/post-images/${filename}`,
+      {
+        headers: { Authorization: token ? `Bearer ${token}` : "" },
+      }
+    );
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting avatar:", err);
+    throw err;
+  }
+};

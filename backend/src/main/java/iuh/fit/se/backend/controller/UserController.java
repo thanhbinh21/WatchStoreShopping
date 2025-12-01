@@ -19,7 +19,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.security.Principal;
 import java.util.Locale;
+import iuh.fit.se.backend.repository.UserRepository;
 
 @RestController
 @RequestMapping("/api/users")
@@ -27,6 +29,7 @@ import java.util.Locale;
 public class UserController {
 
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<UserSummary>>> searchUsers(
@@ -130,6 +133,48 @@ public class UserController {
         } catch (ResponseStatusException ex) {
             return ResponseEntity.status(ex.getStatusCode())
                     .body(ApiResponse.failure(ex.getReason()));
+        }
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserSummary>> getCurrentUser(Principal principal) {
+        if (principal == null || principal.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Unauthenticated"));
+        }
+        String username = principal.getName();
+        var optUser = userRepository.findByUsername(username);
+        if (optUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("User not found"));
+        }
+        var user = optUser.get();
+        var summaryOpt = userService.getUserSummary(user.getId());
+        return summaryOpt.map(summary -> ResponseEntity.ok(ApiResponse.success(summary)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("User not found")));
+    }
+
+    @PutMapping("/me")
+    public ResponseEntity<ApiResponse<UserSummary>> updateCurrentUser(Principal principal, @RequestBody UserRequest request) {
+        if (principal == null || principal.getName() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.failure("Unauthenticated"));
+        }
+        String username = principal.getName();
+        var optUser = userRepository.findByUsername(username);
+        if (optUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ApiResponse.failure("User not found"));
+        }
+        var current = optUser.get();
+
+        if (request != null) {
+            request.setRole(null); // prevent role escalation
+            request.setUsername(null); // username cannot be changed via /me
+            request.setEmail(null); // email cannot be changed via /me
+        }
+
+        try {
+            UserSummary summary = userService.updateUser(current.getId(), request);
+            return ResponseEntity.ok(ApiResponse.success(summary));
+        } catch (ResponseStatusException ex) {
+            return ResponseEntity.status(ex.getStatusCode()).body(ApiResponse.failure(ex.getReason()));
         }
     }
 }

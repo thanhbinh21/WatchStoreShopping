@@ -29,6 +29,10 @@ public class Inventory {
     @JsonBackReference(value = "product-inventory")
     private Product product;
 
+    @ManyToOne
+    @JoinColumn(name = "updated_by")
+    private User updatedBy; // Admin user who last updated this inventory
+
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;

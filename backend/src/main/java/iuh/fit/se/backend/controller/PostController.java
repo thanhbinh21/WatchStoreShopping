@@ -4,6 +4,8 @@ import iuh.fit.se.backend.dto.request.PostRequest;
 import iuh.fit.se.backend.entity.Post;
 import iuh.fit.se.backend.entity.enums.PostStatus;
 import iuh.fit.se.backend.service.PostService;
+import lombok.extern.slf4j.Slf4j;
+import iuh.fit.se.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,10 +20,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostController {
     private final PostService postService;
+    private final UserRepository userRepository;
 
     // ==================== PUBLIC ENDPOINTS ====================
 
@@ -68,11 +72,29 @@ public class PostController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String direction
+            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String createdFrom,
+            @RequestParam(required = false) String createdTo
     ) {
         Sort.Direction sortDirection = Sort.Direction.fromString(direction);
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-        return postService.getAllPosts(pageable);
+        java.time.LocalDateTime from = null;
+        java.time.LocalDateTime to = null;
+        try {
+            if (createdFrom != null && !createdFrom.isEmpty()) from = java.time.LocalDate.parse(createdFrom).atStartOfDay();
+            if (createdTo != null && !createdTo.isEmpty()) to = java.time.LocalDate.parse(createdTo).atTime(23,59,59);
+        } catch (Exception e) {
+            // ignore parse errors, service will return results without date filter
+        }
+
+        if (title == null && categoryId == null && (status == null || status.isEmpty()) && from == null && to == null) {
+            return postService.getAllPosts(pageable);
+        }
+
+        return postService.getAllPostsFiltered(title, categoryId, status, from, to, pageable);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
@@ -85,7 +107,22 @@ public class PostController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Post createPost(@RequestBody PostRequest request, Authentication authentication) {
-        Long authorId = 1L; // TODO: Extract from authentication
+        Long authorId = null;
+        if (authentication == null) {
+            log.warn("createPost called without authentication");
+        } else {
+            String username = authentication.getName();
+            log.info("createPost requested by principal='{}', authorities={}", username, authentication.getAuthorities());
+            if (username != null) {
+                var opt = userRepository.findByUsername(username);
+                if (opt.isPresent()) {
+                    authorId = opt.get().getId();
+                } else {
+                    log.warn("Authenticated username '{}' not found in DB; creating post without author", username);
+                }
+            }
+        }
+
         return postService.createPost(request, authorId);
     }
 

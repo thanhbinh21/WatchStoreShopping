@@ -12,6 +12,12 @@ import { AdminPagination } from "@/components/Pagination";
 export const AdminPosts = () => {
   const [posts, setPosts] = useState([]);
   const [categories, setCategories] = useState([]);
+  // filters
+  const [searchTitle, setSearchTitle] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [createdFrom, setCreatedFrom] = useState("");
+  const [createdTo, setCreatedTo] = useState("");
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -38,24 +44,47 @@ export const AdminPosts = () => {
 
   useEffect(() => {
     loadPosts();
+  }, [page, searchTitle, categoryFilter, statusFilter, createdFrom, createdTo]);
+
+  useEffect(() => {
     loadCategories();
-  }, [page]);
+  }, []);
 
   const loadPosts = async () => {
     try {
       setLoading(true);
       // API uses 0-indexed pages, so subtract 1
-      const response = await adminPostAPI.getAll(page - 1, 10);
+      const filters = {
+        title: searchTitle || undefined,
+        categoryId: categoryFilter || undefined,
+        status: statusFilter || undefined,
+        createdFrom: createdFrom || undefined,
+        createdTo: createdTo || undefined,
+      };
+
+      const response = await adminPostAPI.getAll(
+        page - 1,
+        10,
+        "createdAt",
+        "DESC",
+        filters
+      );
       console.log("Posts response:", response);
 
       // Check if response is paginated (Spring Data Page)
       if (response && response.content !== undefined) {
-        // Paginated response
-        setPosts(response.content || []);
+        // Paginated response - sort by createdAt descending (newest first)
+        const sortedContent = (response.content || []).sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setPosts(sortedContent);
         setTotalPages(response.totalPages || 0);
       } else if (Array.isArray(response)) {
-        // Array response
-        setPosts(response);
+        // Array response - sort by createdAt descending (newest first)
+        const sortedPosts = response.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
+        setPosts(sortedPosts);
         setTotalPages(1);
       } else {
         console.error("Unexpected response format:", response);
@@ -178,10 +207,12 @@ export const AdminPosts = () => {
 
       if (result.success && result.fileNames && result.fileNames.length > 0) {
         const uploadedFileName = result.fileNames[0];
-        setForm({
-          ...form,
-          coverImageUrl: `/images/posts/${uploadedFileName}`,
-        });
+        setTimeout(() => {
+          setForm({
+            ...form,
+            coverImageUrl: `/images/posts/${uploadedFileName}`,
+          });
+        }, 1000);
         toast.success("Upload ảnh bìa thành công");
       }
     } catch (error) {
@@ -238,14 +269,109 @@ export const AdminPosts = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-2xl font-bold">Quản lý bài viết</h1>
         <button
           onClick={handleNew}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="bg-brand-primary text-white px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           + Tạo bài viết
         </button>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white p-4 rounded-lg shadow-sm mb-6 flex flex-wrap items-end gap-3">
+        <div className="flex-1 min-w-[220px]">
+          <label className="block text-xs text-gray-500 mb-1">Tiêu đề</label>
+          <input
+            type="text"
+            className="w-full border rounded px-3 py-2"
+            value={searchTitle}
+            onChange={(e) => {
+              setSearchTitle(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Tìm theo tiêu đề..."
+          />
+        </div>
+
+        <div className="min-w-[180px]">
+          <label className="block text-xs text-gray-500 mb-1">Danh mục</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Tất cả</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="min-w-[160px]">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+          <select
+            className="w-full border rounded px-3 py-2"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setPage(1);
+            }}
+          >
+            <option value="">Tất cả</option>
+            <option value="PUBLISHED">Xuất bản</option>
+            <option value="DRAFT">Nháp</option>
+            <option value="HIDDEN">Ẩn</option>
+          </select>
+        </div>
+
+        <div className="min-w-[140px]">
+          <label className="block text-xs text-gray-500 mb-1">Từ ngày</label>
+          <input
+            type="date"
+            className="w-full border rounded px-3 py-2"
+            value={createdFrom}
+            onChange={(e) => {
+              setCreatedFrom(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="min-w-[140px]">
+          <label className="block text-xs text-gray-500 mb-1">Đến ngày</label>
+          <input
+            type="date"
+            className="w-full border rounded px-3 py-2"
+            value={createdTo}
+            onChange={(e) => {
+              setCreatedTo(e.target.value);
+              setPage(1);
+            }}
+          />
+        </div>
+
+        <div className="ml-auto">
+          <Button
+            onClick={() => {
+              setSearchTitle("");
+              setCategoryFilter("");
+              setStatusFilter("");
+              setCreatedFrom("");
+              setCreatedTo("");
+              setPage(1);
+            }}
+            className="px-3 py-2 cursor-pointer"
+          >
+            Clear filters
+          </Button>
+        </div>
       </div>
 
       {showForm && (
@@ -311,7 +437,9 @@ export const AdminPosts = () => {
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
                     {uploading ? (
                       <div className="text-center">
-                        <div className="text-blue-600 mb-1">Đang upload...</div>
+                        <div className="text-brand-primary mb-1">
+                          Đang upload...
+                        </div>
                       </div>
                     ) : form.coverImageUrl ? (
                       <div className="relative w-full h-full p-2">
@@ -320,8 +448,16 @@ export const AdminPosts = () => {
                           alt="Preview"
                           className="w-full h-full object-contain rounded"
                           onError={(e) => {
-                            e.target.src =
-                              "https://via.placeholder.com/300x200?text=Image+Error";
+                            try {
+                              e.currentTarget.onerror = null;
+                              const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><rect fill='#e2e8f0' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#94a3b8' font-size='16'>Image Error</text></svg>`;
+                              e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(
+                                svg
+                              )}`;
+                              // eslint-disable-next-line no-unused-vars
+                            } catch (err) {
+                              e.currentTarget.src = "";
+                            }
                           }}
                         />
                       </div>

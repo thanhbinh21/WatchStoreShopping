@@ -1,16 +1,24 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import Header from "@/components/Header";
-import Navbar from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 import HeroSection from "@/components/HeroSection";
 import CollectionsSection from "@/components/CollectionsSection";
+import SaleBanner from "@/components/SaleBanner";
+import BrandSection from "@/components/BrandSection";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/Footer";
 import BannerSlider from "@/components/BannerSlider";
 import { bannerAPI } from "@/api/cmsAPI";
+import { addToCart, getCart } from "@/api/cartAPI";
+import { addToGuestCart } from "@/api/guestCart";
+import { getProductById } from "@/api/productAPI";
+import { parseStoredUser } from "@/utils/storage";
 import LatestPosts from "@/components/LatestPosts";
-import Breadcrumb from "@/components/Breadcrumb";
 
 export const Home = () => {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortBy, setSortBy] = useState("id");
   const [order, setOrder] = useState("desc");
@@ -45,17 +53,66 @@ export const Home = () => {
     setSelectedCategory(category);
   };
 
-  const handleAddToCart = (productId) => {
-    console.log("Product added to cart:", productId);
-  };
+   const handleAddToCart = async (product) => {
+  const token = localStorage.getItem("accessToken");
+  const user = parseStoredUser();
+
+  // Fetch full product data vì wishlist product không đủ thông tin
+  const full = await getProductById(product.id);
+  if (!full) {
+    toast.error("Không lấy được thông tin sản phẩm 😢");
+    return;
+  }
+
+  // Guest cart
+  if (!token || !user?.id) {
+    addToGuestCart(full, 1);
+    toast.success("Đã thêm vào giỏ hàng (Khách) 🛒");
+    window.dispatchEvent(new Event("cartUpdated"));
+    return;
+  }
+
+  const maxStock = Number.isFinite(full.stockQuantity)
+    ? full.stockQuantity
+    : Number.isFinite(full.stock)
+    ? full.stock
+    : Infinity;
+
+  if (maxStock <= 0) {
+    toast.error("Sản phẩm hết hàng");
+    return;
+  }
+
+  try {
+    const cart = await getCart(user.id);
+    const existing = (cart.items || []).find(
+      (i) => i.productId === full.id || i.id === full.id
+    );
+
+    const currentQty = existing ? existing.quantity : 0;
+
+    if (currentQty + 1 > maxStock) {
+      toast.error("Không thể thêm vượt quá tồn kho");
+      return;
+    }
+
+    await addToCart(user.id, full.id, 1);
+    toast.success("Đã thêm vào giỏ hàng ✅");
+    window.dispatchEvent(new Event("cartUpdated"));
+  } catch (err) {
+    console.error(err);
+    toast.error("Thêm vào giỏ hàng thất bại 😢");
+  }
+};
+
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <Header />
 
-      {/* Navbar for search and categories */}
-      <Breadcrumb onProductsChange={handleProductsChange} />
+      {/* Navbar for search and categories (breadcrumb items passed explicitly) */}
+      <Breadcrumb items={[]} />
 
       {/* Banner Slider from CMS */}
       {hasBanners && (
@@ -72,11 +129,17 @@ export const Home = () => {
       {/* Hero Section */}
       <HeroSection />
 
+      {/* Sale Banner - Products on Sale */}
+      <SaleBanner onAddToCart={handleAddToCart} />
+
+      {/* Brand Section */}
+      <BrandSection />
+
       {/* Collections Section */}
-      <CollectionsSection
+      {/* <CollectionsSection 
         onProductsChange={handleProductsChange}
         onCategorySelect={handleCategorySelect}
-      />
+      /> */}
 
       {/* Products Section */}
       <section id="products-section" className="py-16 bg-gray-50">
@@ -85,9 +148,15 @@ export const Home = () => {
             category={selectedCategory}
             sortBy={sortBy}
             order={order}
-            pageSize={12}
-            title="Sản Phẩm Mới Nhất"
-            description="Khám phá bộ sưu tập đồng hồ cao cấp với thiết kế đẳng cấp và công nghệ tiên tiến"
+            pageSize={8}
+            title={
+              selectedCategory ? selectedCategory.name : "Sản Phẩm Mới Nhất"
+            }
+            description={
+              selectedCategory
+                ? `Khám phá bộ sưu tập ${selectedCategory.name} với thiết kế đẳng cấp và công nghệ tiên tiến`
+                : "Khám phá bộ sưu tập đồng hồ cao cấp với thiết kế đẳng cấp và công nghệ tiên tiến"
+            }
             onAddToCart={handleAddToCart}
           />
         </div>

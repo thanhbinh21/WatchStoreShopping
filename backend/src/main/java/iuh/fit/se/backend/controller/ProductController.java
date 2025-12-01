@@ -35,7 +35,9 @@ public class ProductController {
     public Page<ProductResponse> searchProducts(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String category,
+            @RequestParam(required = false) String brand,
             @RequestParam(required = false) String supplier,
+            @RequestParam(required = false) String status,
             @RequestParam(required = false) Double minPrice,
             @RequestParam(required = false) Double maxPrice,
             @RequestParam(defaultValue = "0") int page,
@@ -43,7 +45,12 @@ public class ProductController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "desc") String order
     ) {
-        return productService.searchProducts(name, category, supplier, minPrice, maxPrice, page, size, sortBy, order);
+        return productService.searchProducts(name, category, brand, supplier, minPrice, maxPrice, status, page, size, sortBy, order);
+    }
+
+    @GetMapping("/price-range")
+    public iuh.fit.se.backend.dto.response.PriceRangeResponse getPriceRange() {
+        return productService.getPriceRange();
     }
 
     @GetMapping("/{id}")
@@ -73,7 +80,8 @@ public class ProductController {
         response.setProductPrices(product.getProductPrices());
         response.setInventories(product.getInventories());
         response.setProductImages(product.getProductImages());
-        
+        response.setProductSpecs(product.getProductSpecs());
+
         // Current price and stock
         if (!product.getProductPrices().isEmpty()) {
             ProductPrice currentPrice = product.getProductPrices().stream()
@@ -96,6 +104,9 @@ public class ProductController {
                 .orElse(product.getProductImages().get(0).getImageUrl());
             response.setImageUrl(primaryImage);
         }
+
+        // CreatedAt
+        response.setCreatedAt(product.getCreatedAt());
         
         return response;
     }
@@ -161,6 +172,17 @@ public class ProductController {
                         .isPrimary(imgReq.getIsPrimary() != null ? imgReq.getIsPrimary() : false)
                         .build();
                 product.getProductImages().add(image);
+            }
+        }
+
+        // Add product specs if provided
+        if (request.getProductSpecs() != null && !request.getProductSpecs().isEmpty()) {
+            for (ProductRequest.ProductSpecRequest specReq : request.getProductSpecs()) {
+                ProductSpec spec = new ProductSpec();
+                spec.setProduct(product);
+                spec.setKeyName(specReq.getKeyName());
+                spec.setValue(specReq.getValue());
+                product.getProductSpecs().add(spec);
             }
         }
         
@@ -237,6 +259,19 @@ public class ProductController {
                         .isPrimary(imgReq.getIsPrimary() != null ? imgReq.getIsPrimary() : false)
                         .build();
                 product.getProductImages().add(image);
+            }
+        }
+
+        // Update product specs if provided
+        if (request.getProductSpecs() != null) {
+            // clear existing specs (orphanRemoval will delete)
+            product.getProductSpecs().clear();
+            for (ProductRequest.ProductSpecRequest specReq : request.getProductSpecs()) {
+                ProductSpec spec = new ProductSpec();
+                spec.setProduct(product);
+                spec.setKeyName(specReq.getKeyName());
+                spec.setValue(specReq.getValue());
+                product.getProductSpecs().add(spec);
             }
         }
         
