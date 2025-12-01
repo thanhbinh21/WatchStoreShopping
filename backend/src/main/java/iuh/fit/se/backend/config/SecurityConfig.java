@@ -102,9 +102,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
-                        .requestMatchers("/api/products/**").hasRole("ADMIN")  // Products yêu cầu ADMIN
-                        .requestMatchers("/api/inventories/**").hasRole("ADMIN")  // Inventories yêu cầu ADMIN
-                        .requestMatchers("/api/categories/**").hasRole("ADMIN")   // Categories yêu cầu ADMIN
                         
 
                                 // Payments - GET public

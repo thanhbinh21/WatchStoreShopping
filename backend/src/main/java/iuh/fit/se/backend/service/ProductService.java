@@ -102,6 +102,12 @@ public class ProductService {
             response.setRating(avg != null ? avg : 0.0);
             response.setNumOfRating(total != null ? total : 0L);
             
+            // Include inventories for admin to edit stock
+            response.setInventories(p.getInventories());
+            response.setProductImages(p.getProductImages());
+            response.setProductPrices(p.getProductPrices());
+            response.setProductSpecs(p.getProductSpecs());
+            
             return response;
         });
     }
