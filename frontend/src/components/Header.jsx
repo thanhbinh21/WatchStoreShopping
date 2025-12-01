@@ -257,11 +257,11 @@ export default function Header() {
           </div>
 
           {/* Location Selector (Optional) */}
-          <button className="cursor-pointer hidden md:flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors">
+          {/* <button className="cursor-pointer hidden md:flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors">
             <MapPin size={18} />
             <span className="text-sm font-medium">Hồ Chí Minh</span>
             <ChevronDown size={14} />
-          </button>
+          </button> */}
 
           {/* Search Bar */}
           <div className="flex-1 max-w-2xl">
@@ -311,16 +311,6 @@ export default function Header() {
             )}
           </button>
 
-          {/* Orders */}
-          {token && (
-            <button
-              onClick={() => navigate("/orders")}
-              className="cursor-pointer flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
-            >
-              <Package size={20} />
-              <span className="hidden md:inline font-medium">Đơn hàng</span>
-            </button>
-          )}
 
           {/* Notifications */}
           <div className="relative" ref={notificationDropdownRef}>
