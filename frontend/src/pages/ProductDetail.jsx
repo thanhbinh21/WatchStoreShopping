@@ -62,6 +62,9 @@ export default function ProductDetail() {
   const user = parseStoredUser();
 
   useEffect(() => {
+    // Scroll to top when page opens
+    window.scrollTo(0, 0);
+    
     fetchProductDetail();
     fetchReviews();
     checkIfCanReview();
@@ -420,41 +423,55 @@ export default function ProductDetail() {
               </div>
 
               {/* Thumbnail Images */}
-              {product.productImages && product.productImages.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
-                  {product.productImages.map((img) => {
-                    const thumbUrl = getImageUrl(img.imageUrl);
-                    return (
-                      <div
-                        key={img.id}
-                        onClick={() => setSelectedImage(img)}
-                        className={`relative bg-white rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${
-                          selectedImage?.id === img.id
-                            ? "ring-2 ring-brand-primary/50 shadow-md"
-                            : "ring-1 ring-gray-200"
-                        }`}
-                      >
-                        {thumbUrl ? (
-                          <img
-                            src={thumbUrl}
-                            alt={product.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <Package className="size-8" />
-                          </div>
-                        )}
-                        {img.isPrimary && (
-                          <Badge className="absolute -top-2 -right-2 text-xs bg-brand-primary">
-                            Chính
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {(() => {
+                // If only 1 image, duplicate it to show 3 times
+                let imagesToDisplay = product.productImages || [];
+                
+                if (imagesToDisplay.length === 1) {
+                  const singleImage = imagesToDisplay[0];
+                  imagesToDisplay = [
+                    { ...singleImage, id: `${singleImage.id}-1`, displayId: singleImage.id },
+                    { ...singleImage, id: `${singleImage.id}-2`, displayId: singleImage.id, isPrimary: false },
+                    { ...singleImage, id: `${singleImage.id}-3`, displayId: singleImage.id, isPrimary: false }
+                  ];
+                }
+                
+                return imagesToDisplay.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-4">
+                    {imagesToDisplay.map((img, index) => {
+                      const thumbUrl = getImageUrl(img.imageUrl);
+                      return (
+                        <div
+                          key={`${img.id}-${index}`}
+                          onClick={() => setSelectedImage(img)}
+                          className={`relative bg-white rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${
+                            selectedImage?.id === img.id || selectedImage?.displayId === img.displayId
+                              ? "ring-2 ring-brand-primary/50 shadow-md"
+                              : "ring-1 ring-gray-200"
+                          }`}
+                        >
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <Package className="size-8" />
+                            </div>
+                          )}
+                          {img.isPrimary && (
+                            <Badge className="absolute -top-2 -right-2 text-xs bg-brand-primary">
+                              Chính
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null;
+              })()}
 
               {/* Product Description */}
               {product.description && (

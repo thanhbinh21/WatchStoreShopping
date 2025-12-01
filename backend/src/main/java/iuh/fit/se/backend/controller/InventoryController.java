@@ -1,9 +1,15 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.request.InventoryUpdateRequest;
 import iuh.fit.se.backend.entity.Inventory;
+import iuh.fit.se.backend.entity.User;
+import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.InventoryService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -13,6 +19,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InventoryController {
     private final InventoryService inventoryService;
+    private final UserRepository userRepository;
 
     @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
@@ -35,6 +42,20 @@ public class InventoryController {
     @PostMapping
     public Inventory create(@RequestBody Inventory inventory) {
         return inventoryService.save(inventory);
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{id}/stock")
+    public ResponseEntity<Inventory> updateStock(
+            @PathVariable Long id,
+            @RequestBody InventoryUpdateRequest request,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        User admin = userRepository.findByUsername(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Inventory updated = inventoryService.updateStock(id, request.getStock(), admin, request.getReason());
+        return ResponseEntity.ok(updated);
     }
 
     @PreAuthorize("hasRole('ADMIN')")

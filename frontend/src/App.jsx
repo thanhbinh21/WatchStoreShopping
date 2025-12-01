@@ -9,7 +9,7 @@ import { AdminOrders } from "./pages/Admin/AdminOrders";
 import { AdminPricing } from "./pages/Admin/AdminPricing";
 import { AdminProduct } from "./pages/Admin/AdminProduct";
 import { AdminSettings } from "./pages/Admin/AdminSettings";
-import { AdminStock } from "./pages/Admin/AdminStock";
+import { AdminProductStock } from "./pages/Admin/AdminProductStock";
 import { AdminTable } from "./pages/Admin/AdminTable";
 import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
@@ -99,7 +99,7 @@ function App() {
             <Route path="post-categories" element={<AdminPostCategory />} />
             <Route path="posts" element={<AdminPosts />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="stock" element={<AdminStock />} />
+            <Route path="stock" element={<AdminProductStock />} />
             <Route path="pricing" element={<AdminPricing />} />
             <Route path="payments" element={<AdminMethodPayments />} />
             <Route path="promotions" element={<AdminPromotions />} />
