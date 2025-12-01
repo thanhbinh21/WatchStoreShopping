@@ -121,11 +121,12 @@ useEffect(() => {
       // Nếu user đã login thì gọi API
       getCart(user.id)
         .then(res => {
-         const totalQuantity = res?.items?.length || 0;
+          const totalQuantity = Array.isArray(res?.items)
+            ? res.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
+            : 0;
           _setCartCount(totalQuantity);
         })
         .catch(() => _setCartCount(0));
-
     }
   };
 
