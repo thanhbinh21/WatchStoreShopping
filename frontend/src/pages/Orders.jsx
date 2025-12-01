@@ -151,30 +151,42 @@ export default function Orders() {
       let successCount = 0;
       let failCount = 0;
 
-      // Thêm tất cả sản phẩm vào giỏ hàng
+      // Thêm tất cả sản phẩm vào giỏ hàng (tôn trọng tồn kho)
       for (const item of order.items) {
-        // Backend OrderItemResponse luôn có productId
         const productId = item.productId;
-
-        if (productId) {
-          try {
-            await addToCart(user.id, productId, item.quantity);
-            successCount++;
-          } catch (err) {
-            console.error(`Failed to add product ${productId}:`, err);
-            failCount++;
-          }
-        } else {
+        if (!productId) {
           console.warn("Item missing productId:", item);
           failCount++;
+          continue;
         }
-      }
 
-      if (successCount > 0) {
-        toast.success(`Đã thêm ${successCount} sản phẩm vào giỏ hàng!`);
-        navigate("/cart");
-      } else {
-        toast.error("Không thể thêm sản phẩm vào giỏ hàng");
+        try {
+          // Fetch product to check stock
+          const product = await getProductById(productId);
+          const maxStock = Number.isFinite(product?.stockQuantity)
+            ? product.stockQuantity
+            : Number.isFinite(product?.stock)
+            ? product.stock
+            : Infinity;
+          if (maxStock <= 0) {
+            throw new Error("Out of stock");
+          }
+
+          // Check existing cart qty and cap amount added to the available stock
+          const cart = await getCart(user.id);
+          const existing = (cart.items || []).find((i) => i.productId === productId || i.id === productId);
+          const currentQty = existing ? existing.quantity : 0;
+          const qtyToAdd = Math.min(item.quantity, Math.max(0, maxStock - currentQty));
+          if (qtyToAdd <= 0) {
+            throw new Error("Insufficient stock");
+          }
+
+          await addToCart(user.id, productId, qtyToAdd);
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to add product ${productId}:`, err);
+          failCount++;
+        }
       }
 
       if (failCount > 0) {

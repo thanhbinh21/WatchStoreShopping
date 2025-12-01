@@ -32,3 +32,12 @@ export const clearCart = async (userId) => {
   const res = await axiosInstance.delete(`${CART_API}/${userId}`);
   return res.data;
 };
+
+export const getCartCount = () => {
+  try {
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    return cart.reduce((sum, item) => sum + item.quantity, 0);
+  } catch {
+    return 0;
+  }
+};
