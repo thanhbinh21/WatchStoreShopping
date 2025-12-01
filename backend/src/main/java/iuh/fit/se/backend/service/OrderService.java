@@ -120,16 +120,24 @@ public class OrderService {
     }
 
     public Page<Order> searchOrders(
-            String customerName, String status,
+            String customerName,
+            String username,
+            Long userId,
+            String status,
             LocalDateTime fromDate, LocalDateTime toDate,
             Double minTotal, Double maxTotal,
             int page, int size, String sortBy, String sortDir
     ) {
         Specification<Order> spec = (root, query, cb) -> cb.conjunction();
 
-        System.out.println(customerName);
         if (customerName != null) {
             spec = spec.and(OrderSpecification.hasCustomerName(customerName));
+        }
+        if (username != null) {
+            spec = spec.and(OrderSpecification.hasUsername(username));
+        }
+        if (userId != null) {
+            spec = spec.and(OrderSpecification.hasUserId(userId));
         }
         if (status != null) {
             spec = spec.and(OrderSpecification.hasStatus(status));
@@ -153,8 +161,10 @@ public class OrderService {
         return orderRepository.findAll(spec, pageable);
     }
 
-    public Page<OrderResponse> getAdminOrders(
+        public Page<OrderResponse> getAdminOrders(
             String customerName,
+            String username,
+            Long userId,
             String status,
             LocalDateTime fromDate,
             LocalDateTime toDate,
@@ -164,8 +174,8 @@ public class OrderService {
             int size,
             String sortBy,
             String sortDir
-    ) {
-        return searchOrders(customerName, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir)
+        ) {
+        return searchOrders(customerName, username, userId, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir)
                 .map(this::toOrderResponse);
     }
 
