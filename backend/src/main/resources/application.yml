@@ -3,24 +3,6 @@ spring:
         name: spring-ai-flight
 
     ai:
-        client:
-            transport: rest
-
-        openai:
-            api-key: "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"
-            project-id: "proj_pHRLeszmsxnZaTXzaWXWhSUt"
-            base-url: https://api.openai.com
-
-            chat:
-                options:
-                    model: gpt-4o-mini
-                    temperature: 0.8
-                    max-tokens: 1000
-
-            embedding:
-                options:
-                    model: text-embedding-3-large
-
         vectorstore:
             qdrant:
                 host: 127.0.0.1
@@ -33,11 +15,18 @@ spring:
                 grpc:
                     enabled: true
 
+groq:
+    api:
+        key: ${GROQ_API_KEY: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}
+        base-url: https://api.groq.com/openai/v1
+        model: llama-3.3-70b-versatile
+        temperature: 0.7
+        max-output-tokens: 1024
+
 # Logging debug để xem request gửi đi
 logging:
     level:
         org.springframework.web.client: DEBUG
         org.springframework.http.client: DEBUG
         org.springframework.ai: DEBUG
-        com.theokanning: DEBUG
         iuh.fit.se.backend.service.AiService: DEBUG

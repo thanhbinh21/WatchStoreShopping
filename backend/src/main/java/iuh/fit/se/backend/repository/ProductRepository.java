@@ -10,4 +10,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     List<Product> findByNameContainingIgnoreCase(String name);
 
     List<Product> findByCategoryId(Long categoryId);
+
+    List<Product> findTop8ByBrand_IdOrderByCreatedAtDesc(Long brandId);
 }

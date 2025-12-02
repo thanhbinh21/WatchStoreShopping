@@ -21,7 +21,7 @@ public class AiController {
             if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
                 return ResponseEntity.ok(ApiResponse.failure("Message is required"));
             }
-            String reply = aiService.queryOpenAi(request.getMessage().trim());
+            String reply = aiService.queryAi(request.getMessage().trim());
             return ResponseEntity.ok(ApiResponse.success(new AiQueryResponse(reply)));
         } catch (RuntimeException ex) {
             return ResponseEntity.ok(ApiResponse.failure(ex.getMessage()));
