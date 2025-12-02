@@ -30,6 +30,8 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<Page<OrderResponse>> getOrders(
             @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) LocalDateTime fromDate,
             @RequestParam(required = false) LocalDateTime toDate,
@@ -42,6 +44,8 @@ public class OrderController {
     ) {
         return ResponseEntity.ok(orderService.getAdminOrders(
                 customerName,
+            username,
+            userId,
                 status,
                 fromDate,
                 toDate,
@@ -152,6 +156,8 @@ public class OrderController {
     @GetMapping("/search")
     public ResponseEntity<Page<Order>> searchOrders(
             @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) LocalDateTime fromDate,
             @RequestParam(required = false) LocalDateTime toDate,
@@ -163,7 +169,7 @@ public class OrderController {
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
         return ResponseEntity.ok(orderService.searchOrders(
-                customerName, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir
+                customerName, username, userId, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir
         ));
     }
 }

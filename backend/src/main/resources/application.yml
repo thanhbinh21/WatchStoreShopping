@@ -1,0 +1,43 @@
+spring:
+    application:
+        name: spring-ai-flight
+
+    ai:
+        client:
+            transport: rest
+
+        openai:
+            api-key: "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"
+            project-id: "proj_pHRLeszmsxnZaTXzaWXWhSUt"
+            base-url: https://api.openai.com
+
+            chat:
+                options:
+                    model: gpt-4o-mini
+                    temperature: 0.8
+                    max-tokens: 1000
+
+            embedding:
+                options:
+                    model: text-embedding-3-large
+
+        vectorstore:
+            qdrant:
+                host: 127.0.0.1
+                port: 6334
+                api-key: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.ApheJ12lWHcB0gY8QCEcHIBJb_05A2t2o9yNTWslJ3s"
+                collection-name: products
+                distance: COSINE
+                dimension: 3072
+                initialize-schema: true
+                grpc:
+                    enabled: true
+
+# Logging debug để xem request gửi đi
+logging:
+    level:
+        org.springframework.web.client: DEBUG
+        org.springframework.http.client: DEBUG
+        org.springframework.ai: DEBUG
+        com.theokanning: DEBUG
+        iuh.fit.se.backend.service.AiService: DEBUG

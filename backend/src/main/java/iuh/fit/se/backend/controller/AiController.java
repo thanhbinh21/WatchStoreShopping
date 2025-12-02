@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.dto.ApiResponse;
 import iuh.fit.se.backend.dto.request.AiQueryRequest;
 import iuh.fit.se.backend.dto.response.AiQueryResponse;
 import iuh.fit.se.backend.service.AiService;
@@ -11,20 +12,19 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
 public class AiController {
+
     private final AiService aiService;
 
-    @PostMapping("/query")
-    public ResponseEntity<AiQueryResponse> queryAi(@RequestBody AiQueryRequest request) {
-        if (request == null || request.getMessage() == null || request.getMessage().trim().isEmpty()) {
-            return ResponseEntity.badRequest().body(new AiQueryResponse("Message is required"));
-        }
+    @PostMapping("/chat")
+    public ResponseEntity<ApiResponse<AiQueryResponse>> chat(@RequestBody AiQueryRequest request) {
         try {
+            if (request == null || request.getMessage() == null || request.getMessage().isBlank()) {
+                return ResponseEntity.ok(ApiResponse.failure("Message is required"));
+            }
             String reply = aiService.queryOpenAi(request.getMessage().trim());
-            return ResponseEntity.ok(new AiQueryResponse(reply));
-        } catch (Exception ex) {
-            // Log error and respond gracefully
-            ex.printStackTrace();
-            return ResponseEntity.status(503).body(new AiQueryResponse("AI service unavailable: " + ex.getMessage()));
+            return ResponseEntity.ok(ApiResponse.success(new AiQueryResponse(reply)));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.ok(ApiResponse.failure(ex.getMessage()));
         }
     }
 }

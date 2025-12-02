@@ -159,7 +159,13 @@ export const AdminOrders = () => {
     useEffect(() => {
         fetchOrders(page, filters);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.status, filters.search, filters.username, filters.userId, page]);
+    }, [
+        filters.status,
+        filters.search,
+        filters.username,
+        filters.userId,
+        page,
+    ]);
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
