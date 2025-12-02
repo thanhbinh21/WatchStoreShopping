@@ -13,8 +13,29 @@ public class OrderSpecification {
                 return null;
             }
             String keyword = "%" + customerName.toLowerCase() + "%";
-            System.out.println("Searching username with keyword: " + keyword);
+            return cb.or(
+                    cb.like(cb.lower(root.get("user").get("fullName")), keyword),
+                    cb.like(cb.lower(root.get("user").get("email")), keyword)
+            );
+        };
+    }
+
+    public static Specification<Order> hasUsername(String username) {
+        return (root, query, cb) -> {
+            if (username == null || username.isBlank()) {
+                return null;
+            }
+            String keyword = "%" + username.toLowerCase() + "%";
             return cb.like(cb.lower(root.get("user").get("username")), keyword);
+        };
+    }
+
+    public static Specification<Order> hasUserId(Long userId) {
+        return (root, query, cb) -> {
+            if (userId == null) {
+                return null;
+            }
+            return cb.equal(root.get("user").get("id"), userId);
         };
     }
 

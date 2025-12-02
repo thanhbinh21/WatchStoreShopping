@@ -1,4 +1,4 @@
-package iuh.fit.se.backend.service.impl;
+package iuh.fit.se.backend.service;
 
 import iuh.fit.se.backend.dto.OrderDailyPoint;
 import iuh.fit.se.backend.dto.OrderMonthlyPoint;
@@ -7,9 +7,7 @@ import iuh.fit.se.backend.dto.OrderUserSummary;
 import iuh.fit.se.backend.dto.OrderYearlyPoint;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
 import iuh.fit.se.backend.repository.OrderRepository;
-import iuh.fit.se.backend.service.OrderReportService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
@@ -23,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
 @RequiredArgsConstructor
 public class OrderReportServiceImpl implements OrderReportService {
 

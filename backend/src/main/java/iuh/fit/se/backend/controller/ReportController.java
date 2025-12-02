@@ -13,6 +13,7 @@ import iuh.fit.se.backend.dto.InventoryYearlyPoint;
 import iuh.fit.se.backend.dto.OrderDailyPoint;
 import iuh.fit.se.backend.dto.OrderMonthlyPoint;
 import iuh.fit.se.backend.dto.OrderSummaryReport;
+import iuh.fit.se.backend.dto.OrderUserSummary;
 import iuh.fit.se.backend.dto.OrderYearlyPoint;
 import iuh.fit.se.backend.dto.RevenueDailyPoint;
 import iuh.fit.se.backend.dto.RevenueMonthlyPoint;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.List;
 
@@ -202,6 +204,25 @@ public class ReportController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(ApiResponse.failure(ex.getMessage()));
         }
+    }
+
+    @GetMapping("/orders/users")
+    public ResponseEntity<ApiResponse<List<OrderUserSummary>>> getOrderUsersReport(
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "limit", required = false) Integer limit
+    ) {
+        LocalDateTime startDateTime = startDate != null ? startDate.atStartOfDay() : null;
+        LocalDateTime endDateTime = null;
+        if (endDate != null) {
+            endDateTime = endDate.plusDays(1).atStartOfDay().minusNanos(1);
+        }
+        int resolvedLimit = limit != null && limit > 0 ? limit : 10;
+
+        List<OrderUserSummary> data = orderReportService.getOrdersByUser(startDateTime, endDateTime, resolvedLimit);
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 
     @GetMapping("/revenue/summary")
