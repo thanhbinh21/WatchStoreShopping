@@ -8,6 +8,8 @@ export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputMessage, setInputMessage] = useState("");
+  const [user, setUser] = useState(parseStoredUser());
+  const [userRole, setUserRole] = useState(localStorage.getItem("role"));
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -23,9 +25,34 @@ export default function ChatWidget() {
     markAsRead,
   } = useChatContext();
 
-  const user = parseStoredUser();
-  const userRole = localStorage.getItem("role");
   const location = useLocation();
+
+  // Update user state khi user thay đổi
+  useEffect(() => {
+    const handleUserUpdated = () => {
+      setUser(parseStoredUser());
+      setUserRole(localStorage.getItem("role"));
+    };
+
+    const handleStorage = (e) => {
+      if (
+        !e.key ||
+        e.key === "user" ||
+        e.key === "accessToken" ||
+        e.key === "role"
+      ) {
+        handleUserUpdated();
+      }
+    };
+
+    window.addEventListener("userUpdated", handleUserUpdated);
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      window.removeEventListener("userUpdated", handleUserUpdated);
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   // Auto scroll to bottom
   useEffect(() => {
