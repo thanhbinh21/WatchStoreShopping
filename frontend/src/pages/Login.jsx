@@ -95,6 +95,9 @@ export default function LoginRegister() {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
 
+        // Dispatch event để các component khác biết user đã thay đổi
+        window.dispatchEvent(new Event("userUpdated"));
+
         await syncGuestCart(data.user.id);
 
         // Chuyển đến /home cho cả admin và user

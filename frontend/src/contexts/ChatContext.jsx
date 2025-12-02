@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef } from "react";
+import { createContext, useContext, useEffect, useState, useRef, useCallback } from "react";
 import SockJS from "sockjs-client";
 import { Client } from "@stomp/stompjs";
 import { parseStoredUser } from "@/utils/storage";
@@ -28,11 +28,82 @@ export const ChatProvider = ({ children }) => {
     const clientRef = useRef(null);
     const typingTimeoutRef = useRef(null);
 
+    // Load chat room và messages
+    const loadChatRoom = useCallback(async () => {
+        if (!user?.id) return;
+        
+        try {
+            setLoading(true);
+            const roomData = await getChatRoom();
+            setRoom(roomData);
+            setUnreadCount(roomData.unreadCountForUser || 0);
+
+            // Load messages
+            if (roomData.id) {
+                const msgs = await getChatMessages(roomData.id);
+                // Messages come in DESC order, reverse to show oldest first, newest at bottom
+                const orderedMessages = msgs.reverse();
+                
+                // Map messages và xác định isOwnMessage dựa trên user.id hiện tại
+                const mappedMessages = orderedMessages.map(msg => ({
+                    ...msg,
+                    isOwnMessage: msg.senderId === user.id
+                }));
+                
+                // If no messages, add welcome message
+                if (mappedMessages.length === 0) {
+                    const welcomeMessage = {
+                        id: 'welcome-msg',
+                        roomId: roomData.id,
+                        senderId: 0,
+                        senderName: 'Hệ thống',
+                        senderRole: 'ADMIN',
+                        content: 'Xin chào bạn đến với website, bạn cần giúp gì?',
+                        createdAt: new Date().toISOString(),
+                        isOwnMessage: false
+                    };
+                    setMessages([welcomeMessage]);
+                } else {
+                    setMessages(mappedMessages);
+                }
+            }
+        } catch (error) {
+            console.error("Error loading chat room:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [user?.id]);
+
     // Theo dõi thay đổi user (login / logout) tương tự Header
     useEffect(() => {
         const handleUserUpdated = () => {
-            setUser(parseStoredUser() || null);
-            setUserRole(localStorage.getItem("role"));
+            const newUser = parseStoredUser() || null;
+            const newRole = localStorage.getItem("role");
+            
+            // Nếu user thay đổi (logout hoặc login user khác), reset toàn bộ state
+            if (user?.id !== newUser?.id) {
+                console.log('User changed, clearing chat state...', {
+                    oldUserId: user?.id,
+                    newUserId: newUser?.id
+                });
+                
+                // Clear messages và state
+                setMessages([]);
+                setRoom(null);
+                setTyping(false);
+                setUnreadCount(0);
+                setConnected(false);
+                setLoading(false);
+                
+                // Disconnect WebSocket cũ nếu có
+                if (clientRef.current) {
+                    clientRef.current.deactivate();
+                    clientRef.current = null;
+                }
+            }
+            
+            setUser(newUser);
+            setUserRole(newRole);
         };
 
         const handleStorage = (e) => {
@@ -53,11 +124,17 @@ export const ChatProvider = ({ children }) => {
             window.removeEventListener("userUpdated", handleUserUpdated);
             window.removeEventListener("storage", handleStorage);
         };
-    }, []);
+    }, [user?.id]);
 
     // Initialize WebSocket connection (only for non-admin users)
     useEffect(() => {
         if (!user?.id) {
+            // Clear state khi không có user
+            setMessages([]);
+            setRoom(null);
+            setTyping(false);
+            setUnreadCount(0);
+            setConnected(false);
             return;
         }
 
@@ -80,16 +157,20 @@ export const ChatProvider = ({ children }) => {
             heartbeatOutgoing: 4000,
         });
 
-        stompClient.onConnect = () => {
+        stompClient.onConnect = async () => {
+            console.log('WebSocket connected for user:', user?.id);
             setConnected(true);
-            loadChatRoom();
+            // Load lại chat room và messages mỗi khi connect thành công
+            await loadChatRoom();
         };
 
         stompClient.onStompError = () => {
+            console.error('WebSocket STOMP error');
             setConnected(false);
         };
 
         stompClient.onWebSocketClose = () => {
+            console.log('WebSocket closed');
             setConnected(false);
         };
 
@@ -99,13 +180,14 @@ export const ChatProvider = ({ children }) => {
         return () => {
             if (clientRef.current) {
                 clientRef.current.deactivate();
+                clientRef.current = null;
             }
         };
-    }, [user?.id, userRole]);
+    }, [user?.id, userRole, loadChatRoom]);
 
     // Subscribe to room messages
     useEffect(() => {
-        if (!connected || !room || !clientRef.current) return;
+        if (!connected || !room || !clientRef.current || !user?.id) return;
 
         const subscriptions = [];
 
@@ -115,21 +197,27 @@ export const ChatProvider = ({ children }) => {
             (message) => {
                 const newMessage = JSON.parse(message.body);
                 
+                // Xác định isOwnMessage dựa trên user.id hiện tại
+                const mappedMessage = {
+                    ...newMessage,
+                    isOwnMessage: newMessage.senderId === user.id
+                };
+                
                 // Replace temp message or add new message at bottom
                 setMessages((prev) => {
                     // Remove temp message if exists
                     const filtered = prev.filter(msg => !msg.id?.toString().startsWith('temp-'));
                     
                     // Check if message already exists (prevent duplicates)
-                    const exists = filtered.some(msg => msg.id === newMessage.id);
+                    const exists = filtered.some(msg => msg.id === mappedMessage.id);
                     if (exists) return prev;
                     
                     // Add new message at the end (newest at bottom)
-                    return [...filtered, newMessage];
+                    return [...filtered, mappedMessage];
                 });
                 
                 // Update unread count if message is not from current user
-                if (!newMessage.isOwnMessage) {
+                if (mappedMessage.senderId !== user.id) {
                     setUnreadCount((prev) => prev + 1);
                 }
             }
@@ -159,42 +247,7 @@ export const ChatProvider = ({ children }) => {
         };
     }, [connected, room, user?.id]);
 
-    const loadChatRoom = async () => {
-        try {
-            setLoading(true);
-            const roomData = await getChatRoom();
-            setRoom(roomData);
-            setUnreadCount(roomData.unreadCountForUser || 0);
 
-            // Load messages
-            if (roomData.id) {
-                const msgs = await getChatMessages(roomData.id);
-                // Messages come in DESC order, reverse to show oldest first, newest at bottom
-                const orderedMessages = msgs.reverse();
-                
-                // If no messages, add welcome message
-                if (orderedMessages.length === 0) {
-                    const welcomeMessage = {
-                        id: 'welcome-msg',
-                        roomId: roomData.id,
-                        senderId: 0,
-                        senderName: 'Hệ thống',
-                        senderRole: 'ADMIN',
-                        content: 'Xin chào bạn đến với website, bạn cần giúp gì?',
-                        createdAt: new Date().toISOString(),
-                        isOwnMessage: false
-                    };
-                    setMessages([welcomeMessage]);
-                } else {
-                    setMessages(orderedMessages);
-                }
-            }
-        } catch (error) {
-            // Error loading chat room
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const sendMessage = (content) => {
         if (!clientRef.current || !connected || !room) {
