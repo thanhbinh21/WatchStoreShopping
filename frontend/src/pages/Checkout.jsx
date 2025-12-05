@@ -68,10 +68,14 @@ export default function Checkout() {
 
     setLoading(true);
 
+    // Hiển thị toast đang xử lý
+    const loadingToast = toast.loading("Đơn hàng đang xử lý...");
+
     try {
       // Get user from localStorage
       const user = parseStoredUser();
       if (!user?.id) {
+        toast.dismiss(loadingToast);
         toast.error("Vui lòng đăng nhập để đặt hàng");
         navigate("/login");
         return;
@@ -125,15 +129,20 @@ export default function Checkout() {
         // Không fail order nếu không xóa được cart
       }
 
-      // Backend trả về Order object trực tiếp
-      toast.success("Đặt hàng thành công!");
+      // Đóng toast loading và hiển thị toast thành công
+      toast.dismiss(loadingToast);
+      toast.success("Đơn hàng xử lý thành công!");
+      
+      // Navigate không truyền message nữa để tránh toast trùng lặp
       navigate("/orders", {
         state: {
           orderId: order?.id,
-          message: "Đơn hàng của bạn đang được xử lý",
         },
       });
     } catch (error) {
+      // Đóng toast loading khi có lỗi
+      toast.dismiss(loadingToast);
+      
       const errorMsg =
         error.response?.data?.message ||
         error.message ||

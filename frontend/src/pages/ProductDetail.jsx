@@ -274,8 +274,8 @@ export default function ProductDetail() {
     // 🚨 FIX: Nếu chưa login → lưu vào guest cart
     if (!token || !user?.id) {
       // guest cart flow
-      addToGuestCart(product, 1);
-      toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
+      addToGuestCart(product, quantity);
+      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng (khách) 🛒`);
       window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
@@ -300,13 +300,13 @@ export default function ProductDetail() {
       );
       const currentQty = existingItem ? existingItem.quantity : 0;
   
-      if (currentQty + 1 > maxStock) {
-        toast.error("Không thể thêm vượt quá tồn kho");
+      if (currentQty + quantity > maxStock) {
+        toast.error(`Không thể thêm vượt quá tồn kho. Còn lại ${maxStock - currentQty} sản phẩm`);
         return;
       }
   
-      await addToCart(user.id, product.id, 1);
-      toast.success("Đã thêm vào giỏ hàng");
+      await addToCart(user.id, product.id, quantity);
+      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`);
       window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
