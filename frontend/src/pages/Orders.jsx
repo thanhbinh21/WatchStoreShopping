@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { getOrdersByUserId, cancelOrder } from "../api/orderAPI";
 import { getReviewByUserAndProduct } from "../api/reviewAPI";
-import { addToCart } from "../api/cartAPI";
+import { addToCart, getCart } from "../api/cartAPI";
+import { getProductById } from "../api/productAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { toast } from "sonner";
 import Header from "../components/Header";
@@ -70,21 +71,20 @@ export default function Orders() {
   const [filterStatus, setFilterStatus] = useState("ALL");
   const [productReviews, setProductReviews] = useState({});
 
-  const { orderId, message } = location.state || {};
+  const { orderId } = location.state || {};
 
   useEffect(() => {
     loadOrders();
-
-    // Show success message if coming from checkout
-    if (message) {
-      toast.success(message);
-    }
-  }, [message]);
+  }, []);
 
   const loadOrders = async () => {
     try {
+      // Kiểm tra token trước khi gọi API
+      const token = localStorage.getItem("accessToken");
       const user = parseStoredUser();
-      if (!user?.id) {
+      
+      if (!token || !user?.id) {
+        console.log("Không có token hoặc user ID, redirect đến login");
         toast.error("Vui lòng đăng nhập");
         navigate("/login");
         return;
@@ -104,7 +104,19 @@ export default function Orders() {
       }
     } catch (error) {
       console.error("Error loading orders:", error);
+      
+      // Nếu lỗi là 401 (Unauthorized), redirect về login
+      if (error.response?.status === 401) {
+        console.log("Token không hợp lệ, redirect đến login");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        toast.error("Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại");
+        navigate("/login");
+        return;
+      }
+      
       const errorMsg =
+        error.response?.data?.message ||
         error.response?.data ||
         error.message ||
         "Có lỗi xảy ra khi tải đơn hàng";
@@ -150,6 +162,10 @@ export default function Orders() {
 
       let successCount = 0;
       let failCount = 0;
+      const failedProducts = [];
+
+      // Hiển thị loading toast
+      const loadingToast = toast.loading("Đang thêm sản phẩm vào giỏ hàng...");
 
       // Thêm tất cả sản phẩm vào giỏ hàng (tôn trọng tồn kho)
       for (const item of order.items) {
@@ -157,6 +173,7 @@ export default function Orders() {
         if (!productId) {
           console.warn("Item missing productId:", item);
           failCount++;
+          failedProducts.push(item.productName || "Sản phẩm không xác định");
           continue;
         }
 
@@ -169,7 +186,7 @@ export default function Orders() {
             ? product.stock
             : Infinity;
           if (maxStock <= 0) {
-            throw new Error("Out of stock");
+            throw new Error("Hết hàng");
           }
 
           // Check existing cart qty and cap amount added to the available stock
@@ -178,7 +195,7 @@ export default function Orders() {
           const currentQty = existing ? existing.quantity : 0;
           const qtyToAdd = Math.min(item.quantity, Math.max(0, maxStock - currentQty));
           if (qtyToAdd <= 0) {
-            throw new Error("Insufficient stock");
+            throw new Error("Không đủ tồn kho");
           }
 
           await addToCart(user.id, productId, qtyToAdd);
@@ -186,11 +203,24 @@ export default function Orders() {
         } catch (err) {
           console.error(`Failed to add product ${productId}:`, err);
           failCount++;
+          failedProducts.push(item.productName || `ID: ${productId}`);
         }
       }
 
-      if (failCount > 0) {
-        toast.warning(`${failCount} sản phẩm không thể thêm vào giỏ`);
+      // Đóng loading toast
+      toast.dismiss(loadingToast);
+
+      // Hiển thị kết quả
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`Đã thêm ${successCount} sản phẩm vào giỏ hàng`);
+        window.dispatchEvent(new Event("cartUpdated"));
+        navigate("/cart");
+      } else if (successCount > 0 && failCount > 0) {
+        toast.warning(`Đã thêm ${successCount} sản phẩm. ${failCount} sản phẩm không thể thêm vào giỏ`);
+        window.dispatchEvent(new Event("cartUpdated"));
+        navigate("/cart");
+      } else {
+        toast.error("Không thể thêm sản phẩm vào giỏ hàng. Vui lòng thử lại");
       }
     } catch (error) {
       console.error("Error reordering:", error);
