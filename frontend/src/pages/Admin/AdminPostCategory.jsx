@@ -8,6 +8,7 @@ import { AdminPagination } from "@/components/Pagination";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
