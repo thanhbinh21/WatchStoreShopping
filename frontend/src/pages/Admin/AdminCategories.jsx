@@ -218,38 +218,33 @@ export const AdminCategories = () => {
         </div>
       </div>
 
-      {/* Main Content: Table + Detail Panel */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Category Table */}
-        <div
-          className={`${categoryDetail ? "xl:col-span-2" : "xl:col-span-3"}`}
-        >
-          <CategoryTable
-            categories={paginatedCategories}
-            selectedCategory={selectedCategory}
-            onRowClick={handleRowClick}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-          />
-          {totalPages > 1 && (
-            <AdminPagination
-              page={currentPage}
-              totalPages={totalPages}
-              handlePageChange={setCurrentPage}
-              handlePrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              handleNext={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-            />
-          )}
-        </div>
-
-        {/* Category Detail Panel */}
-        <CategoryDetailPanel
-          categoryDetail={categoryDetail}
-          onClose={handleCloseDetail}
+      {/* Category Table */}
+      <div>
+        <CategoryTable
+          categories={paginatedCategories}
+          selectedCategory={selectedCategory}
+          onRowClick={handleRowClick}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
         />
+        {totalPages > 1 && (
+          <AdminPagination
+            page={currentPage}
+            totalPages={totalPages}
+            handlePageChange={setCurrentPage}
+            handlePrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            handleNext={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+          />
+        )}
       </div>
+
+      {/* Category Detail Modal */}
+      <CategoryDetailPanel
+        categoryDetail={categoryDetail}
+        onClose={handleCloseDetail}
+      />
 
       {/* Add Dialog */}
       <CategoryFormDialog
