@@ -39,6 +39,9 @@ export const ProductFormDialog = ({
   const [uploadedImages, setUploadedImages] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  // State for URL input
+  const [imageUrlInput, setImageUrlInput] = useState("");
+
   // Fetch data for dropdowns
   useEffect(() => {
     if (isOpen) {
@@ -173,6 +176,31 @@ export const ProductFormDialog = ({
       newImages[0].isPrimary = true;
     }
     setUploadedImages(newImages);
+  };
+
+  // Add image from URL
+  const handleAddImageUrl = () => {
+    if (!imageUrlInput.trim()) {
+      toast.error("Vui lòng nhập URL hình ảnh");
+      return;
+    }
+
+    // Validate URL format (basic check)
+    try {
+      new URL(imageUrlInput);
+    } catch (e) {
+      toast.error("URL không hợp lệ");
+      return;
+    }
+
+    const newImage = {
+      imageUrl: imageUrlInput.trim(),
+      isPrimary: uploadedImages.length === 0, // First image is primary
+    };
+
+    setUploadedImages([...uploadedImages, newImage]);
+    setImageUrlInput("");
+    toast.success("Đã thêm hình ảnh từ URL");
   };
 
   // Handle form submit with images
@@ -324,51 +352,65 @@ export const ProductFormDialog = ({
               {/* Uploaded images grid */}
               {uploadedImages.length > 0 && (
                 <div className="grid grid-cols-4 gap-3 mb-3">
-                  {uploadedImages.map((img, index) => (
-                    <div
-                      key={index}
-                      className="relative group border-2 rounded-lg overflow-hidden"
-                      style={{
-                        borderColor: img.isPrimary ? "#10b981" : "#e5e7eb",
-                      }}
-                    >
-                      <img
-                        src={`/images/products/${img.imageUrl}`}
-                        alt={`Product ${index + 1}`}
-                        className="w-full h-24 object-cover"
-                      />
+                  {uploadedImages.map((img, index) => {
+                    // Helper to get image src
+                    const getImageSrc = (url) => {
+                      if (!url) return "";
+                      if (url.startsWith("http") || url.startsWith("data:"))
+                        return url;
+                      return `/images/products/${url}`;
+                    };
 
-                      {/* Primary badge */}
-                      {img.isPrimary && (
-                        <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
-                          <Star className="inline size-3 mr-1" />
-                          Chính
-                        </div>
-                      )}
+                    return (
+                      <div
+                        key={index}
+                        className="relative group border-2 rounded-lg overflow-hidden"
+                        style={{
+                          borderColor: img.isPrimary ? "#10b981" : "#e5e7eb",
+                        }}
+                      >
+                        <img
+                          src={getImageSrc(img.imageUrl)}
+                          alt={`Product ${index + 1}`}
+                          className="w-full h-24 object-cover"
+                          onError={(e) => {
+                            e.target.src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3EError%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
 
-                      {/* Actions */}
-                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        {!img.isPrimary && (
+                        {/* Primary badge */}
+                        {img.isPrimary && (
+                          <div className="absolute top-1 left-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded">
+                            <Star className="inline size-3 mr-1" />
+                            Chính
+                          </div>
+                        )}
+
+                        {/* Actions */}
+                        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          {!img.isPrimary && (
+                            <button
+                              type="button"
+                              onClick={() => setPrimaryImage(index)}
+                              className="bg-green-500 text-white p-1.5 rounded hover:bg-green-600"
+                              title="Đặt làm ảnh chính"
+                            >
+                              <Star className="size-4" />
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => setPrimaryImage(index)}
-                            className="bg-green-500 text-white p-1.5 rounded hover:bg-green-600"
-                            title="Đặt làm ảnh chính"
+                            onClick={() => removeImage(index)}
+                            className="bg-red-500 text-white p-1.5 rounded hover:bg-red-600"
+                            title="Xóa ảnh"
                           >
-                            <Star className="size-4" />
+                            <X className="size-4" />
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="bg-red-500 text-white p-1.5 rounded hover:bg-red-600"
-                          title="Xóa ảnh"
-                        >
-                          <X className="size-4" />
-                        </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
@@ -397,9 +439,36 @@ export const ProductFormDialog = ({
                 )}
               </div>
 
+              {/* URL Input */}
+              <div className="flex items-center gap-2 mt-3">
+                <div className="flex-1">
+                  <Input
+                    type="url"
+                    placeholder="Hoặc nhập URL hình ảnh (http://... hoặc https://...)"
+                    value={imageUrlInput}
+                    onChange={(e) => setImageUrlInput(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddImageUrl();
+                      }
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  disabled={!imageUrlInput.trim()}
+                  className="cursor-pointer"
+                >
+                  Thêm URL
+                </Button>
+              </div>
+
               <p className="text-xs text-gray-500">
-                Chọn nhiều ảnh (PNG, JPG, JPEG - tối đa 5MB/file). Click{" "}
-                <Star className="inline size-3" /> để đặt ảnh chính.
+                Chọn nhiều ảnh (PNG, JPG, JPEG - tối đa 5MB/file) hoặc nhập URL
+                hình ảnh. Click <Star className="inline size-3" /> để đặt ảnh
+                chính.
               </p>
             </div>
 

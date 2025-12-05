@@ -41,23 +41,37 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                   </h3>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                  {productDetail.productImages.map((img) => (
-                    <div key={img.id} className="relative">
-                      <img
-                        src={`/images/products/${img.imageUrl}`}
-                        alt={productDetail.name}
-                        className="w-full h-full object-cover rounded-md"
-                      />
-                      {img.isPrimary && (
-                        <Badge
-                          className="absolute top-1 right-1"
-                          variant="default"
-                        >
-                          Chính
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
+                  {productDetail.productImages.map((img) => {
+                    // Helper to get image src
+                    const getImageSrc = (url) => {
+                      if (!url) return "";
+                      if (url.startsWith("http") || url.startsWith("data:"))
+                        return url;
+                      return `/images/products/${url}`;
+                    };
+
+                    return (
+                      <div key={img.id} className="relative">
+                        <img
+                          src={getImageSrc(img.imageUrl)}
+                          alt={productDetail.name}
+                          className="w-full h-full object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src =
+                              "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          }}
+                        />
+                        {img.isPrimary && (
+                          <Badge
+                            className="absolute top-1 right-1"
+                            variant="default"
+                          >
+                            Chính
+                          </Badge>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
