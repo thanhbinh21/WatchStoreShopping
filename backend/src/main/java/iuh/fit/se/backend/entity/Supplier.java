@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,7 +34,7 @@ public class Supplier {
 
     @Builder.Default
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference(value = "supplier-products")
+    @JsonIgnore
     @ToString.Exclude
     private List<Product> products = new ArrayList<>();
 }

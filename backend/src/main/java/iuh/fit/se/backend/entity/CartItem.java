@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "cart_items")
 @Getter
@@ -21,6 +23,9 @@ public class CartItem {
     @Column(nullable = false)
     private Integer quantity;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @ManyToOne
     @JoinColumn(name = "cart_id", nullable = false)
     @JsonBackReference(value = "cart-items")
@@ -30,4 +35,10 @@ public class CartItem {
     @JoinColumn(name = "product_id", nullable = false)
     @JsonBackReference(value = "product-cartItems")
     private Product product;
+
+    @PrePersist
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

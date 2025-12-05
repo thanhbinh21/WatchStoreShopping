@@ -539,37 +539,34 @@ export const AdminProduct = () => {
         </div>
       </div>
 
-      {/* Main Content: Table + Detail Panel */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Product Table */}
-        <div className={`${productDetail ? "xl:col-span-2" : "xl:col-span-3"}`}>
-          <ProductTable
-            products={products}
-            selectedProduct={selectedProduct}
-            onRowClick={handleRowClick}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            formatCurrency={formatCurrency}
-          />
-
-          {/* Pagination */}
-          <div className="mt-4">
-            <AdminPagination
-              handleNext={handleNext}
-              handlePrev={handlePrev}
-              handlePageChange={handlePageChange}
-              page={page}
-              totalPages={totalPages}
-            />
-          </div>
-        </div>
-
-        {/* Product Detail Panel */}
-        <ProductDetailPanel
-          productDetail={productDetail}
-          onClose={handleCloseDetail}
+      {/* Product Table */}
+      <div>
+        <ProductTable
+          products={products}
+          selectedProduct={selectedProduct}
+          onRowClick={handleRowClick}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          formatCurrency={formatCurrency}
         />
+
+        {/* Pagination */}
+        <div className="mt-4">
+          <AdminPagination
+            handleNext={handleNext}
+            handlePrev={handlePrev}
+            handlePageChange={handlePageChange}
+            page={page}
+            totalPages={totalPages}
+          />
+        </div>
       </div>
+
+      {/* Product Detail Modal */}
+      <ProductDetailPanel
+        productDetail={productDetail}
+        onClose={handleCloseDetail}
+      />
 
       {/* Add Dialog */}
       <ProductFormDialog

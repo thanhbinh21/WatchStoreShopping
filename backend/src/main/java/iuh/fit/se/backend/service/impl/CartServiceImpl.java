@@ -35,15 +35,32 @@ public class CartServiceImpl implements CartService {
                     return cartRepository.save(newCart);
                 });
 
-        List<CartItemDto> items = cart.getCartItems().stream().map(item ->
-                new CartItemDto(
-                        item.getId(),
-                        item.getProduct().getId(),
-                        item.getProduct().getName(),
-                        item.getProduct().getPrimaryImageUrl(),
-                        item.getQuantity(),
-                        item.getProduct().getCurrentPrice() // BigDecimal OK!
-                )
+        // Sort by updatedAt descending - most recently updated items first
+        List<CartItemDto> items = cart.getCartItems().stream()
+                .sorted((a, b) -> {
+                    if (a.getUpdatedAt() == null && b.getUpdatedAt() == null) return 0;
+                    if (a.getUpdatedAt() == null) return 1;
+                    if (b.getUpdatedAt() == null) return -1;
+                    return b.getUpdatedAt().compareTo(a.getUpdatedAt());
+                })
+                .map(item -> {
+                    Product product = item.getProduct();
+                    String imageUrl = product.getPrimaryImageUrl();
+                    // If primaryImageUrl is relative, prepend /images/products/
+                    if (imageUrl != null && !imageUrl.startsWith("http") && !imageUrl.startsWith("/")) {
+                        imageUrl = "/images/products/" + imageUrl;
+                    }
+                    
+                    return new CartItemDto(
+                            item.getId(),
+                            product.getId(),
+                            product.getName(),
+                            imageUrl,
+                            item.getQuantity(),
+                            product.getCurrentPrice(),
+                            product.getStockQuantity()
+                    );
+                }
         ).toList();
 
         BigDecimal total = items.stream()
@@ -67,7 +84,11 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
 
         if (cartItem == null) {
-            cartItem = new CartItem(null, quantity, cart, product);
+            cartItem = CartItem.builder()
+                    .quantity(quantity)
+                    .cart(cart)
+                    .product(product)
+                    .build();
         } else {
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
         }
