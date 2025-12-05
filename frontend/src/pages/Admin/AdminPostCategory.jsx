@@ -136,6 +136,11 @@ export const AdminPostCategory = () => {
             <DialogTitle className="text-xl font-semibold">
               {editingId ? "Sửa danh mục" : "Tạo danh mục mới"}
             </DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? "Cập nhật thông tin danh mục bài viết"
+                : "Tạo danh mục mới cho blog"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div>

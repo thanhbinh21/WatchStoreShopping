@@ -387,6 +387,11 @@ export const AdminPosts = () => {
             <DialogTitle className="text-xl font-semibold">
               {editingId ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}
             </DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? "Cập nhật nội dung bài viết"
+                : "Tạo bài viết mới cho blog"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">

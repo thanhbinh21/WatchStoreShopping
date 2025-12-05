@@ -170,6 +170,11 @@ export const AdminBanner = () => {
             <DialogTitle className="text-xl font-semibold">
               {editingId ? "Sửa banner" : "Tạo banner mới"}
             </DialogTitle>
+            <DialogDescription>
+              {editingId
+                ? "Cập nhật thông tin banner/slideshow"
+                : "Thêm banner mới vào trang chủ"}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
