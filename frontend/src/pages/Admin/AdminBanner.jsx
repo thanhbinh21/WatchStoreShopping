@@ -2,10 +2,16 @@ import { useState, useEffect } from "react";
 import { adminBannerAPI } from "@/api/cmsAPI";
 import { uploadBannerImages, deleteBannerImage } from "@/api/uploadAPI";
 import { toast } from "sonner";
-import { Link, PencilIcon, TrashIcon } from "lucide-react";
+import { Link as LinkIcon, PencilIcon, TrashIcon, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { AdminPagination } from "@/components/Pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const AdminBanner = () => {
   const [banners, setBanners] = useState([]);
@@ -157,30 +163,38 @@ export const AdminBanner = () => {
         </button>
       </div>
 
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingId ? "Sửa" : "Tạo"} banner
-          </h2>
-          <form onSubmit={handleSave} className="space-y-4">
+      {/* Modal Form */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {editingId ? "Sửa banner" : "Tạo banner mới"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1">Tiêu đề *</label>
+                <label className="block mb-1 text-sm font-medium">
+                  Tiêu đề <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block mb-1">
-                  Link URL (ví dụ: /products)
+                <label className="block mb-1 text-sm font-medium">
+                  Link URL{" "}
+                  <span className="text-gray-400 text-xs">
+                    (ví dụ: /products)
+                  </span>
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.linkUrl}
                   onChange={(e) =>
                     setForm({ ...form, linkUrl: e.target.value })
@@ -189,8 +203,8 @@ export const AdminBanner = () => {
               </div>
             </div>
             <div>
-              <label className="block mb-1 font-medium">
-                Hình ảnh Banner *
+              <label className="block mb-1 text-sm font-medium">
+                Hình ảnh Banner <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
                 <div className="flex gap-2">
@@ -240,7 +254,7 @@ export const AdminBanner = () => {
                 </div>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="https://..."
                   value={form.imageUrl}
                   onChange={(e) =>
@@ -267,9 +281,9 @@ export const AdminBanner = () => {
               )}
             </div>
             <div>
-              <label className="block mb-1">Mô tả</label>
+              <label className="block mb-1 text-sm font-medium">Mô tả</label>
               <textarea
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows="2"
                 value={form.description}
                 onChange={(e) =>
@@ -279,10 +293,12 @@ export const AdminBanner = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block mb-1">Thứ tự hiển thị</label>
+                <label className="block mb-1 text-sm font-medium">
+                  Thứ tự hiển thị
+                </label>
                 <input
                   type="number"
-                  className="border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.displayOrder}
                   onChange={(e) =>
                     setForm({ ...form, displayOrder: parseInt(e.target.value) })
@@ -297,29 +313,30 @@ export const AdminBanner = () => {
                     onChange={(e) =>
                       setForm({ ...form, active: e.target.checked })
                     }
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                   />
-                  Kích hoạt
+                  <span className="text-sm font-medium">Kích hoạt</span>
                 </label>
               </div>
             </div>
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                Lưu
-              </button>
+            <div className="flex gap-2 justify-end pt-4 border-t">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="bg-gray-300 px-4 py-2 rounded"
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition"
               >
                 Hủy
               </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              >
+                {editingId ? "Cập nhật" : "Tạo mới"}
+              </button>
             </div>
           </form>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
         <div className="overflow-x-auto">
@@ -372,7 +389,7 @@ export const AdminBanner = () => {
                       </div>
                       {banner.linkUrl && (
                         <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 truncate max-w-md">
-                          <Link className="size-3" />
+                          <LinkIcon className="size-3" />
                           {banner.linkUrl}
                         </div>
                       )}
