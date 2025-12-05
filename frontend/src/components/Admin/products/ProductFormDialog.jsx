@@ -59,9 +59,17 @@ export const ProductFormDialog = ({
               ? res.content
               : [];
 
-          setBrands(normalize(brandsRes));
-          setCategories(normalize(categoriesRes));
-          setSuppliers(normalize(suppliersRes));
+          console.log("Raw suppliers response:", suppliersRes);
+
+          const normalizedBrands = normalize(brandsRes);
+          const normalizedCategories = normalize(categoriesRes);
+          const normalizedSuppliers = normalize(suppliersRes);
+
+          console.log("Normalized suppliers:", normalizedSuppliers);
+
+          setBrands(normalizedBrands);
+          setCategories(normalizedCategories);
+          setSuppliers(normalizedSuppliers);
         } catch (error) {
           console.error("Error fetching dropdown data:", error);
         } finally {
@@ -182,7 +190,7 @@ export const ProductFormDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới"}

@@ -4,64 +4,59 @@ const SUPPLIER_URL = "/suppliers";
 
 // Lấy tất cả suppliers
 export const getSuppliers = async () => {
-    try {
-        const res = await axiosInstance.get(SUPPLIER_URL);
-        if (Array.isArray(res)) return res;
-        if (Array.isArray(res?.data)) return res.data;
-        if (Array.isArray(res?.content)) return res.content;
-        return [];
-    } catch (err) {
-        console.error("Error fetching suppliers:", err);
-        return [];
-    }
+  try {
+    const res = await axiosInstance.get(SUPPLIER_URL);
+    const data = res.data;
+
+    if (Array.isArray(data)) return data;
+    if (Array.isArray(data?.content)) return data.content;
+    if (Array.isArray(data?.data)) return data.data;
+    return [];
+  } catch (err) {
+    console.error("Error fetching suppliers:", err);
+    return [];
+  }
 };
 
 // Lấy supplier theo ID
 export const getSupplierById = async (id) => {
-    try {
-        const supplier = await axiosInstance.get(`${SUPPLIER_URL}/${id}`);
-        return supplier;
-    } catch (err) {
-        console.error(`Error fetching supplier ${id}:`, err);
-        return null;
-    }
+  try {
+    const res = await axiosInstance.get(`${SUPPLIER_URL}/${id}`);
+    return res.data;
+  } catch (err) {
+    console.error(`Error fetching supplier ${id}:`, err);
+    return null;
+  }
 };
 
 // Tạo supplier mới
 export const createSupplier = async (supplierData) => {
-    try {
-        const newSupplier = await axiosInstance.post(
-            SUPPLIER_URL,
-            supplierData
-        );
-        return newSupplier;
-    } catch (err) {
-        console.error("Error creating supplier:", err);
-        return null;
-    }
+  try {
+    const res = await axiosInstance.post(SUPPLIER_URL, supplierData);
+    return res.data;
+  } catch (err) {
+    console.error("Error creating supplier:", err);
+    throw err;
+  }
 };
 
 // Cập nhật supplier
 export const updateSupplier = async (id, supplierData) => {
-    try {
-        const updatedSupplier = await axiosInstance.put(
-            `${SUPPLIER_URL}/${id}`,
-            supplierData
-        );
-        return updatedSupplier;
-    } catch (err) {
-        console.error(`Error updating supplier ${id}:`, err);
-        return null;
-    }
+  try {
+    const res = await axiosInstance.put(`${SUPPLIER_URL}/${id}`, supplierData);
+    return res.data;
+  } catch (err) {
+    console.error(`Error updating supplier ${id}:`, err);
+    throw err;
+  }
 };
 
 // Xóa supplier
 export const deleteSupplier = async (id) => {
-    try {
-        await axiosInstance.delete(`${SUPPLIER_URL}/${id}`);
-        return true;
-    } catch (err) {
-        console.error(`Error deleting supplier ${id}:`, err);
-        return false;
-    }
+  try {
+    await axiosInstance.delete(`${SUPPLIER_URL}/${id}`);
+  } catch (err) {
+    console.error(`Error deleting supplier ${id}:`, err);
+    throw err;
+  }
 };

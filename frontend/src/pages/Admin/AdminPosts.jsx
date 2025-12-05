@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { AdminPagination } from "@/components/Pagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const AdminPosts = () => {
   const [posts, setPosts] = useState([]);
@@ -374,30 +380,38 @@ export const AdminPosts = () => {
         </div>
       </div>
 
-      {showForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingId ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}
-          </h2>
-          <form onSubmit={handleSave} className="space-y-4">
+      {/* Modal Form */}
+      <Dialog open={showForm} onOpenChange={setShowForm}>
+        <DialogContent className="sm:max-w-4xl max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">
+              {editingId ? "Chỉnh sửa bài viết" : "Tạo bài viết mới"}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSave} className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">
-                  Tiêu đề *
+                  Tiêu đề <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.title}
                   onChange={(e) => setForm({ ...form, title: e.target.value })}
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Slug</label>
+                <label className="block text-sm font-medium mb-1">
+                  Slug{" "}
+                  <span className="text-gray-400 text-xs">
+                    (tự động nếu để trống)
+                  </span>
+                </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.slug}
                   onChange={(e) => setForm({ ...form, slug: e.target.value })}
                   placeholder="Để trống để tự động tạo"
@@ -408,7 +422,7 @@ export const AdminPosts = () => {
             <div>
               <label className="block text-sm font-medium mb-1">Tóm tắt</label>
               <textarea
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 rows="2"
                 value={form.summary}
                 onChange={(e) => setForm({ ...form, summary: e.target.value })}
@@ -417,7 +431,7 @@ export const AdminPosts = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Nội dung *
+                Nội dung <span className="text-red-500">*</span>
               </label>
               <ReactQuill
                 theme="snow"
@@ -492,7 +506,7 @@ export const AdminPosts = () => {
                   <input
                     type="text"
                     placeholder="Hoặc dán URL ảnh"
-                    className="w-full border rounded px-3 py-2 text-sm"
+                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     value={form.coverImageUrl}
                     onChange={(e) =>
                       setForm({ ...form, coverImageUrl: e.target.value })
@@ -505,7 +519,7 @@ export const AdminPosts = () => {
                   Danh mục
                 </label>
                 <select
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.categoryId}
                   onChange={(e) =>
                     setForm({ ...form, categoryId: e.target.value })
@@ -523,11 +537,14 @@ export const AdminPosts = () => {
 
             <div>
               <label className="block text-sm font-medium mb-1">
-                Tags (phân cách bởi dấu phẩy)
+                Tags{" "}
+                <span className="text-gray-400 text-xs">
+                  (phân cách bởi dấu phẩy)
+                </span>
               </label>
               <input
                 type="text"
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={form.tags}
                 onChange={(e) => setForm({ ...form, tags: e.target.value })}
                 placeholder="đồng hồ, thời trang, phụ kiện"
@@ -541,7 +558,7 @@ export const AdminPosts = () => {
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.seoTitle}
                   onChange={(e) =>
                     setForm({ ...form, seoTitle: e.target.value })
@@ -554,7 +571,7 @@ export const AdminPosts = () => {
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.seoDescription}
                   onChange={(e) =>
                     setForm({ ...form, seoDescription: e.target.value })
@@ -567,7 +584,7 @@ export const AdminPosts = () => {
                 </label>
                 <input
                   type="text"
-                  className="w-full border rounded px-3 py-2"
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={form.seoKeywords}
                   onChange={(e) =>
                     setForm({ ...form, seoKeywords: e.target.value })
@@ -581,7 +598,7 @@ export const AdminPosts = () => {
                 Trạng thái
               </label>
               <select
-                className="border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
               >
@@ -591,24 +608,24 @@ export const AdminPosts = () => {
               </select>
             </div>
 
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-              >
-                {editingId ? "Cập nhật" : "Tạo mới"}
-              </button>
+            <div className="flex gap-2 justify-end pt-4 border-t">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50 transition"
               >
                 Hủy
               </button>
+              <button
+                type="submit"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+              >
+                {editingId ? "Cập nhật" : "Tạo mới"}
+              </button>
             </div>
           </form>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {loading ? (
         <div className="text-center py-8">Đang tải...</div>
