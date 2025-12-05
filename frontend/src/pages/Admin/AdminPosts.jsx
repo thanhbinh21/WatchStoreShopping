@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
+import { PostDetailPanel } from "@/components/Admin/posts/PostDetailPanel";
 import { AdminPagination } from "@/components/Pagination";
 import {
   Dialog,
@@ -31,6 +32,7 @@ export const AdminPosts = () => {
   const [showForm, setShowForm] = useState(false);
   const [deletingPost, setDeletingPost] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [postDetail, setPostDetail] = useState(null);
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -126,6 +128,14 @@ export const AdminPosts = () => {
       console.error("Error loading categories:", error);
       setCategories([]);
     }
+  };
+
+  const handleRowClick = (post) => {
+    setPostDetail(post);
+  };
+
+  const handleCloseDetail = () => {
+    setPostDetail(null);
   };
 
   const handleEdit = (post) => {
@@ -676,7 +686,8 @@ export const AdminPosts = () => {
                     posts.map((post) => (
                       <tr
                         key={post.id}
-                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                        onClick={() => handleRowClick(post)}
+                        className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer"
                       >
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900 dark:text-gray-100 mb-1">
@@ -767,6 +778,9 @@ export const AdminPosts = () => {
           )}
         </>
       )}
+
+      {/* Post Detail Modal */}
+      <PostDetailPanel postDetail={postDetail} onClose={handleCloseDetail} />
 
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
