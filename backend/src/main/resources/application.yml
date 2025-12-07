@@ -62,6 +62,11 @@ vnpay:
     command: pay
     order-type: other
 
+
+# Cloudinary Configuration
+cloudinary:
+    url: ${CLOUDINARY_URL}
+
 # Logging debug để xem request gửi đi
 logging:
     level:

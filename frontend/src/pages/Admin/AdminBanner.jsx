@@ -23,6 +23,7 @@ export const AdminBanner = () => {
   const [uploading, setUploading] = useState(false);
   const [deletingBanner, setDeletingBanner] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null); // {file: File, preview: string} or null
   const [form, setForm] = useState({
     title: "",
     imageUrl: "",
@@ -60,11 +61,13 @@ export const AdminBanner = () => {
   const handleEdit = (banner) => {
     setEditingId(banner.id);
     setForm({ ...banner });
+    setSelectedImage(null); // Reset, existing image in imageUrl
     setShowForm(true);
   };
 
   const handleNew = () => {
     setEditingId(null);
+    setSelectedImage(null);
     setForm({
       title: "",
       imageUrl: "",
@@ -78,18 +81,50 @@ export const AdminBanner = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+
+    if (!selectedImage && !form.imageUrl) {
+      toast.error("Vui lòng chọn ảnh banner");
+      return;
+    }
+
+    setUploading(true);
     try {
+      let finalImageUrl = form.imageUrl;
+
+      // Upload new image if selected
+      if (selectedImage && selectedImage.file) {
+        // Delete old image from Cloudinary if updating
+        if (editingId && form.imageUrl) {
+          try {
+            await deleteBannerImage(form.imageUrl);
+          } catch (err) {
+            console.error("Error deleting old image:", err);
+            // Continue even if delete fails
+          }
+        }
+
+        const result = await uploadBannerImages([selectedImage.file]);
+        if (result.success && result.fileNames.length > 0) {
+          finalImageUrl = result.fileNames[0]; // Cloudinary URL
+        }
+      }
+
+      const dataToSave = { ...form, imageUrl: finalImageUrl };
+
       if (editingId) {
-        await adminBannerAPI.update(editingId, form);
+        await adminBannerAPI.update(editingId, dataToSave);
         toast.success("Cập nhật banner thành công");
       } else {
-        await adminBannerAPI.create(form);
+        await adminBannerAPI.create(dataToSave);
         toast.success("Tạo banner thành công");
       }
       setShowForm(false);
+      setSelectedImage(null);
       loadBanners();
     } catch (error) {
       toast.error("Lỗi lưu banner");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -102,16 +137,13 @@ export const AdminBanner = () => {
     if (!deletingBanner) return;
 
     try {
-      // Xóa file ảnh nếu là local file
-      if (
-        deletingBanner.imageUrl &&
-        deletingBanner.imageUrl.startsWith("/images/banners/")
-      ) {
-        const filename = deletingBanner.imageUrl.split("/").pop();
+      // Xóa ảnh trên Cloudinary (cả local path và Cloudinary URL)
+      if (deletingBanner.imageUrl) {
         try {
-          await deleteBannerImage(filename);
+          await deleteBannerImage(deletingBanner.imageUrl);
         } catch (err) {
-          console.error("Error deleting image file:", err);
+          console.error("Error deleting image from Cloudinary:", err);
+          // Tiếp tục xóa banner ngay cả khi xóa ảnh thất bại
         }
       }
 
@@ -125,26 +157,22 @@ export const AdminBanner = () => {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (files.length === 0) return;
+  const handleImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    setUploading(true);
-    try {
-      const result = await uploadBannerImages(files);
-      if (result.success && result.fileNames.length > 0) {
-        const imageUrl = `/images/banners/${result.fileNames[0]}`;
-        setTimeout(() => {
-          setForm({ ...form, imageUrl });
-        }, 1000);
-        toast.success("Upload ảnh thành công");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Lỗi upload ảnh");
-    } finally {
-      setUploading(false);
+    // Validate file size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File vượt quá 5MB");
+      return;
     }
+
+    // Create preview
+    const preview = URL.createObjectURL(file);
+    setSelectedImage({ file, preview });
+
+    // Reset input
+    e.target.value = "";
   };
 
   // Pagination logic
@@ -213,78 +241,75 @@ export const AdminBanner = () => {
                 Hình ảnh Banner <span className="text-red-500">*</span>
               </label>
               <div className="space-y-2">
-                <div className="flex gap-2">
-                  <label className="flex-1">
-                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={uploading}
-                      />
-                      <div className="text-gray-600">
-                        {uploading ? (
-                          <span className="text-brand-primary">
-                            Đang upload...
-                          </span>
-                        ) : (
-                          <>
-                            <svg
-                              className="mx-auto h-12 w-12 text-gray-400 mb-2"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                              />
-                            </svg>
-                            <p className="text-sm font-medium">
-                              Click để upload ảnh
-                            </p>
-                            <p className="text-xs text-gray-500 mt-1">
-                              PNG, JPG, JPEG tối đa 5MB
-                            </p>
-                          </>
-                        )}
-                      </div>
+                {/* Preview image */}
+                {(selectedImage || form.imageUrl) && (
+                  <div className="relative">
+                    <img
+                      src={
+                        selectedImage
+                          ? selectedImage.preview
+                          : form.imageUrl.startsWith("http")
+                          ? form.imageUrl
+                          : `/images/banners/${form.imageUrl}`
+                      }
+                      alt="Preview"
+                      className="w-full max-h-48 object-cover rounded-lg border"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (selectedImage) {
+                          URL.revokeObjectURL(selectedImage.preview);
+                          setSelectedImage(null);
+                        }
+                        setForm({ ...form, imageUrl: "" });
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Upload button */}
+                <label className="block">
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:border-blue-500 transition">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <div className="text-gray-600">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400 mb-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                        />
+                      </svg>
+                      <p className="text-sm font-medium">
+                        {selectedImage || form.imageUrl
+                          ? "Thay đổi ảnh"
+                          : "Click để chọn ảnh"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PNG, JPG, JPEG tối đa 5MB. Ảnh sẽ upload lên Cloudinary
+                        khi Save.
+                      </p>
                     </div>
-                  </label>
-                </div>
-                <div className="text-sm text-gray-600">
-                  Hoặc nhập URL trực tiếp:
-                </div>
-                <input
-                  type="text"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="https://..."
-                  value={form.imageUrl}
-                  onChange={(e) =>
-                    setForm({ ...form, imageUrl: e.target.value })
-                  }
-                />
+                  </div>
+                </label>
               </div>
-              {form.imageUrl && (
-                <div className="mt-3">
-                  <img
-                    src={
-                      form.imageUrl.startsWith("/")
-                        ? form.imageUrl
-                        : form.imageUrl
-                    }
-                    alt="Preview"
-                    className="w-full max-h-48 object-cover rounded-lg border"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      toast.error("Không thể tải ảnh");
-                    }}
-                  />
-                </div>
-              )}
             </div>
             <div>
               <label className="block mb-1 text-sm font-medium">Mô tả</label>
@@ -335,9 +360,14 @@ export const AdminBanner = () => {
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                disabled={uploading}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingId ? "Cập nhật" : "Tạo mới"}
+                {uploading
+                  ? "Đang upload..."
+                  : editingId
+                  ? "Cập nhật"
+                  : "Tạo mới"}
               </button>
             </div>
           </form>
@@ -384,7 +414,11 @@ export const AdminBanner = () => {
                   >
                     <td className="px-6 py-4">
                       <img
-                        src={banner.imageUrl}
+                        src={
+                          banner.imageUrl.startsWith("http")
+                            ? banner.imageUrl
+                            : `/images/banners/${banner.imageUrl}`
+                        }
                         alt={banner.title}
                         className="h-20 w-32 object-cover rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm"
                       />

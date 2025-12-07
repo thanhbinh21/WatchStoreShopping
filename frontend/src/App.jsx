@@ -6,12 +6,9 @@ import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
-import { AdminPricing } from "./pages/Admin/AdminPricing";
 import { AdminProduct } from "./pages/Admin/AdminProduct";
 import { AdminSettings } from "./pages/Admin/AdminSettings";
 import { AdminProductStock } from "./pages/Admin/AdminProductStock";
-import { AdminTable } from "./pages/Admin/AdminTable";
-import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
 import { AdminViewReport } from "./pages/Admin/AdminViewReport";
 import { Dashboard } from "./pages/Dashboard";
@@ -70,7 +67,10 @@ function App() {
           />
           <Route path="/products" element={<ProductList />} />
           <Route path="/about" element={<About />} />
-          <Route path="/promotional-products" element={<PromotionalProducts />} />
+          <Route
+            path="/promotional-products"
+            element={<PromotionalProducts />}
+          />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
           <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
@@ -104,15 +104,12 @@ function App() {
             <Route path="posts" element={<AdminPosts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="stock" element={<AdminProductStock />} />
-            <Route path="pricing" element={<AdminPricing />} />
             <Route path="payments" element={<AdminMethodPayments />} />
             <Route path="promotions" element={<AdminPromotions />} />
             <Route path="reviews" element={<AdminReview />} />
             <Route path="users" element={<AdminUser />} />
             <Route path="invoice" element={<AdminInvoice />} />
             <Route path="reports" element={<AdminViewReport />} />
-            <Route path="team" element={<AdminTeam />} />
-            <Route path="table" element={<AdminTable />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="chat" element={<AdminChat />} />
           </Route>

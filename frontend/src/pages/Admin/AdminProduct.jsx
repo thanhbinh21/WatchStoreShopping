@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { PlusIcon, SearchIcon, Loader2 } from "lucide-react";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
+import { deleteProductImage } from "@/api/uploadAPI";
 
 export const AdminProduct = () => {
   const [products, setProducts] = useState([]);
@@ -377,6 +378,23 @@ export const AdminProduct = () => {
 
   const confirmDelete = async () => {
     try {
+      // Xóa tất cả ảnh của sản phẩm trên Cloudinary
+      if (
+        selectedProduct.productImages &&
+        selectedProduct.productImages.length > 0
+      ) {
+        for (const image of selectedProduct.productImages) {
+          try {
+            await deleteProductImage(image.imageUrl);
+          } catch (err) {
+            console.error("Error deleting image:", err);
+            // Tiếp tục xóa các ảnh khác
+          }
+        }
+      } else {
+        console.log("No images found in product");
+      }
+
       await deleteProduct(selectedProduct.id);
       toast.success("Xóa sản phẩm thành công");
       setIsDeleteOpen(false);
