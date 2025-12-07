@@ -179,3 +179,130 @@ export const deleteAvatar = async (filename) => {
     throw err;
   }
 };
+
+// Upload logo (settings)
+export const uploadLogo = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/logo`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading logo:", err);
+    throw err;
+  }
+};
+
+// Delete logo
+export const deleteLogo = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/logo`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting logo:", err);
+    throw err;
+  }
+};
+
+// Upload payment method images
+export const uploadPaymentMethodImages = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(
+      `${UPLOAD_URL}/payment-methods`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading payment method images:", err);
+    throw err;
+  }
+};
+
+// Delete payment method image
+export const deletePaymentMethodImage = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/payment-methods`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting payment method image:", err);
+    throw err;
+  }
+};
+
+// Upload social media images
+export const uploadSocialMediaImages = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/social-media`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading social media images:", err);
+    throw err;
+  }
+};
+
+// Delete social media image
+export const deleteSocialMediaImage = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/social-media`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting social media image:", err);
+    throw err;
+  }
+};

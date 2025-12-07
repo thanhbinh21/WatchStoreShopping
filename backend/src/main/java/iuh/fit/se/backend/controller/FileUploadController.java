@@ -32,6 +32,21 @@ public class FileUploadController {
         return uploadImages(files, "posts");
     }
 
+    @PostMapping("/logo")
+    public ResponseEntity<?> uploadLogo(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/logos");
+    }
+
+    @PostMapping("/payment-methods")
+    public ResponseEntity<?> uploadPaymentMethodImages(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/payment-methods");
+    }
+
+    @PostMapping("/social-media")
+    public ResponseEntity<?> uploadSocialMediaImages(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/social-media");
+    }
+
     @PostMapping("/avatar")
     public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file) {
         try {
@@ -112,6 +127,21 @@ public class FileUploadController {
 
     @DeleteMapping("/post-images")
     public ResponseEntity<?> deletePostImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/logo")
+    public ResponseEntity<?> deleteLogo(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/payment-methods")
+    public ResponseEntity<?> deletePaymentMethodImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/social-media")
+    public ResponseEntity<?> deleteSocialMediaImage(@RequestBody Map<String, String> request) {
         return deleteImage(request.get("url"));
     }
 

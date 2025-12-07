@@ -109,6 +109,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
 
+                                // Settings - GET public (for Footer), PUT ADMIN only
+                                .requestMatchers(HttpMethod.GET, "/api/settings/**").permitAll()
+                                .requestMatchers("/api/settings/**").hasRole("ADMIN")
+
                                 // Allow authenticated users to upload their avatar, keep other upload endpoints ADMIN-only
                                 .requestMatchers(HttpMethod.POST, "/api/upload/avatar").authenticated()
                                 // Upload - ADMIN only for other upload operations
