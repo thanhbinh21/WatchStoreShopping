@@ -163,7 +163,6 @@ export const AdminBanner = () => {
     // Create preview
     const preview = URL.createObjectURL(file);
     setSelectedImage({ file, preview });
-    toast.success("Đã chọn ảnh (sẽ upload khi Save)");
 
     // Reset input
     e.target.value = "";
