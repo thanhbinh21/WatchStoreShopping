@@ -81,7 +81,7 @@ export const AdminBanner = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedImage && !form.imageUrl) {
       toast.error("Vui lòng chọn ảnh banner");
       return;
@@ -164,7 +164,7 @@ export const AdminBanner = () => {
     const preview = URL.createObjectURL(file);
     setSelectedImage({ file, preview });
     toast.success("Đã chọn ảnh (sẽ upload khi Save)");
-    
+
     // Reset input
     e.target.value = "";
   };
@@ -292,10 +292,13 @@ export const AdminBanner = () => {
                         />
                       </svg>
                       <p className="text-sm font-medium">
-                        {selectedImage || form.imageUrl ? "Thay đổi ảnh" : "Click để chọn ảnh"}
+                        {selectedImage || form.imageUrl
+                          ? "Thay đổi ảnh"
+                          : "Click để chọn ảnh"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
-                        PNG, JPG, JPEG tối đa 5MB. Ảnh sẽ upload lên Cloudinary khi Save.
+                        PNG, JPG, JPEG tối đa 5MB. Ảnh sẽ upload lên Cloudinary
+                        khi Save.
                       </p>
                     </div>
                   </div>
@@ -354,7 +357,11 @@ export const AdminBanner = () => {
                 disabled={uploading}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {uploading ? "Đang upload..." : editingId ? "Cập nhật" : "Tạo mới"}
+                {uploading
+                  ? "Đang upload..."
+                  : editingId
+                  ? "Cập nhật"
+                  : "Tạo mới"}
               </button>
             </div>
           </form>
