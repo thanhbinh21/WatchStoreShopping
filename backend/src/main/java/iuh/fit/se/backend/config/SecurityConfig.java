@@ -94,24 +94,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/orders/*/cancel").authenticated()  // Users can cancel their own orders (controller will verify ownership)
                         .requestMatchers("/api/orders/**").hasRole("ADMIN")  // ADMIN can manage all orders
 
-                        // Độc quyền (ADMIN)
-                        .requestMatchers("/api/reviews/**").hasRole("ADMIN") // Reviews yêu cầu ADMIN
-                        
-                        // Promotions - GET public, modifications need ADMIN (PHẢI đặt trước rule tổng quát)
+                        // Promotions - GET public, modifications need ADMIN
                         .requestMatchers(HttpMethod.GET, "/api/promotions/**").permitAll()
-                        .requestMatchers("/api/promotions/**").hasRole("ADMIN") // Promotions yêu cầu ADMIN cho tạo/sửa/xóa
-                        
+                        .requestMatchers("/api/promotions/**").hasRole("ADMIN")
+
+                        // VNPay Payment Gateway - Public endpoints (PHẢI đặt trước rule payment tổng quát)
+                        .requestMatchers(HttpMethod.POST, "/api/payments/create-payment").permitAll() // Tạo thanh toán VNPay
+                        .requestMatchers(HttpMethod.GET, "/api/payments/vnpay-return").permitAll() // VNPay callback
+                        .requestMatchers(HttpMethod.GET, "/api/payments/vnpay-ipn").permitAll() // VNPay IPN
+
+                        // Payments - GET public, CRUD operations require ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/payments/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/payments/**").hasRole("ADMIN")
-                        .requestMatchers("/api/admin/**").hasRole("ADMIN")   // Chỉ ADMIN được truy cập
-                        
-
-                                // Payments - GET public
-                                .requestMatchers(HttpMethod.GET, "/api/payments/**").permitAll()
-
-                                // Cart - POST public (add to cart without login)
-                                .requestMatchers(HttpMethod.POST, "/api/cart/**").permitAll()
 
                                 // Allow authenticated users to upload their avatar, keep other upload endpoints ADMIN-only
                                 .requestMatchers(HttpMethod.POST, "/api/upload/avatar").authenticated()
