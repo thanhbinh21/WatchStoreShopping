@@ -22,10 +22,8 @@ import {
 } from "@/api/notificationAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
-import { getCart ,getCartCount } from "@/api/cartAPI";
+import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
-
-
 
 export default function Header() {
   const navigate = useNavigate();
@@ -110,37 +108,39 @@ export default function Header() {
     };
   }, []);
   // cart count
-useEffect(() => {
-  const updateCartCount = () => {
-    const token = localStorage.getItem("accessToken");
-    const user = parseStoredUser();
+  useEffect(() => {
+    const updateCartCount = () => {
+      const token = localStorage.getItem("accessToken");
+      const user = parseStoredUser();
 
-    if (!token || !user?.id) {
-      _setCartCount(getGuestCartCount());
-    } else {
-      // Nếu user đã login thì gọi API
-      getCart(user.id)
-        .then(res => {
-          const totalQuantity = Array.isArray(res?.items)
-            ? res.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
-            : 0;
-          _setCartCount(totalQuantity);
-        })
-        .catch(() => _setCartCount(0));
-    }
-  };
+      if (!token || !user?.id) {
+        _setCartCount(getGuestCartCount());
+      } else {
+        // Nếu user đã login thì gọi API
+        getCart(user.id)
+          .then((res) => {
+            const totalQuantity = Array.isArray(res?.items)
+              ? res.items.reduce(
+                  (sum, it) => sum + (Number(it.quantity) || 0),
+                  0
+                )
+              : 0;
+            _setCartCount(totalQuantity);
+          })
+          .catch(() => _setCartCount(0));
+      }
+    };
 
-  updateCartCount();
+    updateCartCount();
 
-  window.addEventListener("cartUpdated", updateCartCount);
-  window.addEventListener("storage", updateCartCount);
+    window.addEventListener("cartUpdated", updateCartCount);
+    window.addEventListener("storage", updateCartCount);
 
-  return () => {
-    window.removeEventListener("cartUpdated", updateCartCount);
-    window.removeEventListener("storage", updateCartCount);
-  };
-}, []);
-
+    return () => {
+      window.removeEventListener("cartUpdated", updateCartCount);
+      window.removeEventListener("storage", updateCartCount);
+    };
+  }, []);
 
   // Update user state when profile changes elsewhere in the app
   useEffect(() => {
@@ -196,10 +196,10 @@ useEffect(() => {
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     localStorage.removeItem("refreshToken");
-    
+
     // Dispatch event để các component khác biết user đã thay đổi
     window.dispatchEvent(new Event("userUpdated"));
-    
+
     navigate("/login");
   };
 
@@ -344,14 +344,12 @@ useEffect(() => {
           >
             <ShoppingCart size={20} />
             <span className="hidden md:inline font-medium">Giỏ hàng</span>
-          {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-              {cartCount > 9 ? "9+" : cartCount}
-            </span>
-          )}
-
+            {cartCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                {cartCount > 9 ? "9+" : cartCount}
+              </span>
+            )}
           </button>
-
 
           {/* Notifications */}
           <div className="relative" ref={notificationDropdownRef}>
