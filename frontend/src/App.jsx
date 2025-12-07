@@ -41,6 +41,7 @@ import ChatWidget from "./components/ChatWidget";
 import AIChatWidget from "./components/AIChat/AIChatWidget";
 import Support from "./pages/Support";
 import About from "./pages/About";
+import VNPayReturn from "./pages/VNPayReturn";
 
 function App() {
   return (
@@ -137,6 +138,7 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
           {/* Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createOrder } from "../api/orderAPI";
 import { removeCartItem } from "../api/cartAPI";
+import { createVNPayPayment } from "../api/paymentAPI";
 import { parseStoredUser } from "@/utils/storage";
 import { toast } from "sonner";
 import Header from "../components/Header";
@@ -10,10 +11,10 @@ import Breadcrumb from "../components/Breadcrumb";
 
 const paymentMethods = [
   { value: "CASH", label: "Tiền mặt khi nhận hàng (COD)" },
+  { value: "VNPAY", label: "Thanh toán qua VNPay" },
   // Các phương thức thanh toán khác sẽ phát triển sau
   // { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng' },
   // { value: 'MOMO', label: 'Ví MoMo' },
-  // { value: 'VNPAY', label: 'VNPay' },
 ];
 
 export default function Checkout() {
@@ -117,6 +118,36 @@ export default function Checkout() {
       // Backend có thể trả về response.data hoặc trực tiếp data
       const order = response?.data || response;
 
+      // If payment method is VNPay, redirect to VNPay payment gateway
+      if (formData.paymentMethod === "VNPAY") {
+        try {
+          // Store cart items in sessionStorage for later removal
+          sessionStorage.setItem('vnpay_cart_items', JSON.stringify(selectedItems));
+          
+          const vnpayResponse = await createVNPayPayment({
+            orderId: order.id,
+            amount: Math.round(totalPrice),
+            orderInfo: `Thanh toan don hang ${order.id}`,
+            returnUrl: `${window.location.origin}/payment/vnpay-return`
+          });
+
+          if (vnpayResponse?.code === "00" && vnpayResponse?.paymentUrl) {
+            toast.dismiss(loadingToast);
+            toast.success("Đang chuyển đến cổng thanh toán VNPay...");
+            // Redirect to VNPay
+            window.location.href = vnpayResponse.paymentUrl;
+            return;
+          } else {
+            throw new Error(vnpayResponse?.message || "Không thể tạo thanh toán VNPay");
+          }
+        } catch (vnpayError) {
+          toast.dismiss(loadingToast);
+          toast.error("Lỗi khi tạo thanh toán VNPay: " + vnpayError.message);
+          return;
+        }
+      }
+
+      // For COD payment, remove cart items and navigate to orders
       // Xóa các sản phẩm đã mua khỏi giỏ hàng
       try {
         for (const item of selectedItems) {
