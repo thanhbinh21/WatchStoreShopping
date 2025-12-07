@@ -22,6 +22,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.net.URI;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -34,6 +41,7 @@ public class AuthController {
     private final org.springframework.core.env.Environment env;
     private final iuh.fit.se.backend.repository.UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
@@ -125,5 +133,72 @@ public class AuthController {
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         return ResponseEntity.ok("Mật khẩu đã được thay đổi");
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> googleLogin(@RequestBody Map<String, String> body) {
+        String idToken = body.get("idToken");
+        if (idToken == null || idToken.isBlank()) {
+            return ResponseEntity.badRequest().body("idToken is required");
+        }
+
+        try {
+            // Verify token with Google
+            HttpClient client = HttpClient.newHttpClient();
+            String tokenInfoUrl = "https://oauth2.googleapis.com/tokeninfo?id_token=" + idToken;
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(tokenInfoUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() != 200) {
+                return ResponseEntity.status(400).body("Invalid Google ID token");
+            }
+
+            Map<String, Object> tokenInfo = objectMapper.readValue(resp.body(), Map.class);
+            String email = (String) tokenInfo.get("email");
+            String name = (String) tokenInfo.get("name");
+            String picture = (String) tokenInfo.get("picture");
+
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.status(400).body("Google token does not contain email");
+            }
+
+            // Find or create user by email
+            var opt = userRepository.findByEmail(email.trim());
+            iuh.fit.se.backend.entity.User user;
+            if (opt.isPresent()) {
+                user = opt.get();
+            } else {
+                // generate unique username from email local part
+                String baseUsername = email.split("@")[0].replaceAll("[^a-zA-Z0-9._-]","");
+                String candidate = baseUsername;
+                int suffix = 1;
+                while (candidate.isBlank() || userRepository.findByUsername(candidate).isPresent()) {
+                    candidate = baseUsername + suffix++;
+                }
+
+                // build and save new user entity directly
+                iuh.fit.se.backend.entity.User newUser = iuh.fit.se.backend.entity.User.builder()
+                        .username(candidate)
+                        .email(email.trim())
+                        .fullName(name != null ? name : candidate)
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .role(Role.USER)
+                        .avatarUrl(picture)
+                        .active(true)
+                        .build();
+
+                user = userRepository.save(newUser);
+            }
+
+            String token = jwtService.generateToken(user.getUsername(), user.getRole().toString());
+            return ResponseEntity.ok(new iuh.fit.se.backend.dto.response.LoginResponse(token, user.getRole().toString(), user));
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(500).body("Google login error: " + ex.getMessage());
+        }
     }
 }
