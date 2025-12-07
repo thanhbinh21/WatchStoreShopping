@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -113,8 +114,15 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse removeItem(Long cartItemId) {
-        CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow();
+        // Check if item exists
+        var itemOpt = cartItemRepository.findById(cartItemId);
+        if (itemOpt.isEmpty()) {
+            // Item already removed or doesn't exist - return empty response
+            // This is idempotent - calling delete on non-existent item is safe
+            return new CartResponse(null, new ArrayList<>(), 0.0);
+        }
+        
+        CartItem item = itemOpt.get();
         Long userId = item.getCart().getUser().getId();
         cartItemRepository.delete(item);
         return getUserCart(userId);

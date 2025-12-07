@@ -40,21 +40,10 @@ export default function VNPayReturn() {
         if (response?.code === "00") {
           toast.success("Thanh toán thành công!");
           
-          // Try to remove cart items (stored in sessionStorage during checkout)
-          try {
-            const cartItemsToRemove = sessionStorage.getItem('vnpay_cart_items');
-            if (cartItemsToRemove) {
-              const items = JSON.parse(cartItemsToRemove);
-              for (const item of items) {
-                if (item.id) {
-                  await removeCartItem(item.id);
-                }
-              }
-              sessionStorage.removeItem('vnpay_cart_items');
-            }
-          } catch (error) {
-            console.error("Error removing cart items:", error);
-          }
+          // Clean up sessionStorage
+          sessionStorage.removeItem('vnpay_cart_items');
+          // Note: Backend already cleared cart items when creating the order
+          // No need to call removeCartItem API here
 
           // Redirect to orders page after 2 seconds
           setTimeout(() => {
