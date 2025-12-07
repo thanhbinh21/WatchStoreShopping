@@ -29,7 +29,16 @@ export const Sidebar = ({ setCollapsed, collapsed, logout }) => {
         style={{ height: "70px" }}
       >
         {!collapsed ? (
-          <h1 className="text-2xl font-bold text-gray-800">Nhóm 8</h1>
+          <div
+            className="cursor-pointer w-full flex items-center justify-center"
+            onClick={() => navigate("/home")}
+          >
+            <img
+              src="/watchstore-logo-no-bg.jpg"
+              alt="Logo"
+              className="max-h-[150px] w-auto object-contain py-2"
+            />
+          </div>
         ) : (
           <button
             onClick={() => setCollapsed(!collapsed)}

@@ -4,6 +4,11 @@ import { createOrder } from "../api/orderAPI";
 import { removeCartItem } from "../api/cartAPI";
 import { createVNPayPayment } from "../api/paymentAPI";
 import { parseStoredUser } from "@/utils/storage";
+import {
+  getProvinces,
+  getDistrictsByProvince,
+  getWardsByDistrict,
+} from "../api/locationAPI";
 import { toast } from "sonner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -109,12 +114,87 @@ export default function Checkout() {
     }
   }, [selectedItems, navigate]);
 
+  // Load provinces on mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const data = await getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error("Failed to load provinces:", error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // Load districts when province changes
+  useEffect(() => {
+    const loadDistricts = async () => {
+      if (selectedProvinceCode) {
+        try {
+          const data = await getDistrictsByProvince(selectedProvinceCode);
+          setDistricts(data);
+          setWards([]); // Reset wards
+          setFormData((prev) => ({ ...prev, district: "", ward: "" }));
+          setSelectedDistrictCode("");
+        } catch (error) {
+          console.error("Failed to load districts:", error);
+        }
+      } else {
+        setDistricts([]);
+        setWards([]);
+      }
+    };
+    loadDistricts();
+  }, [selectedProvinceCode]);
+
+  // Load wards when district changes
+  useEffect(() => {
+    const loadWards = async () => {
+      if (selectedDistrictCode) {
+        try {
+          const data = await getWardsByDistrict(selectedDistrictCode);
+          setWards(data);
+          setFormData((prev) => ({ ...prev, ward: "" }));
+        } catch (error) {
+          console.error("Failed to load wards:", error);
+        }
+      } else {
+        setWards([]);
+      }
+    };
+    loadWards();
+  }, [selectedDistrictCode]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleProvinceChange = (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    const provinceName = selectedOption.text;
+    const provinceCode = e.target.value;
+
+    setSelectedProvinceCode(provinceCode);
+    setFormData((prev) => ({ ...prev, city: provinceName }));
+  };
+
+  const handleDistrictChange = (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    const districtName = selectedOption.text;
+    const districtCode = e.target.value;
+
+    setSelectedDistrictCode(districtCode);
+    setFormData((prev) => ({ ...prev, district: districtName }));
+  };
+
+  const handleWardChange = (e) => {
+    const wardName = e.target.selectedOptions[0].text;
+    setFormData((prev) => ({ ...prev, ward: wardName }));
   };
 
   const handleSubmitOrder = async (e) => {

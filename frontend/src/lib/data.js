@@ -84,7 +84,7 @@ export const sideBars = [
   { name: "Posts", icon: "la-newspaper", path: "/admin/posts" },
   { name: "Order Lists", icon: "la-list-alt", path: "/admin/orders" },
   { name: "Product Stock", icon: "la-database", path: "/admin/stock" },
-  { name: "Pricing", icon: "la-gift", path: "/admin/pricing" },
+
   { name: "Promotions", icon: "la-calendar", path: "/admin/promotions" },
   {
     name: "Payment History",
@@ -94,9 +94,6 @@ export const sideBars = [
   { name: "Reviews", icon: "la-star", path: "/admin/reviews" },
   { name: "Chat Support", icon: "la-comments", path: "/admin/chat" },
   { name: "Users", icon: "la-users-cog", path: "/admin/users" },
-  { name: "Invoice", icon: "la-wallet", path: "/admin/invoice" },
   { name: "Reports", icon: "la-chart-bar", path: "/admin/reports" },
-  { name: "Team", icon: "la-user", path: "/admin/team" },
-  { name: "Table", icon: "la-table", path: "/admin/table" },
   { name: "Settings", icon: "la-cog", path: "/admin/settings" },
 ];
