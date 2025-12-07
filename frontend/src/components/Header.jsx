@@ -39,6 +39,8 @@ export default function Header() {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [cartAnimation, setCartAnimation] = useState(false);
+  const [wishlistAnimation, setWishlistAnimation] = useState(false);
   const userDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
@@ -95,7 +97,15 @@ export default function Header() {
   // Load wishlist count
   useEffect(() => {
     const updateWishlistCount = () => {
-      setWishlistCount(getWishlistCount());
+      const newCount = getWishlistCount();
+      const oldCount = wishlistCount;
+      setWishlistCount(newCount);
+      
+      // Trigger animation if count increased
+      if (newCount > oldCount) {
+        setWishlistAnimation(true);
+        setTimeout(() => setWishlistAnimation(false), 600);
+      }
     };
 
     updateWishlistCount();
@@ -108,7 +118,7 @@ export default function Header() {
       window.removeEventListener("storage", updateWishlistCount);
       window.removeEventListener("wishlistUpdated", updateWishlistCount);
     };
-  }, []);
+  }, [wishlistCount]);
   // cart count
 useEffect(() => {
   const updateCartCount = () => {
@@ -116,7 +126,15 @@ useEffect(() => {
     const user = parseStoredUser();
 
     if (!token || !user?.id) {
-      _setCartCount(getGuestCartCount());
+      const newCount = getGuestCartCount();
+      const oldCount = cartCount;
+      _setCartCount(newCount);
+      
+      // Trigger animation if count increased
+      if (newCount > oldCount) {
+        setCartAnimation(true);
+        setTimeout(() => setCartAnimation(false), 600);
+      }
     } else {
       // Nếu user đã login thì gọi API
       getCart(user.id)
@@ -124,7 +142,14 @@ useEffect(() => {
           const totalQuantity = Array.isArray(res?.items)
             ? res.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
             : 0;
+          const oldCount = cartCount;
           _setCartCount(totalQuantity);
+          
+          // Trigger animation if count increased
+          if (totalQuantity > oldCount) {
+            setCartAnimation(true);
+            setTimeout(() => setCartAnimation(false), 600);
+          }
         })
         .catch(() => _setCartCount(0));
     }
@@ -139,7 +164,7 @@ useEffect(() => {
     window.removeEventListener("cartUpdated", updateCartCount);
     window.removeEventListener("storage", updateCartCount);
   };
-}, []);
+}, [cartCount]);
 
 
   // Update user state when profile changes elsewhere in the app
@@ -326,12 +351,18 @@ useEffect(() => {
           {/* Wishlist */}
           <button
             onClick={() => navigate("/wishlist")}
-            className="cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+            className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+              wishlistAnimation ? 'animate-bounce scale-110' : ''
+            }`}
           >
-            <Heart size={20} />
+            <Heart size={20} className={`transition-all ${
+              wishlistAnimation ? 'scale-125 text-red-400' : ''
+            }`} />
             <span className="hidden md:inline font-medium">Yêu thích</span>
             {wishlistCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+              <span className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
+                wishlistAnimation ? 'animate-ping' : ''
+              }`}>
                 {wishlistCount > 9 ? "9+" : wishlistCount}
               </span>
             )}
@@ -340,12 +371,18 @@ useEffect(() => {
           {/* Cart */}
           <button
             onClick={() => navigate("/cart")}
-            className="cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+            className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+              cartAnimation ? 'animate-bounce scale-110' : ''
+            }`}
           >
-            <ShoppingCart size={20} />
+            <ShoppingCart size={20} className={`transition-all ${
+              cartAnimation ? 'scale-125 text-green-400' : ''
+            }`} />
             <span className="hidden md:inline font-medium">Giỏ hàng</span>
           {cartCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+            <span className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
+              cartAnimation ? 'animate-ping' : ''
+            }`}>
               {cartCount > 9 ? "9+" : cartCount}
             </span>
           )}
