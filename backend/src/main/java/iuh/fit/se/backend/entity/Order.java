@@ -66,6 +66,9 @@ public class Order {
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
 
+    @Column(name = "transaction_id")
+    private String transactionId;
+
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     @JsonBackReference(value = "user-orders")

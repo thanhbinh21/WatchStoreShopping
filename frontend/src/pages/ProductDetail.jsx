@@ -118,18 +118,15 @@ export default function ProductDetail() {
 
       // Kiểm tra xem user đã đánh giá chưa
       if (user?.id) {
-        try {
-          const userReview = await getReviewByUserAndProduct(user.id, id);
-          if (userReview) {
-            setExistingReview(userReview);
-            // Kiểm tra xem có thể chỉnh sửa không (trong vòng 30 ngày)
-            const reviewDate = new Date(userReview.createdAt);
-            const daysSinceReview =
-              (new Date() - reviewDate) / (1000 * 60 * 60 * 24);
-            setIsEditingReview(daysSinceReview <= 30);
-          }
-        } catch (err) {
-          // User chưa có review
+        const userReview = await getReviewByUserAndProduct(user.id, id);
+        if (userReview) {
+          setExistingReview(userReview);
+          // Kiểm tra xem có thể chỉnh sửa không (trong vòng 30 ngày)
+          const reviewDate = new Date(userReview.createdAt);
+          const daysSinceReview =
+            (new Date() - reviewDate) / (1000 * 60 * 60 * 24);
+          setIsEditingReview(daysSinceReview <= 30);
+        } else {
           setExistingReview(null);
         }
       }

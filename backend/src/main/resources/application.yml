@@ -1,6 +1,8 @@
 spring:
     application:
         name: spring-ai-flight
+    profiles:
+        active: local
 
     ai:
         vectorstore:
@@ -17,11 +19,22 @@ spring:
 
 groq:
     api:
-        key: ${GROQ_API_KEY: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}
+        key: ${GROQ_API_KEY}
         base-url: https://api.groq.com/openai/v1
         model: llama-3.3-70b-versatile
         temperature: 0.7
         max-output-tokens: 1024
+
+# VNPay Configuration
+vnpay:
+    tmn-code: ${VNPAY_TMN_CODE}
+    hash-secret: ${VNPAY_HASH_SECRET}
+    url: https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+    return-url: ${VNPAY_RETURN_URL}
+    version: 2.1.0
+    command: pay
+    order-type: other
+    skip-signature-check: ${VNPAY_SKIP_SIGNATURE_CHECK:true}  # Set to false in production!
 
 # Logging debug để xem request gửi đi
 logging:

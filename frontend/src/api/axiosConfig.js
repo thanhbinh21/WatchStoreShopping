@@ -2,7 +2,7 @@ import axios from "axios";
 
 const axiosInstance = axios.create({
   baseURL: "http://localhost:8080/api",
-  timeout: 10000,
+  timeout: 30000, // Increase timeout to 30 seconds for payment processing
   headers: {
     "Content-Type": "application/json",
   },
@@ -25,6 +25,18 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    // Suppress console errors for 404 on review endpoints (user hasn't reviewed yet)
+    const isReviewNotFound = 
+      error.response?.status === 404 && 
+      originalRequest?.url?.includes('/reviews/user/');
+    
+    if (!isReviewNotFound) {
+      // Only log non-review 404 errors
+      if (error.response?.status !== 404) {
+        console.error('API Error:', error);
+      }
+    }
 
     // Nếu lỗi là token expired
     // Do not try refresh for auth endpoints (login/register/refresh-token)
