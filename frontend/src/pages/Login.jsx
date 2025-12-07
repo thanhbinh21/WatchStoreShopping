@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosConfig";
-import { User, Lock, Mail, Loader2, Gift, ShieldCheck } from "lucide-react"; // Thêm icon Gift
+import { User, Lock, Mail, Loader2, Gift, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,9 @@ import { GoogleIcon } from "@/components/ui/GoogleIcon";
 import { ZaloIcon } from "@/components/ui/ZaloIcon";
 import { getGuestCart, clearGuestCart } from "@/api/guestCart";
 import { addToCart } from "@/api/cartAPI";
-
+import { googleSignIn } from "@/api/googleAuth";
+import { facebookSignIn } from "@/api/facebookAuth";
+import { FacebookIcon } from "@/components/ui/FacebookIcon";
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true);
@@ -36,6 +38,9 @@ export default function LoginRegister() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Ref để gắn nút Google ẩn vào
+  const googleButtonRef = useRef(null);
+
   const syncGuestCart = async (userId) => {
     const guestItems = getGuestCart();
     if (!guestItems || guestItems.length === 0) return;
@@ -49,7 +54,11 @@ export default function LoginRegister() {
         }
         const qty = Math.min(item.quantity, maxStock);
         if (qty < item.quantity) {
-          toast.warning(`Số lượng sản phẩm ${item.productName || item.id} đã được điều chỉnh theo tồn kho`);
+          toast.warning(
+            `Số lượng sản phẩm ${
+              item.productName || item.id
+            } đã được điều chỉnh theo tồn kho`
+          );
         }
         await addToCart(userId, item.id, qty);
       } catch (err) {
@@ -59,7 +68,6 @@ export default function LoginRegister() {
 
     clearGuestCart();
   };
-
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -95,12 +103,9 @@ export default function LoginRegister() {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
 
-        // Dispatch event để các component khác biết user đã thay đổi
         window.dispatchEvent(new Event("userUpdated"));
-
         await syncGuestCart(data.user.id);
 
-        // Chuyển đến /home cho cả admin và user
         navigate("/home");
         toast.success("Đăng nhập thành công!");
       } else {
@@ -133,6 +138,212 @@ export default function LoginRegister() {
     }
   };
 
+  // Handle Google credential response
+  const handleGoogleCredential = async (response) => {
+    if (!response?.credential) {
+      toast.error("Google sign-in failed");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await googleSignIn(response.credential);
+      const { data } = res;
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("role", data.role);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+      window.dispatchEvent(new Event("userUpdated"));
+
+      if (data.user?.id) await syncGuestCart(data.user.id);
+      navigate("/home");
+      toast.success("Đăng nhập bằng Google thành công");
+    } catch (err) {
+      console.error("Google login error", err);
+      toast.error(err.response?.data || "Đăng nhập Google thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initialize Google Identity button
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const mount = () => {
+      if (window.google?.accounts?.id && googleButtonRef.current) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleCredential,
+            auto_select: false,
+          });
+
+          // Render nút Google thật vào ref, nhưng chúng ta sẽ ẩn nó bằng CSS
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: "outline",
+            size: "large",
+            width: "240", // Kích thước đủ lớn để che nút custom
+            height: "50",
+          });
+        } catch (err) {
+          console.error("Google Identity init error", err);
+        }
+      }
+    };
+
+    if (window.google && window.google.accounts) {
+      mount();
+    } else {
+      const script = document.querySelector(
+        'script[src="https://accounts.google.com/gsi/client"]'
+      );
+      if (script) {
+        script.addEventListener("load", mount);
+        return () => script.removeEventListener("load", mount);
+      }
+    }
+  }, [isLogin]);
+
+  // Initialize Facebook SDK
+  useEffect(() => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      console.warn("VITE_FACEBOOK_APP_ID not set; Facebook login disabled");
+      return;
+    }
+
+    const initFB = () => {
+      try {
+        if (window.FB) {
+          window.FB.init({
+            appId: fbAppId,
+            cookie: true,
+            xfbml: false,
+            version: "v16.0",
+          });
+        }
+      } catch (err) {
+        console.error("FB init error", err);
+      }
+    };
+
+    // Ensure fb-root exists
+    if (!document.getElementById("fb-root")) {
+      const fbRoot = document.createElement("div");
+      fbRoot.id = "fb-root";
+      document.body.appendChild(fbRoot);
+    }
+
+    // If FB already loaded, init immediately
+    if (window.FB) {
+      initFB();
+      return;
+    }
+
+    // Otherwise dynamically load the SDK and init when ready
+    const existingScript = document.querySelector(
+      'script[src^="https://connect.facebook.net"]'
+    );
+    if (existingScript) {
+      // script may not have fired load event yet
+      existingScript.addEventListener("load", initFB);
+      return () => existingScript.removeEventListener("load", initFB);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://connect.facebook.net/vi_VN/sdk.js";
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+    script.onload = initFB;
+    script.onerror = () => console.error("Failed to load Facebook SDK");
+    document.body.appendChild(script);
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
+
+  const processFacebookToken = async (token) => {
+    setLoading(true);
+    const loadingToast = toast.loading("Đang xác thực với Facebook...");
+
+    try {
+      const res = await facebookSignIn(token);
+      const { data } = res;
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("role", data.role);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+      window.dispatchEvent(new Event("userUpdated"));
+      if (data.user?.id) await syncGuestCart(data.user.id);
+
+      toast.dismiss(loadingToast);
+      toast.success("Đăng nhập bằng Facebook thành công");
+      navigate("/home");
+    } catch (err) {
+      console.error("Facebook login error", err);
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data || "Đăng nhập Facebook thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = () => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      toast.error("Facebook App ID chưa cấu hình");
+      return;
+    }
+
+    const waitForFB = () =>
+      new Promise((resolve, reject) => {
+        let count = 0;
+        const maxTries = 20;
+        const interval = setInterval(() => {
+          if (window.FB) {
+            clearInterval(interval);
+            resolve(window.FB);
+          } else if (count++ >= maxTries) {
+            clearInterval(interval);
+            reject(new Error("Timeout: FB SDK not loaded"));
+          }
+        }, 300);
+      });
+
+    waitForFB()
+      .then((FB) => {
+        // SỬA LỖI: Bỏ từ khóa 'async' ở đây
+        FB.login(
+          (resp) => {
+            if (resp.status === "connected") {
+              const token = resp.authResponse.accessToken;
+              // Gọi hàm xử lý riêng
+              processFacebookToken(token);
+            } else {
+              console.log("User cancelled login");
+            }
+          },
+          { scope: "email,public_profile" }
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Không thể tải Facebook SDK. Hãy tắt AdBlock và thử lại.");
+      });
+  };
+
   const benefits = [
     {
       icon: ShieldCheck,
@@ -150,14 +361,12 @@ export default function LoginRegister() {
 
   return (
     <div className="min-h-screen w-full relative">
-      {/* Lavender Blush Flow Gradient (Top Left to Bottom Right) */}
       <div
         className="absolute inset-0 z-0"
         style={{
           background: `linear-gradient(135deg, #E1BEE7 0%, #F3E5F5 20%, #FCE4EC 40%, #FFF0F5 60%, #F8BBD9 80%, #E1BEE7 100%)`,
         }}
       />
-      {/* Your Content/Components */}
       <>
         {/* Popup thành công */}
         <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
@@ -183,12 +392,11 @@ export default function LoginRegister() {
           </DialogContent>
         </Dialog>
 
-        {/* Giao diện chính mới */}
+        {/* Giao diện chính */}
         <div className="flex items-center justify-center min-h-screen min-w-screen p-4 absolute z-10">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden">
             {/* Cột trái: Quảng cáo */}
             <div className="w-full md:w-1/2 p-8 md:p-12 relative bg-white">
-              {/* Box đỏ viền */}
               <div className="border-2 border-red-600 rounded-lg p-6 h-full">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Nhập hội khách hàng thành viên{" "}
@@ -213,8 +421,6 @@ export default function LoginRegister() {
                 >
                   Xem chi tiết chính sách ưu đãi Smember
                 </a>
-
-                {/* <img src="/path/to/mascot.png" alt="Mascot" className="absolute bottom-0 right-0 w-1/2" /> */}
               </div>
             </div>
 
@@ -229,7 +435,6 @@ export default function LoginRegister() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Trường chung: Tên đăng nhập */}
                 <div>
                   <label
                     htmlFor="username"
@@ -253,7 +458,6 @@ export default function LoginRegister() {
                   />
                 </div>
 
-                {/* Trường chỉ có khi Đăng ký */}
                 {!isLogin && (
                   <>
                     <div>
@@ -296,7 +500,6 @@ export default function LoginRegister() {
                   </>
                 )}
 
-                {/* Trường chung: Mật khẩu */}
                 <div>
                   <label
                     htmlFor="password"
@@ -316,7 +519,6 @@ export default function LoginRegister() {
                   />
                 </div>
 
-                {/* Trường chỉ có khi Đăng ký */}
                 {!isLogin && (
                   <div>
                     <label
@@ -338,7 +540,6 @@ export default function LoginRegister() {
                   </div>
                 )}
 
-                {/* Link Quên mật khẩu (chỉ hiển thị khi đăng nhập) */}
                 {isLogin && (
                   <div className="text-right">
                     <button
@@ -369,7 +570,6 @@ export default function LoginRegister() {
                 </Button>
               </form>
 
-              {/* Dialog: Forgot password */}
               {forgotOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
                   <div className="bg-white p-6 rounded-lg w-full max-w-md">
@@ -426,7 +626,6 @@ export default function LoginRegister() {
                 </div>
               )}
 
-              {/* Phần đăng nhập bằng MXH (chỉ hiển thị khi đăng nhập) */}
               {isLogin && (
                 <>
                   <div className="flex items-center my-6">
@@ -438,27 +637,48 @@ export default function LoginRegister() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    {/* BẮT ĐẦU: Sửa phần nút Google ở đây */}
+                    <div className="relative inline-block w-30">
+                      {/* Lớp phủ vô hình: Nút Google thật nằm ở đây, opacity 0, đè lên trên */}
+                      <div
+                        ref={googleButtonRef}
+                        className="absolute top-0 left-0 w-full h-full opacity-0 z-20 overflow-hidden"
+                        style={{ transform: "scale(1.05)" }}
+                      />
+
+                      {/* Nút Custom của bạn: Chỉ để hiển thị giao diện */}
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-center w-full relative z-10"
+                      >
+                        <GoogleIcon />
+                        Google
+                      </Button>
+                    </div>
+                    {/* Facebook button (custom) */}
                     <Button
                       variant="outline"
-                      className="flex items-center justify-center w-30"
-                      onClick={() => toast.info("Sắp ra mắt")}
+                      className="flex items-center justify-center w-30  hover:bg-primary/0"
+                      onClick={handleFacebookLogin}
                     >
-                      <GoogleIcon />
-                      Google
+                      {/* simple text icon; replace with a proper SVG/icon as desired */}
+                      <FacebookIcon />
+                      Facebook
                     </Button>
-                    <Button
+                    {/* KẾT THÚC: Sửa phần nút Google */}
+
+                    {/* <Button
                       variant="outline"
-                      className="flex items-center justify-center w-30"
+                      className="flex items-center justify-center w-30 hover:bg-primary/0"
                       onClick={() => toast.info("Sắp ra mắt")}
                     >
                       <ZaloIcon />
                       Zalo
-                    </Button>
+                    </Button> */}
                   </div>
                 </>
               )}
 
-              {/* Link chuyển đổi Đăng nhập/Đăng ký */}
               <div className="mt-6 text-center text-sm text-gray-600">
                 {isLogin ? "Bạn chưa có tài khoản?" : "Đã có tài khoản?"}{" "}
                 <button
