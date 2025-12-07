@@ -87,7 +87,7 @@ export const sideBars = [
   { name: "Pricing", icon: "la-gift", path: "/admin/pricing" },
   { name: "Promotions", icon: "la-calendar", path: "/admin/promotions" },
   {
-    name: "Payment Methods",
+    name: "Payment History",
     icon: "la-credit-card",
     path: "/admin/payments",
   },
