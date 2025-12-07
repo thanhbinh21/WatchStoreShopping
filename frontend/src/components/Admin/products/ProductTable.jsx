@@ -56,9 +56,13 @@ export const ProductTable = ({
                     <img
                       src={
                         product.imageUrl
-                          ? (product.imageUrl.startsWith('http') ? product.imageUrl : `/images/products/${product.imageUrl}`)
+                          ? product.imageUrl.startsWith("http")
+                            ? product.imageUrl
+                            : `/images/products/${product.imageUrl}`
                           : product.primaryImageUrl
-                          ? (product.primaryImageUrl.startsWith('http') ? product.primaryImageUrl : `/images/products/${product.primaryImageUrl}`)
+                          ? product.primaryImageUrl.startsWith("http")
+                            ? product.primaryImageUrl
+                            : `/images/products/${product.primaryImageUrl}`
                           : productImg
                       }
                       alt={product.name}
