@@ -74,8 +74,15 @@ export const AdminOrders = () => {
     const [page, setPage] = useState(0);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
-    const [filters, setFilters] = useState({ status: "ALL", search: "" });
+    const [filters, setFilters] = useState({
+        status: "ALL",
+        search: "",
+        username: "",
+        userId: "",
+    });
     const [searchInput, setSearchInput] = useState("");
+    const [usernameInput, setUsernameInput] = useState("");
+    const [userIdInput, setUserIdInput] = useState("");
     const [listLoading, setListLoading] = useState(false);
 
     const [selectedOrderId, setSelectedOrderId] = useState(null);
@@ -100,6 +107,8 @@ export const AdminOrders = () => {
                         ? currentFilters.status
                         : undefined,
                 search: currentFilters.search || undefined,
+                user: currentFilters.username || undefined,
+                userId: currentFilters.userId || undefined,
             });
 
             const content = response?.content || [];
@@ -150,12 +159,31 @@ export const AdminOrders = () => {
     useEffect(() => {
         fetchOrders(page, filters);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [filters.status, filters.search, page]);
+    }, [
+        filters.status,
+        filters.search,
+        filters.username,
+        filters.userId,
+        page,
+    ]);
 
     const handleSearchSubmit = (event) => {
         event.preventDefault();
         setPage(0);
-        setFilters((prev) => ({ ...prev, search: searchInput.trim() }));
+        setFilters((prev) => ({
+            ...prev,
+            search: searchInput.trim(),
+            username: usernameInput.trim(),
+            userId: userIdInput.trim(),
+        }));
+    };
+
+    const handleResetFilters = () => {
+        setSearchInput("");
+        setUsernameInput("");
+        setUserIdInput("");
+        setPage(0);
+        setFilters({ status: "ALL", search: "", username: "", userId: "" });
     };
 
     const handleRefresh = () => {
@@ -234,26 +262,55 @@ export const AdminOrders = () => {
 
             <div className="grid gap-6 lg:grid-cols-[1.4fr,1fr]">
                 <Card className="p-6">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                         <form
-                            className="flex w-full gap-2 md:max-w-md"
+                            className="grid w-full gap-3 md:max-w-3xl md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]"
                             onSubmit={handleSearchSubmit}
                         >
-                            <div className="relative w-full">
+                            <div className="relative">
                                 <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
                                 <Input
                                     value={searchInput}
                                     onChange={(event) =>
                                         setSearchInput(event.target.value)
                                     }
-                                    placeholder="Tìm theo tên khách hàng"
+                                    placeholder="Tìm theo tên hoặc email khách hàng"
                                     className="pl-9"
                                 />
                             </div>
-                            <Button type="submit">Tìm kiếm</Button>
+                            <div className="flex gap-3">
+                                <Input
+                                    value={usernameInput}
+                                    onChange={(event) =>
+                                        setUsernameInput(event.target.value)
+                                    }
+                                    placeholder="Username"
+                                    className="flex-1"
+                                />
+                                <Input
+                                    value={userIdInput}
+                                    onChange={(event) =>
+                                        setUserIdInput(event.target.value)
+                                    }
+                                    placeholder="User ID"
+                                    className="w-32"
+                                />
+                            </div>
+                            <div className="flex gap-2 md:col-span-2">
+                                <Button type="submit" className="flex-1">
+                                    Tìm kiếm
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={handleResetFilters}
+                                >
+                                    Đặt lại
+                                </Button>
+                            </div>
                         </form>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 md:self-end">
                             <label className="text-sm text-muted-foreground">
                                 Trạng thái
                             </label>

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
 import iuh.fit.se.backend.entity.enums.PaymentMethod;
+import iuh.fit.se.backend.entity.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -60,6 +61,14 @@ public class Order {
 
     @Column(name = "note", columnDefinition = "TEXT")
     private String note;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentStatus paymentStatus;
+
+    @Column(name = "transaction_id")
+    private String transactionId;
+
+    private LocalDateTime paidAt;
 
     // Payment information
     @Enumerated(EnumType.STRING)

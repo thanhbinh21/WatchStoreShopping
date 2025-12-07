@@ -179,6 +179,16 @@ export default function SaleBanner({ onAddToCart }) {
     return null;
   }
 
+  // Helper to get proper image URL
+  const getImageUrl = (url) => {
+    if (!url)
+      return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+    // If already full URL (http/https) or data URI, use as is
+    if (url.startsWith("http") || url.startsWith("data:")) return url;
+    // If relative path, prepend with /images/products/ (from public folder)
+    return `/images/products/${url}`;
+  };
+
   return (
     <section className="py-12 lg:py-16 bg-gradient-to-br from-red-50 via-orange-50 to-yellow-50 relative overflow-hidden">
       {/* Background decoration */}
@@ -224,11 +234,9 @@ export default function SaleBanner({ onAddToCart }) {
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
                   <img
-                    src={
-                      product.imageUrl ||
-                      product.primaryImageUrl ||
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E"
-                    }
+                    src={getImageUrl(
+                      product.imageUrl || product.primaryImageUrl
+                    )}
                     alt={product.name}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
                     onError={(e) => {
@@ -293,7 +301,7 @@ export default function SaleBanner({ onAddToCart }) {
                     onClick={(e) => {
                       e.stopPropagation();
                       if (onAddToCart) {
-                        onAddToCart(product.id);
+                        onAddToCart(product);
                       }
                     }}
                     className="mt-auto w-full bg-linear-to-r from-brand-primary to-orange-600 text-brand-primary-foreground rounded-lg py-2.5 hover:from-red-700 hover:to-orange-700 transition-all duration-300 font-medium text-sm lg:text-base shadow-md hover:shadow-lg"
@@ -310,15 +318,11 @@ export default function SaleBanner({ onAddToCart }) {
         <div className="text-center mt-8">
           <button
             onClick={() => {
-              const productsSection =
-                document.getElementById("products-section");
-              if (productsSection) {
-                productsSection.scrollIntoView({ behavior: "smooth" });
-              }
+              navigate("/promotional-products");
             }}
             className="px-8 py-3 bg-brand-primary-foreground text-brand-primary border-2 border-brand-primary rounded-lg font-semibold hover:bg-brand-primary hover:text-brand-primary-foreground transition-all duration-300 shadow-md"
           >
-            Xem tất cả sản phẩm
+            Xem tất cả sản phẩm khuyến mãi
           </button>
         </div>
       </div>

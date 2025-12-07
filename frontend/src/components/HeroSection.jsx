@@ -5,13 +5,13 @@ export default function HeroSection() {
   const navigate = useNavigate();
 
   const handleShopCollection = () => {
-    // Scroll to products section hoặc navigate
-    window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+    // Navigate to ProductList page
+    navigate("/products");
   };
 
   const handleLearnMore = () => {
-    // Có thể navigate đến trang about hoặc scroll
-    window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+    // Navigate to About page
+    navigate("/about");
   };
 
   return (
@@ -34,9 +34,9 @@ export default function HeroSection() {
 
             {/* Body Text */}
             <p className="text-base lg:text-lg text-gray-600 leading-relaxed max-w-xl font-light">
-              Discover our curated collection of premium electronic watches,
-              where Swiss precision meets contemporary design. Each timepiece is
-              a masterpiece of engineering and craftsmanship.
+              Khám phá bộ sưu tập đồng hồ điện tử cao cấp được tuyển chọn của
+              chúng tôi, nơi độ chính xác gặp gỡ thiết kế đương đại. Mỗi chiếc
+              đồng hồ là một kiệt tác của kỹ thuật và nghề thủ công.
             </p>
 
             {/* Call-to-Action Buttons */}
@@ -45,13 +45,13 @@ export default function HeroSection() {
                 onClick={handleShopCollection}
                 className="px-8 py-3.5 bg-blue-900 text-white rounded-lg font-semibold hover:bg-blue-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm lg:text-base"
               >
-                Shop Collection
+                Xem Bộ Sưu Tập
               </button>
               <button
                 onClick={handleLearnMore}
                 className="px-8 py-3.5 bg-white text-gray-700 border border-gray-300 rounded-lg font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 text-sm lg:text-base"
               >
-                Learn More
+                Tìm Hiểu Thêm
               </button>
             </div>
 
@@ -62,7 +62,7 @@ export default function HeroSection() {
                   500+
                 </p>
                 <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
-                  Premium Watches
+                  Đồng Hồ Cao Cấp
                 </p>
               </div>
               <div>
@@ -70,7 +70,7 @@ export default function HeroSection() {
                   25k+
                 </p>
                 <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
-                  Happy Customers
+                  Khách Hàng Hài Lòng
                 </p>
               </div>
               <div>
@@ -78,7 +78,7 @@ export default function HeroSection() {
                   99%
                 </p>
                 <p className="text-xs lg:text-sm text-gray-500 mt-1 font-light">
-                  Satisfaction Rate
+                  Tỷ Lệ Hài Lòng
                 </p>
               </div>
             </div>
@@ -94,12 +94,12 @@ export default function HeroSection() {
               <div className="relative rounded-[2rem] overflow-hidden shadow-2xl transform -rotate-1 hover:rotate-0 transition-transform duration-700">
                 <img
                   src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"
-                  alt="Premium Watch - Elegance Meets Innovation"
+                  alt="Đồng Hồ Cao Cấp - Sang Trọng Gặp Gỡ Đổi Mới"
                   className="w-full h-auto object-cover aspect-square"
                   onError={(e) => {
                     // Use SVG placeholder instead of external URL
                     e.target.src =
-                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='600' height='600' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3EPremium Watch%3C/text%3E%3C/svg%3E";
+                      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600'%3E%3Crect width='600' height='600' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='24' fill='%23ffffff' text-anchor='middle' dominant-baseline='middle'%3EĐồng Hồ Cao Cấp%3C/text%3E%3C/svg%3E";
                   }}
                 />
               </div>

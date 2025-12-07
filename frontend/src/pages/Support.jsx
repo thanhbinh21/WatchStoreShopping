@@ -98,7 +98,7 @@ export default function Support() {
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
       {/* Breadcrumb dùng chung */}
-      <Breadcrumb currentPage="Hỗ trợ khách hàng" />
+      <Breadcrumb items={[{ label: "Hỗ trợ khách hàng", isCurrent: true }]} />
 
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 py-8 lg:py-10">
@@ -245,5 +245,3 @@ export default function Support() {
     </div>
   );
 }
-
-

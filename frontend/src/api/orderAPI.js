@@ -8,6 +8,8 @@ export const searchOrders = async (params = {}) => {
         size = 10,
         status,
         search,
+        user,
+        userId,
         fromDate,
         toDate,
         minTotal,
@@ -24,6 +26,8 @@ export const searchOrders = async (params = {}) => {
 
     if (status) query.set("status", status);
     if (search) query.set("customerName", search);
+    if (user) query.set("username", user);
+    if (userId) query.set("userId", userId);
     if (fromDate) query.set("fromDate", fromDate);
     if (toDate) query.set("toDate", toDate);
     if (minTotal !== undefined && minTotal !== null)
@@ -40,6 +44,44 @@ export const searchOrders = async (params = {}) => {
 export const getOrderDetail = async (id) => {
     const response = await axiosInstance.get(`${ORDER_URL}/${id}/detail`);
     return response.data;
+};
+
+export const getOrdersByUser = async ({
+    userId,
+    username,
+    page = 0,
+    size = 10,
+} = {}) => {
+    const params = {};
+    if (userId) {
+        params.userId = userId;
+    }
+    if (username) {
+        params.username = username;
+    }
+    params.page = page;
+    params.size = size;
+
+    const response = await axiosInstance.get(`${ORDER_URL}/by-user`, {
+        params,
+    });
+    return response.data;
+};
+
+export const getOrderTimeline = async ({ startDate, endDate } = {}) => {
+    const params = {};
+    if (startDate) {
+        params.startDate = startDate;
+    }
+    if (endDate) {
+        params.endDate = endDate;
+    }
+    const response = await axiosInstance.get(`${ORDER_URL}/timeline`, {
+        params,
+    });
+    return Array.isArray(response?.data?.data)
+        ? response.data.data
+        : response.data;
 };
 
 export const updateOrderStatus = async (id, status) => {
@@ -62,14 +104,19 @@ export const getOrdersByUserId = async (userId) => {
 export const cancelOrder = async (orderId) => {
     // Thử endpoint user cancel trước
     try {
-        const response = await axiosInstance.post(`${ORDER_URL}/${orderId}/cancel`);
+        const response = await axiosInstance.post(
+            `${ORDER_URL}/${orderId}/cancel`
+        );
         return response.data;
     } catch (error) {
         // Nếu không có endpoint này, thử dùng updateOrderStatus
         if (error.response?.status === 404) {
-            const response = await axiosInstance.put(`${ORDER_URL}/${orderId}/status`, {
-                status: "CANCELLED"
-            });
+            const response = await axiosInstance.put(
+                `${ORDER_URL}/${orderId}/status`,
+                {
+                    status: "CANCELLED",
+                }
+            );
             return response.data;
         }
         throw error;

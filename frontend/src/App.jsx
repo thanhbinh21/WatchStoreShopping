@@ -9,7 +9,7 @@ import { AdminOrders } from "./pages/Admin/AdminOrders";
 import { AdminPricing } from "./pages/Admin/AdminPricing";
 import { AdminProduct } from "./pages/Admin/AdminProduct";
 import { AdminSettings } from "./pages/Admin/AdminSettings";
-import { AdminStock } from "./pages/Admin/AdminStock";
+import { AdminProductStock } from "./pages/Admin/AdminProductStock";
 import { AdminTable } from "./pages/Admin/AdminTable";
 import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
@@ -30,6 +30,7 @@ import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import Orders from "./pages/Orders";
 import ProductList from "./pages/ProductList";
+import PromotionalProducts from "./pages/PromotionalProducts";
 import { AdminPostCategory } from "./pages/Admin/AdminPostCategory";
 import { AdminPosts } from "./pages/Admin/AdminPosts";
 import Wishlist from "./pages/Wishlist";
@@ -37,7 +38,10 @@ import PostList from "./pages/PostList";
 import AdminChat from "./pages/Admin/AdminChat";
 import { ChatProvider } from "./contexts/ChatContext";
 import ChatWidget from "./components/ChatWidget";
+import AIChatWidget from "./components/AIChat/AIChatWidget";
 import Support from "./pages/Support";
+import About from "./pages/About";
+import VNPayReturn from "./pages/VNPayReturn";
 
 function App() {
   return (
@@ -65,6 +69,8 @@ function App() {
             }
           />
           <Route path="/products" element={<ProductList />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/promotional-products" element={<PromotionalProducts />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
           <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
@@ -97,7 +103,7 @@ function App() {
             <Route path="post-categories" element={<AdminPostCategory />} />
             <Route path="posts" element={<AdminPosts />} />
             <Route path="orders" element={<AdminOrders />} />
-            <Route path="stock" element={<AdminStock />} />
+            <Route path="stock" element={<AdminProductStock />} />
             <Route path="pricing" element={<AdminPricing />} />
             <Route path="payments" element={<AdminMethodPayments />} />
             <Route path="promotions" element={<AdminPromotions />} />
@@ -132,9 +138,11 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
           {/* Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AIChatWidget />
         <ChatWidget />
       </Router>
     </ChatProvider>

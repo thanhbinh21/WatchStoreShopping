@@ -5,19 +5,25 @@ import iuh.fit.se.backend.dto.response.CartResponse;
 import iuh.fit.se.backend.entity.Cart;
 import iuh.fit.se.backend.entity.CartItem;
 import iuh.fit.se.backend.entity.Product;
+import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.repository.CartItemRepository;
 import iuh.fit.se.backend.repository.CartRepository;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.CartService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -35,15 +41,32 @@ public class CartServiceImpl implements CartService {
                     return cartRepository.save(newCart);
                 });
 
-        List<CartItemDto> items = cart.getCartItems().stream().map(item ->
-                new CartItemDto(
-                        item.getId(),
-                        item.getProduct().getId(),
-                        item.getProduct().getName(),
-                        item.getProduct().getPrimaryImageUrl(),
-                        item.getQuantity(),
-                        item.getProduct().getCurrentPrice() // BigDecimal OK!
-                )
+        // Sort by updatedAt descending - most recently updated items first
+        List<CartItemDto> items = cart.getCartItems().stream()
+                .sorted((a, b) -> {
+                    if (a.getUpdatedAt() == null && b.getUpdatedAt() == null) return 0;
+                    if (a.getUpdatedAt() == null) return 1;
+                    if (b.getUpdatedAt() == null) return -1;
+                    return b.getUpdatedAt().compareTo(a.getUpdatedAt());
+                })
+                .map(item -> {
+                    Product product = item.getProduct();
+                    String imageUrl = product.getPrimaryImageUrl();
+                    // If primaryImageUrl is relative, prepend /images/products/
+                    if (imageUrl != null && !imageUrl.startsWith("http") && !imageUrl.startsWith("/")) {
+                        imageUrl = "/images/products/" + imageUrl;
+                    }
+                    
+                    return new CartItemDto(
+                            item.getId(),
+                            product.getId(),
+                            product.getName(),
+                            imageUrl,
+                            item.getQuantity(),
+                            product.getCurrentPrice(),
+                            product.getStockQuantity()
+                    );
+                }
         ).toList();
 
         BigDecimal total = items.stream()
@@ -67,7 +90,11 @@ public class CartServiceImpl implements CartService {
                 .orElse(null);
 
         if (cartItem == null) {
-            cartItem = new CartItem(null, quantity, cart, product);
+            cartItem = CartItem.builder()
+                    .quantity(quantity)
+                    .cart(cart)
+                    .product(product)
+                    .build();
         } else {
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
         }
@@ -92,15 +119,46 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse removeItem(Long cartItemId) {
-        CartItem item = cartItemRepository.findById(cartItemId)
-                .orElseThrow();
+        // Check if item exists
+        var itemOpt = cartItemRepository.findById(cartItemId);
+        if (itemOpt.isEmpty()) {
+            // Item already removed or doesn't exist - return empty response
+            // This is idempotent - calling delete on non-existent item is safe
+            return new CartResponse(null, new ArrayList<>(), 0.0);
+        }
+        
+        CartItem item = itemOpt.get();
         Long userId = item.getCart().getUser().getId();
         cartItemRepository.delete(item);
         return getUserCart(userId);
     }
 
     @Override
+    @Transactional
     public void clearCart(Long userId) {
-
+        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            int itemCount = cart.getCartItems().size();
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+            log.info("🗑️ Cleared {} items from cart for user #{}", itemCount, userId);
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void removeProductsFromCart(Long userId, List<Long> productIds) {
+        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            List<CartItem> itemsToRemove = cart.getCartItems().stream()
+                    .filter(item -> productIds.contains(item.getProduct().getId()))
+                    .toList();
+            
+            cart.getCartItems().removeAll(itemsToRemove);
+            cartRepository.save(cart);
+            log.info("🗑️ Removed {} products from cart for user #{}", itemsToRemove.size(), userId);
+        }
     }
 }

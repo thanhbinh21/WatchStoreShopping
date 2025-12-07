@@ -5,13 +5,21 @@ import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+    plugins: [react(), tailwindcss()],
+    resolve: {
+        alias: {
+            "@": path.resolve(__dirname, "./src"),
+        },
     },
-  },
-  define: {
-    global: 'globalThis',
-  },
+    define: {
+        global: "globalThis",
+    },
+    server: {
+        proxy: {
+            "/api": {
+                target: "http://localhost:8080",
+                changeOrigin: true,
+            },
+        },
+    },
 });

@@ -31,6 +31,11 @@ export const CategoryFormDialog = ({
           <DialogDescription>
             {isEditMode
               ? "Cập nhật thông tin danh mục"
+              : "Nhập thông tin để tạo danh mục sản phẩm mới"}
+          </DialogDescription>
+          <DialogDescription>
+            {isEditMode
+              ? "Cập nhật thông tin danh mục"
               : "Điền thông tin để thêm danh mục mới"}
           </DialogDescription>
         </DialogHeader>

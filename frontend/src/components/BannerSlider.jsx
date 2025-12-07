@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { bannerAPI } from "../api/cmsAPI";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -55,11 +56,13 @@ export default function BannerSlider({ startIndex = 0 }) {
         <div
           key={banner.id}
           className={`absolute inset-0 transition-opacity duration-500 ${
-            index === currentIndex ? "opacity-100" : "opacity-0"
+            index === currentIndex
+              ? "opacity-100 z-10"
+              : "opacity-0 z-0 pointer-events-none"
           }`}
         >
           {banner.linkUrl ? (
-            <a href={banner.linkUrl} className="block w-full h-full">
+            <Link to={banner.linkUrl} className="block w-full h-full">
               <img
                 src={banner.imageUrl}
                 alt={banner.title}
@@ -77,7 +80,7 @@ export default function BannerSlider({ startIndex = 0 }) {
                   )}
                 </div>
               )}
-            </a>
+            </Link>
           ) : (
             <>
               <img
@@ -107,14 +110,14 @@ export default function BannerSlider({ startIndex = 0 }) {
         <>
           <button
             onClick={goToPrevious}
-            className="cursor-pointer absolute left-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all"
+            className="cursor-pointer absolute left-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all z-20"
             aria-label="Previous banner"
           >
             <ChevronLeft className="w-6 h-6 text-brand-ink" />
           </button>
           <button
             onClick={goToNext}
-            className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all"
+            className="cursor-pointer absolute right-4 top-1/2 -translate-y-1/2 bg-brand-accent-soft hover:bg-brand-accent p-2 rounded-full shadow-lg transition-all z-20"
             aria-label="Next banner"
           >
             <ChevronRight className="w-6 h-6 text-brand-ink" />
@@ -124,7 +127,7 @@ export default function BannerSlider({ startIndex = 0 }) {
 
       {/* Dots Indicator */}
       {banners.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
           {banners.map((_, index) => (
             <button
               key={index}

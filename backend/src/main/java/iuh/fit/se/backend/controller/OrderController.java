@@ -30,6 +30,8 @@ public class OrderController {
     @GetMapping
     public ResponseEntity<Page<OrderResponse>> getOrders(
             @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) LocalDateTime fromDate,
             @RequestParam(required = false) LocalDateTime toDate,
@@ -42,6 +44,8 @@ public class OrderController {
     ) {
         return ResponseEntity.ok(orderService.getAdminOrders(
                 customerName,
+            username,
+            userId,
                 status,
                 fromDate,
                 toDate,
@@ -112,6 +116,11 @@ public class OrderController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         try {
+            // Check if user is authenticated
+            if (userDetails == null) {
+                return ResponseEntity.status(401).body("Vui lòng đăng nhập để hủy đơn hàng");
+            }
+            
             // Get current user from authentication
             User currentUser = userRepository.findByUsername(userDetails.getUsername())
                     .orElseThrow(() -> new RuntimeException("User not found"));
@@ -119,8 +128,9 @@ public class OrderController {
             // Get the order
             Order order = orderService.getOrder(id);
             
-            // Check if user owns this order
-            if (!order.getUser().getId().equals(currentUser.getId())) {
+            // Check if user owns this order or is ADMIN
+            boolean isAdmin = currentUser.getRole().name().equals("ADMIN");
+            if (!isAdmin && !order.getUser().getId().equals(currentUser.getId())) {
                 return ResponseEntity.status(403).body("Bạn không có quyền hủy đơn hàng này");
             }
             
@@ -146,6 +156,8 @@ public class OrderController {
     @GetMapping("/search")
     public ResponseEntity<Page<Order>> searchOrders(
             @RequestParam(required = false) String customerName,
+            @RequestParam(required = false) String username,
+            @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) LocalDateTime fromDate,
             @RequestParam(required = false) LocalDateTime toDate,
@@ -157,7 +169,7 @@ public class OrderController {
             @RequestParam(defaultValue = "asc") String sortDir
     ) {
         return ResponseEntity.ok(orderService.searchOrders(
-                customerName, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir
+                customerName, username, userId, status, fromDate, toDate, minTotal, maxTotal, page, size, sortBy, sortDir
         ));
     }
 }

@@ -29,5 +29,13 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
+### Environment Variables ###
+.env
+
 ### VS Code ###
 .vscode/
+
+### Environment Variables ###
+.env
+application-local.yml
+src/main/resources/application-local.yml

@@ -3,6 +3,7 @@ package iuh.fit.se.backend.service.impl;
 import iuh.fit.se.backend.dto.OrderDailyPoint;
 import iuh.fit.se.backend.dto.OrderMonthlyPoint;
 import iuh.fit.se.backend.dto.OrderSummaryReport;
+import iuh.fit.se.backend.dto.OrderUserSummary;
 import iuh.fit.se.backend.dto.OrderYearlyPoint;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
 import iuh.fit.se.backend.repository.OrderRepository;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
@@ -202,6 +204,42 @@ public class OrderReportServiceImpl implements OrderReportService {
         return result;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<OrderUserSummary> getOrdersByUser(LocalDateTime startDate, LocalDateTime endDate, int limit) {
+        int resolvedLimit = limit > 0 ? limit : 10;
+        List<Object[]> rows = orderRepository.summarizeOrdersByUser(startDate, endDate);
+        List<OrderUserSummary> result = new ArrayList<>();
+        int index = 0;
+        for (Object[] row : rows) {
+            if (index >= resolvedLimit) {
+                break;
+            }
+            Long userId = toLong(row[0]);
+            String username = row[1] != null ? row[1].toString() : null;
+            String fullName = row[2] != null ? row[2].toString() : null;
+            String email = row[3] != null ? row[3].toString() : null;
+            long ordersCount = toLong(row[4]);
+            long totalUnits = toLong(row[5]);
+            BigDecimal totalAmount = toBigDecimal(row[6]);
+            LocalDateTime latestOrderAt = toLocalDateTime(row[7]);
+
+            OrderUserSummary summary = OrderUserSummary.builder()
+                    .userId(userId)
+                    .username(username)
+                    .fullName(fullName)
+                    .email(email)
+                    .ordersCount(ordersCount)
+                    .totalUnits(totalUnits)
+                    .totalAmount(totalAmount)
+                    .latestOrderAt(latestOrderAt)
+                    .build();
+            result.add(summary);
+            index++;
+        }
+        return result;
+    }
+
     private void validateRange(LocalDate startDate, LocalDate endDate) {
         if (startDate == null || endDate == null) {
             throw new IllegalArgumentException("Start date and end date are required");
@@ -239,5 +277,37 @@ public class OrderReportServiceImpl implements OrderReportService {
             return timestamp.toLocalDateTime().toLocalDate();
         }
         throw new IllegalArgumentException("Unsupported date value: " + value);
+    }
+
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) {
+            return BigDecimal.ZERO;
+        }
+        if (value instanceof BigDecimal decimal) {
+            return decimal;
+        }
+        if (value instanceof Number number) {
+            return BigDecimal.valueOf(number.doubleValue());
+        }
+        throw new IllegalArgumentException("Unsupported numeric value: " + value);
+    }
+
+    private LocalDateTime toLocalDateTime(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime;
+        }
+        if (value instanceof LocalDate localDate) {
+            return localDate.atStartOfDay();
+        }
+        if (value instanceof Timestamp timestamp) {
+            return timestamp.toLocalDateTime();
+        }
+        if (value instanceof Date sqlDate) {
+            return sqlDate.toLocalDate().atStartOfDay();
+        }
+        throw new IllegalArgumentException("Unsupported datetime value: " + value);
     }
 }

@@ -7,6 +7,12 @@ export function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("role");
+    localStorage.removeItem("user");
+    localStorage.removeItem("refreshToken");
+    
+    // Dispatch event để các component khác biết user đã thay đổi
+    window.dispatchEvent(new Event("userUpdated"));
+    
     navigate("/login");
   };
 

@@ -13,10 +13,13 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
     List<Order> findByUserId(Long userId);
+    
+    Optional<Order> findByTransactionId(String transactionId);
 
     Page<Order> findAll(Specification<Order> spec, Pageable pageable);
 
@@ -224,4 +227,23 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("select max(o.createdAt) from Order o")
     LocalDateTime findLastOrderTimestamp();
+
+    @Query("""
+        select o.user.id,
+               o.user.username,
+               o.user.fullName,
+               o.user.email,
+               count(distinct o.id) as ordersCount,
+               coalesce(sum(oi.quantity), 0) as totalUnits,
+               coalesce(sum(oi.price * oi.quantity), 0) as totalAmount,
+               max(o.createdAt) as latestOrderAt
+        from Order o
+        join o.orderItems oi
+        where (:startDate is null or o.createdAt >= :startDate)
+          and (:endDate is null or o.createdAt <= :endDate)
+        group by o.user.id, o.user.username, o.user.fullName, o.user.email
+        order by ordersCount desc, totalAmount desc
+        """)
+    List<Object[]> summarizeOrdersByUser(@Param("startDate") LocalDateTime startDate,
+                                         @Param("endDate") LocalDateTime endDate);
 }

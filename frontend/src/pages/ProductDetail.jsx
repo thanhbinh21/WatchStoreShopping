@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/api/productAPI";
-import { addToCart } from "@/api/cartAPI";
+import { addToCart, getCart } from "@/api/cartAPI";
 import {
   getReviewsByProduct,
   getReviewByUserAndProduct,
@@ -20,6 +20,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { parseStoredUser } from "@/utils/storage";
 import Header from "@/components/Header";
+import { addToGuestCart } from "@/api/guestCart.js";
+
 
 import Footer from "@/components/Footer";
 import {
@@ -62,6 +64,9 @@ export default function ProductDetail() {
   const user = parseStoredUser();
 
   useEffect(() => {
+    // Scroll to top when page opens
+    window.scrollTo(0, 0);
+    
     fetchProductDetail();
     fetchReviews();
     checkIfCanReview();
@@ -113,18 +118,15 @@ export default function ProductDetail() {
 
       // Kiểm tra xem user đã đánh giá chưa
       if (user?.id) {
-        try {
-          const userReview = await getReviewByUserAndProduct(user.id, id);
-          if (userReview) {
-            setExistingReview(userReview);
-            // Kiểm tra xem có thể chỉnh sửa không (trong vòng 30 ngày)
-            const reviewDate = new Date(userReview.createdAt);
-            const daysSinceReview =
-              (new Date() - reviewDate) / (1000 * 60 * 60 * 24);
-            setIsEditingReview(daysSinceReview <= 30);
-          }
-        } catch (err) {
-          // User chưa có review
+        const userReview = await getReviewByUserAndProduct(user.id, id);
+        if (userReview) {
+          setExistingReview(userReview);
+          // Kiểm tra xem có thể chỉnh sửa không (trong vòng 30 ngày)
+          const reviewDate = new Date(userReview.createdAt);
+          const daysSinceReview =
+            (new Date() - reviewDate) / (1000 * 60 * 60 * 24);
+          setIsEditingReview(daysSinceReview <= 30);
+        } else {
           setExistingReview(null);
         }
       }
@@ -260,22 +262,49 @@ export default function ProductDetail() {
     }
   };
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+  
     const token = localStorage.getItem("accessToken");
     const user = parseStoredUser();
-
+  
+    // 🚨 FIX: Nếu chưa login → lưu vào guest cart
     if (!token || !user?.id) {
-      toast.error("Vui lòng đăng nhập để thêm vào giỏ hàng");
-      setTimeout(() => {
-        navigate("/login");
-      }, 1000);
+      // guest cart flow
+      addToGuestCart(product, quantity);
+      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng (khách) 🛒`);
+      window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
-
+  
+    // Nếu đăng nhập → xử lý như cũ
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
+  
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+  
     setAddingToCart(true);
     try {
+      const cart = await getCart(user.id);
+      const existingItem = (cart.items || []).find(
+        (i) => i.productId === product.id || i.id === product.id
+      );
+      const currentQty = existingItem ? existingItem.quantity : 0;
+  
+      if (currentQty + quantity > maxStock) {
+        toast.error(`Không thể thêm vượt quá tồn kho. Còn lại ${maxStock - currentQty} sản phẩm`);
+        return;
+      }
+  
       await addToCart(user.id, product.id, quantity);
-      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng ✅`);
+      toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`);
+      window.dispatchEvent(new Event("cartUpdated"));
     } catch (err) {
       console.error(err);
       toast.error("Thêm vào giỏ hàng thất bại 😢");
@@ -332,7 +361,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <Breadcrumb selectedCategory={null} />
+        <Breadcrumb items={[]} />
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-brand-primary mx-auto"></div>
@@ -348,8 +377,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-
-        <Breadcrumb selectedCategory={null} />
+        <Breadcrumb items={[]} />
         <Footer />
       </div>
     );
@@ -362,17 +390,29 @@ export default function ProductDetail() {
     : null;
 
   // Category cho breadcrumb (nếu có)
-  const categoryForNav = product.categoryName
-    ? {
-        id: product.categoryId,
-        name: product.categoryName,
-      }
-    : null;
+  const breadcrumbItems = (() => {
+    if (!product) return [];
+    const items = [{ label: "Sản phẩm", href: "/products" }];
+    if (product.categoryName) {
+      items.push({
+        label: product.categoryName,
+        href: `/products?category=${product.categoryId}`,
+      });
+    }
+    if (product.brand) {
+      items.push({
+        label: product.brand,
+        href: `/products?brand=${product.brand}`,
+      });
+    }
+    items.push({ label: product.name, isCurrent: true });
+    return items;
+  })();
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
-      <Breadcrumb selectedCategory={categoryForNav} />
+      <Breadcrumb items={breadcrumbItems} />
 
       <div className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-4">
@@ -409,41 +449,55 @@ export default function ProductDetail() {
               </div>
 
               {/* Thumbnail Images */}
-              {product.productImages && product.productImages.length > 1 && (
-                <div className="grid grid-cols-4 gap-4">
-                  {product.productImages.map((img) => {
-                    const thumbUrl = getImageUrl(img.imageUrl);
-                    return (
-                      <div
-                        key={img.id}
-                        onClick={() => setSelectedImage(img)}
-                        className={`relative bg-white rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${
-                          selectedImage?.id === img.id
-                            ? "ring-2 ring-brand-primary/50 shadow-md"
-                            : "ring-1 ring-gray-200"
-                        }`}
-                      >
-                        {thumbUrl ? (
-                          <img
-                            src={thumbUrl}
-                            alt={product.name}
-                            className="w-full h-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-300">
-                            <Package className="size-8" />
-                          </div>
-                        )}
-                        {img.isPrimary && (
-                          <Badge className="absolute -top-2 -right-2 text-xs bg-brand-primary">
-                            Chính
-                          </Badge>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {(() => {
+                // If only 1 image, duplicate it to show 3 times
+                let imagesToDisplay = product.productImages || [];
+                
+                if (imagesToDisplay.length === 1) {
+                  const singleImage = imagesToDisplay[0];
+                  imagesToDisplay = [
+                    { ...singleImage, id: `${singleImage.id}-1`, displayId: singleImage.id },
+                    { ...singleImage, id: `${singleImage.id}-2`, displayId: singleImage.id, isPrimary: false },
+                    { ...singleImage, id: `${singleImage.id}-3`, displayId: singleImage.id, isPrimary: false }
+                  ];
+                }
+                
+                return imagesToDisplay.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-4">
+                    {imagesToDisplay.map((img, index) => {
+                      const thumbUrl = getImageUrl(img.imageUrl);
+                      return (
+                        <div
+                          key={`${img.id}-${index}`}
+                          onClick={() => setSelectedImage(img)}
+                          className={`relative bg-white rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${
+                            selectedImage?.id === img.id || selectedImage?.displayId === img.displayId
+                              ? "ring-2 ring-brand-primary/50 shadow-md"
+                              : "ring-1 ring-gray-200"
+                          }`}
+                        >
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt={product.name}
+                              className="w-full h-full object-cover rounded-lg"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-300">
+                              <Package className="size-8" />
+                            </div>
+                          )}
+                          {img.isPrimary && (
+                            <Badge className="absolute -top-2 -right-2 text-xs bg-brand-primary">
+                              Chính
+                            </Badge>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null;
+              })()}
 
               {/* Product Description */}
               {product.description && (
@@ -799,7 +853,9 @@ export default function ProductDetail() {
                   <div className="space-y-3 pt-4">
                     <Button
                       onClick={handleAddToCart}
-                      disabled={addingToCart || product.status !== "ACTIVE"}
+                      disabled={
+                        addingToCart || product.status !== "ACTIVE" || (Number.isFinite(product?.stockQuantity) ? product.stockQuantity <= 0 : product.stock <= 0)
+                      }
                       className="cursor-pointer w-full bg-brand-primary hover:bg-brand-primary-soft text-white py-6 text-base font-semibold"
                     >
                       {addingToCart ? (

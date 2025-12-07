@@ -43,9 +43,14 @@ public class OrderItem {
     @JsonBackReference(value = "product-orderItems")
     private Product product;
 
-    // Getter để serialize productId mà không serialize toàn bộ product object
+    // Getter để serialize productId và productName mà không serialize toàn bộ product object
     public Long getProductId() {
         return product != null ? product.getId() : null;
+    }
+    
+    public String getProductName() {
+        if (productName != null) return productName;
+        return product != null ? product.getName() : null;
     }
 
     @PrePersist

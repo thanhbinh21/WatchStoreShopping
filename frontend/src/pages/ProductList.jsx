@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
-import Navbar from "@/components/Breadcrumb";
+import { parseStoredUser } from "@/utils/storage";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { getProducts } from "@/api/productAPI";
 import { getCategories } from "@/api/categoryAPI";
 import { getBrands } from "@/api/brandAPI";
-import { addToCart } from "@/api/cartAPI";
+import { addToCart, getCart } from "@/api/cartAPI";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -169,12 +169,30 @@ export default function ProductList() {
       navigate("/login");
       return;
     }
+    const user = parseStoredUser();
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+    try {
+      const cart = await getCart(user.id);
+      const existing = (cart.items || []).find((i) => i.productId === product.id || i.id === product.id);
+      const currentQty = existing ? existing.quantity : 0;
+      if (currentQty + 1 > maxStock) {
+        toast.error("Không thể thêm vượt quá tồn kho");
+        return;
+      }
+    } catch (e) {
+      // ignore
+    }
 
     try {
-      await addToCart({
-        productId: product.id,
-        quantity: 1,
-      });
+      await addToCart(user.id, product.id, 1);
       toast.success("Đã thêm sản phẩm vào giỏ hàng");
     } catch (error) {
       console.error("Error adding to cart:", error);
@@ -250,15 +268,25 @@ export default function ProductList() {
     <div className="min-h-screen bg-gray-50">
       <Header />
       <Breadcrumb
-        selectedCategory={selectedCategory}
-        currentPage={
-          brandName
-            ? "Sản phẩm"
-            : searchQuery
-            ? `Tìm kiếm: ${searchQuery}`
-            : "Sản phẩm"
-        }
-        selectedBrand={brandName ? { name: brandName } : null}
+        items={(() => {
+          const items = [{ label: "Sản phẩm", href: "/products" }];
+          if (selectedCategory) {
+            items.push({
+              label: selectedCategory.name,
+              href: `/products?category=${selectedCategory.id}`,
+            });
+          }
+          if (brandName) {
+            items.push({ label: brandName, isCurrent: true });
+          } else if (searchQuery) {
+            items.push({ label: `Tìm kiếm: ${searchQuery}`, isCurrent: true });
+          } else if (!selectedCategory) {
+            items[0].isCurrent = true;
+          } else if (!brandName && selectedCategory) {
+            items[items.length - 1].isCurrent = true;
+          }
+          return items;
+        })()}
       />
 
       <main className="max-w-7xl mx-auto px-4 py-8">

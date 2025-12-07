@@ -1,6 +1,5 @@
 package iuh.fit.se.backend.service;
 
-import iuh.fit.se.backend.dto.PaymentRequest;
 import iuh.fit.se.backend.dto.PaymentSummary;
 import iuh.fit.se.backend.entity.Order;
 import iuh.fit.se.backend.entity.Payment;
@@ -27,127 +26,65 @@ public class PaymentService {
 
     @Transactional(readOnly = true)
     public List<PaymentSummary> getSummaries(String keyword) {
-        List<Payment> payments = paymentRepository.findAll();
+        // Get payment transactions from orders instead of payments table
+        List<Order> orders = orderRepository.findAll();
 
-        return payments.stream()
-                .filter(payment -> matchesKeyword(payment, keyword))
+        return orders.stream()
+                .filter(order -> matchesOrderKeyword(order, keyword))
                 .sorted(Comparator.comparing(
-                        Payment::getCreatedAt,
+                        Order::getCreatedAt,
                         Comparator.nullsLast(Comparator.naturalOrder())
                 ).reversed())
-                .map(this::toSummary)
+                .map(this::orderToSummary)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
     public PaymentSummary getSummary(Long id) {
-        Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
-        return toSummary(payment);
-    }
-
-    public PaymentSummary create(PaymentRequest request) {
-        validateRequest(request);
-
-        Order order = resolveOrder(request.resolveOrderId());
-        Payment payment = Payment.builder()
-                .method(request.getMethod())
-                .amount(request.getAmount())
-                .order(order)
-                .build();
-
-        Payment saved = paymentRepository.save(payment);
-        return toSummary(saved);
-    }
-
-    public PaymentSummary update(Long id, PaymentRequest request) {
-        Payment existing = paymentRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found"));
-
-        if (request.getMethod() != null) {
-            existing.setMethod(request.getMethod());
-        }
-        if (request.getAmount() != null) {
-            if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than 0");
-            }
-            existing.setAmount(request.getAmount());
-        }
-        Long orderId = request.resolveOrderId();
-        if (orderId != null) {
-            existing.setOrder(resolveOrder(orderId));
-        }
-
-        Payment saved = paymentRepository.save(existing);
-        return toSummary(saved);
-    }
-
-    public void delete(Long id) {
-        if (!paymentRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Payment not found");
-        }
-        paymentRepository.deleteById(id);
-    }
-
-    private Order resolveOrder(Long orderId) {
-        if (orderId == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "order.id is required");
-        }
-        return orderRepository.findById(orderId)
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+        return orderToSummary(order);
     }
 
-    private void validateRequest(PaymentRequest request) {
-        if (request.getMethod() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payment method is required");
-        }
-        if (request.getAmount() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount is required");
-        }
-        if (request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be greater than 0");
-        }
-        if (request.resolveOrderId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order is required");
-        }
-    }
+    private PaymentSummary orderToSummary(Order order) {
+        // Calculate total amount from order items
+        BigDecimal totalAmount = order.getOrderItems().stream()
+                .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-    private PaymentSummary toSummary(Payment payment) {
-        Order order = payment.getOrder();
         return new PaymentSummary(
-                payment.getId(),
-                payment.getMethod(),
-                payment.getAmount(),
-                order != null ? order.getId() : null,
-                order != null ? Optional.ofNullable(order.getFullName()).orElse(null) : null,
-                order != null ? order.getCreatedAt() : null,
-                payment.getCreatedAt()
+                order.getId(), // Use order ID as payment ID
+                order.getPaymentMethod(),
+                totalAmount,
+                order.getId(),
+                Optional.ofNullable(order.getFullName()).orElse(order.getUser() != null ? order.getUser().getFullName() : null),
+                order.getCreatedAt(),
+                order.getUpdatedAt() // Use updated_at for payment timestamp
         );
     }
 
-    private boolean matchesKeyword(Payment payment, String keyword) {
+    private boolean matchesOrderKeyword(Order order, String keyword) {
         if (keyword == null || keyword.isBlank()) {
             return true;
         }
 
         String normalized = keyword.trim().toLowerCase(Locale.ROOT);
 
-        if (payment.getMethod() != null && payment.getMethod().name().toLowerCase(Locale.ROOT).contains(normalized)) {
+        if (order.getPaymentMethod() != null && order.getPaymentMethod().name().toLowerCase(Locale.ROOT).contains(normalized)) {
             return true;
         }
 
-        if (payment.getId() != null && String.valueOf(payment.getId()).contains(normalized)) {
+        if (order.getId() != null && String.valueOf(order.getId()).contains(normalized)) {
             return true;
         }
 
-        Order order = payment.getOrder();
-        if (order != null) {
-            if (order.getId() != null && String.valueOf(order.getId()).contains(normalized)) {
-                return true;
-            }
-            if (order.getFullName() != null && order.getFullName().toLowerCase(Locale.ROOT).contains(normalized)) {
-                return true;
-            }
+        if (order.getFullName() != null && order.getFullName().toLowerCase(Locale.ROOT).contains(normalized)) {
+            return true;
+        }
+
+        if (order.getUser() != null && order.getUser().getFullName() != null 
+            && order.getUser().getFullName().toLowerCase(Locale.ROOT).contains(normalized)) {
+            return true;
         }
 
         return false;

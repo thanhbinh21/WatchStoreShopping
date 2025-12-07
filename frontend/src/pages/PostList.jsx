@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { useParams, useNavigate } from "react-router-dom";
 import { postAPI, postCategoryAPI } from "@/api/cmsAPI";
 import Header from "@/components/Header";
-import Navbar from "@/components/Breadcrumb";
+import Breadcrumb from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import PostDetailContent from "@/components/PostDetailContent";
 import { Calendar, Eye, Tag, ChevronLeft, ChevronRight } from "lucide-react";
@@ -226,6 +226,22 @@ export default function PostList() {
     navigate("/posts");
   };
 
+  const breadcrumbItems = (() => {
+    const items = [{ label: "Tin tức & Bài viết", href: "/posts" }];
+    if (selectedCategory) {
+      items.push({
+        label: selectedCategory.name,
+        href: `/posts/${selectedCategory.slug}`,
+      });
+    }
+    if (selectedPost) {
+      items.push({ label: selectedPost.title, isCurrent: true });
+    } else if (!selectedCategory) {
+      items[0].isCurrent = true;
+    }
+    return items;
+  })();
+
   // Component wrapper for clickable post items
   const PostLink = ({ post, children, className }) => (
     <div
@@ -254,12 +270,7 @@ export default function PostList() {
       </Helmet>
 
       <Header />
-      <Navbar
-        selectedCategory={selectedCategory}
-        currentPage="Tin tức & Bài viết"
-        postTitle={selectedPost?.title}
-        onBackToList={handleBackToList}
-      />
+      <Breadcrumb items={breadcrumbItems} />
 
       <main className="flex-1 py-8 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4">

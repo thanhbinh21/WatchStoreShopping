@@ -104,7 +104,7 @@ public class Product {
     // Helper method to get current price
     public BigDecimal getCurrentPrice() {
         return productPrices.stream()
-                .filter(p -> p.getIsCurrent() != null && p.getIsCurrent())
+                .filter(p -> Boolean.TRUE.equals(p.getIsCurrent()))
                 .findFirst()
                 .map(ProductPrice::getPrice)
                 .orElse(BigDecimal.ZERO);
@@ -113,7 +113,7 @@ public class Product {
     // Helper method to get primary image
     public String getPrimaryImageUrl() {
         return productImages.stream()
-                .filter(img -> img.getIsPrimary() != null && img.getIsPrimary())
+                .filter(img -> Boolean.TRUE.equals(img.getIsPrimary()))
                 .findFirst()
                 .map(ProductImage::getImageUrl)
                 .orElse(null);
