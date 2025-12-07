@@ -1,9 +1,9 @@
 package iuh.fit.se.backend.controller;
 
 import iuh.fit.se.backend.dto.ApiResponse;
-import iuh.fit.se.backend.dto.request.PaymentRequest;
+import iuh.fit.se.backend.dto.request.VNPayPaymentRequest;
+import iuh.fit.se.backend.dto.response.VNPayPaymentResponse;
 import iuh.fit.se.backend.dto.PaymentSummary;
-import iuh.fit.se.backend.dto.response.PaymentResponse;
 import iuh.fit.se.backend.entity.enums.PaymentMethod;
 import iuh.fit.se.backend.entity.enums.PaymentStatus;
 import iuh.fit.se.backend.service.OrderService;
@@ -29,81 +29,50 @@ public class PaymentController {
     private final OrderService orderService;
 
     @PostMapping("/create-payment")
-    public ResponseEntity<?> createPayment(@RequestBody PaymentRequest paymentRequest,
-                                           HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<VNPayPaymentResponse>> createPayment(
+            @RequestBody VNPayPaymentRequest paymentRequest,
+            HttpServletRequest request) {
         try {
-            String paymentUrl = vnPayService.createPayment(request, paymentRequest);
-
-            if (paymentUrl != null) {
-                PaymentResponse response = new PaymentResponse();
-                response.setStatus("OK");
-                response.setMessage("Success");
-                response.setPaymentUrl(paymentUrl);
-                return ResponseEntity.ok(response);
-            }
-
-            return ResponseEntity.badRequest().body("Failed to create payment");
+            VNPayPaymentResponse response = vnPayService.createPayment(paymentRequest, request);
+            return ResponseEntity.ok(ApiResponse.success(response));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error: " + e.getMessage());
+            return ResponseEntity.ok(ApiResponse.failure("Error: " + e.getMessage()));
         }
     }
 
 
     @GetMapping("/vnpay-return")
-    public ResponseEntity<?> paymentReturn(@RequestParam Map<String, String> params) {
-        String vnp_ResponseCode = params.get("vnp_ResponseCode");
-        String vnp_TxnRef = params.get("vnp_TxnRef");
-        String vnp_TransactionNo = params.get("vnp_TransactionNo");
-
-        if (!vnPayService.verifyPayment(params)) {
-            return ResponseEntity.badRequest().body("Invalid signature");
-        }
-
+    public ResponseEntity<ApiResponse<Map<String, String>>> paymentReturn(@RequestParam Map<String, String> params) {
         try {
-            Long orderId = Long.parseLong(vnp_TxnRef);
-            PaymentStatus status = "00".equals(vnp_ResponseCode) ? PaymentStatus.PAID : PaymentStatus.FAILED;
-            orderService.updatePaymentStatus(orderId, status, vnp_TransactionNo);
-            
-            String message = status == PaymentStatus.PAID ? "Payment successful" : "Payment failed";
-            return ResponseEntity.ok(message);
-        } catch (NumberFormatException e) {
-            return ResponseEntity.badRequest().body("Invalid order ID");
+            Map<String, String> result = vnPayService.handlePaymentReturn(params);
+            return ResponseEntity.ok(ApiResponse.success(result));
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Error processing payment: " + e.getMessage());
+            return ResponseEntity.ok(ApiResponse.failure("Error processing payment: " + e.getMessage()));
         }
     }
 
     @GetMapping("/vnpay-ipn")
-    public ResponseEntity<?> paymentIPN(@RequestParam Map<String, String> params) {
-        String vnp_ResponseCode = params.get("vnp_ResponseCode");
-        String vnp_TxnRef = params.get("vnp_TxnRef");
-        String vnp_TransactionNo = params.get("vnp_TransactionNo");
-
-        boolean isValid = vnPayService.verifyPayment(params);
-
-        Map<String, Object> result = new HashMap<>();
-
-        if (isValid) {
-            if ("00".equals(vnp_ResponseCode)) {
-                // Cập nhật trạng thái đơn hàng trong database
-                try {
-                    Long orderId = Long.parseLong(vnp_TxnRef);
-                    orderService.updatePaymentStatus(orderId, PaymentStatus.PAID, vnp_TransactionNo);
-                } catch (Exception e) {
-                    System.err.println("Error updating payment status in IPN: " + e.getMessage());
-                }
-                result.put("RspCode", "00");
-                result.put("Message", "Confirm Success");
+    public ResponseEntity<Map<String, String>> paymentIPN(@RequestParam Map<String, String> params) {
+        try {
+            Map<String, String> result = vnPayService.handlePaymentReturn(params);
+            
+            // IPN response format for VNPay
+            Map<String, String> ipnResponse = new HashMap<>();
+            if ("success".equals(result.get("status"))) {
+                ipnResponse.put("RspCode", "00");
+                ipnResponse.put("Message", "Confirm Success");
             } else {
-                result.put("RspCode", "00");
-                result.put("Message", "Confirm Success");
+                ipnResponse.put("RspCode", "97");
+                ipnResponse.put("Message", result.getOrDefault("message", "Invalid Signature"));
             }
-        } else {
-            result.put("RspCode", "97");
-            result.put("Message", "Invalid Signature");
+            
+            return ResponseEntity.ok(ipnResponse);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("RspCode", "99");
+            errorResponse.put("Message", "System Error");
+            return ResponseEntity.ok(errorResponse);
         }
-
-        return ResponseEntity.ok(result);
     }
 
 

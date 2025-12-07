@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 public class OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final CartService cartService;
     private final ProductRepository productRepository;
     private final EmailService emailService;
 
@@ -285,6 +286,19 @@ public class OrderService {
                 // Force load relationships
                 orderWithRelations.getOrderItems().size();
                 orderWithRelations.getUser().getEmail();
+                
+                // Remove purchased products from user's cart
+                Long userId = orderWithRelations.getUser().getId();
+                log.info("🔄 Removing purchased products from cart for user #{}...", userId);
+                try {
+                    List<Long> productIds = orderWithRelations.getOrderItems().stream()
+                            .map(item -> item.getProduct().getId())
+                            .collect(Collectors.toList());
+                    cartService.removeProductsFromCart(userId, productIds);
+                    log.info("✅ Removed {} products from cart for user #{} after successful payment", productIds.size(), userId);
+                } catch (Exception e) {
+                    log.error("❌ Failed to remove products from cart for user #{}: {}", userId, e.getMessage(), e);
+                }
                 
                 final Order orderForEmail = orderWithRelations;
                 new Thread(() -> {

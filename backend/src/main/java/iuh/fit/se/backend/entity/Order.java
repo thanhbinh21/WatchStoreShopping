@@ -65,6 +65,7 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private PaymentStatus paymentStatus;
 
+    @Column(name = "transaction_id")
     private String transactionId;
 
     private LocalDateTime paidAt;
@@ -73,9 +74,6 @@ public class Order {
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")
     private PaymentMethod paymentMethod;
-
-    @Column(name = "transaction_id")
-    private String transactionId;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)

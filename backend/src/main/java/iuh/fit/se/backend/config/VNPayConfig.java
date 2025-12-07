@@ -28,7 +28,4 @@ public class VNPayConfig {
     
     @Value("${vnpay.order-type:other}")
     private String orderType;
-    
-    @Value("${vnpay.skip-signature-check:false}")
-    private boolean skipSignatureCheck;
 }

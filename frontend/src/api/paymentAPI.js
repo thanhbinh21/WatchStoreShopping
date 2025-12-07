@@ -35,32 +35,6 @@ export const getPaymentMethods = async () => {
   }
 };
 
-// VNPay payment
-export const createVNPayPayment = async (payload) => {
-  try {
-    const response = await axiosInstance.post(
-      `${PAYMENT_URL}/create-payment`,
-      payload
-    );
-    return response?.data;
-  } catch (error) {
-    console.error("Failed to create VNPay payment:", error);
-    throw error;
-  }
-};
-
-export const handleVNPayReturn = async (params) => {
-  try {
-    const response = await axiosInstance.get(`${PAYMENT_URL}/vnpay-return`, {
-      params,
-    });
-    return response?.data;
-  } catch (error) {
-    console.error("Failed to handle VNPay return:", error);
-    throw error;
-  }
-};
-
 // VNPay Integration
 export const createVNPayPayment = async (payload) => {
     try {

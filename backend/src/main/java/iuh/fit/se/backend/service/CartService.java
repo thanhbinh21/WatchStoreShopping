@@ -11,4 +11,6 @@ public interface CartService {
     CartResponse removeItem(Long cartItemId);
 
     void clearCart(Long userId);
+    
+    void removeProductsFromCart(Long userId, java.util.List<Long> productIds);
 }

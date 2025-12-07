@@ -5,20 +5,25 @@ import iuh.fit.se.backend.dto.response.CartResponse;
 import iuh.fit.se.backend.entity.Cart;
 import iuh.fit.se.backend.entity.CartItem;
 import iuh.fit.se.backend.entity.Product;
+import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.repository.CartItemRepository;
 import iuh.fit.se.backend.repository.CartRepository;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.CartService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartServiceImpl implements CartService {
 
     private final CartRepository cartRepository;
@@ -129,7 +134,31 @@ public class CartServiceImpl implements CartService {
     }
 
     @Override
+    @Transactional
     public void clearCart(Long userId) {
-
+        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            int itemCount = cart.getCartItems().size();
+            cart.getCartItems().clear();
+            cartRepository.save(cart);
+            log.info("🗑️ Cleared {} items from cart for user #{}", itemCount, userId);
+        }
+    }
+    
+    @Override
+    @Transactional
+    public void removeProductsFromCart(Long userId, List<Long> productIds) {
+        Optional<Cart> cartOpt = cartRepository.findByUserId(userId);
+        if (cartOpt.isPresent()) {
+            Cart cart = cartOpt.get();
+            List<CartItem> itemsToRemove = cart.getCartItems().stream()
+                    .filter(item -> productIds.contains(item.getProduct().getId()))
+                    .toList();
+            
+            cart.getCartItems().removeAll(itemsToRemove);
+            cartRepository.save(cart);
+            log.info("🗑️ Removed {} products from cart for user #{}", itemsToRemove.size(), userId);
+        }
     }
 }
