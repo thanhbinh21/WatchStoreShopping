@@ -4,6 +4,7 @@ import { createOrder } from "../api/orderAPI";
 import { removeCartItem } from "../api/cartAPI";
 import { createVNPayPayment } from "../api/paymentAPI";
 import { parseStoredUser } from "@/utils/storage";
+import { getProvinces, getDistrictsByProvince, getWardsByDistrict } from "../api/locationAPI";
 import { toast } from "sonner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -37,6 +38,15 @@ export default function Checkout() {
   });
 
   const [loading, setLoading] = useState(false);
+  
+  // Location data
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  
+  // Selected location codes for API calls
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
 
   useEffect(() => {
     if (!selectedItems || selectedItems.length === 0) {
@@ -45,12 +55,87 @@ export default function Checkout() {
     }
   }, [selectedItems, navigate]);
 
+  // Load provinces on mount
+  useEffect(() => {
+    const loadProvinces = async () => {
+      try {
+        const data = await getProvinces();
+        setProvinces(data);
+      } catch (error) {
+        console.error('Failed to load provinces:', error);
+      }
+    };
+    loadProvinces();
+  }, []);
+
+  // Load districts when province changes
+  useEffect(() => {
+    const loadDistricts = async () => {
+      if (selectedProvinceCode) {
+        try {
+          const data = await getDistrictsByProvince(selectedProvinceCode);
+          setDistricts(data);
+          setWards([]); // Reset wards
+          setFormData(prev => ({ ...prev, district: "", ward: "" }));
+          setSelectedDistrictCode("");
+        } catch (error) {
+          console.error('Failed to load districts:', error);
+        }
+      } else {
+        setDistricts([]);
+        setWards([]);
+      }
+    };
+    loadDistricts();
+  }, [selectedProvinceCode]);
+
+  // Load wards when district changes
+  useEffect(() => {
+    const loadWards = async () => {
+      if (selectedDistrictCode) {
+        try {
+          const data = await getWardsByDistrict(selectedDistrictCode);
+          setWards(data);
+          setFormData(prev => ({ ...prev, ward: "" }));
+        } catch (error) {
+          console.error('Failed to load wards:', error);
+        }
+      } else {
+        setWards([]);
+      }
+    };
+    loadWards();
+  }, [selectedDistrictCode]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleProvinceChange = (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    const provinceName = selectedOption.text;
+    const provinceCode = e.target.value;
+    
+    setSelectedProvinceCode(provinceCode);
+    setFormData(prev => ({ ...prev, city: provinceName }));
+  };
+
+  const handleDistrictChange = (e) => {
+    const selectedOption = e.target.selectedOptions[0];
+    const districtName = selectedOption.text;
+    const districtCode = e.target.value;
+    
+    setSelectedDistrictCode(districtCode);
+    setFormData(prev => ({ ...prev, district: districtName }));
+  };
+
+  const handleWardChange = (e) => {
+    const wardName = e.target.selectedOptions[0].text;
+    setFormData(prev => ({ ...prev, ward: wardName }));
   };
 
   const handleSubmitOrder = async (e) => {
@@ -242,43 +327,60 @@ export default function Checkout() {
                   <label className="block text-sm font-medium mb-1">
                     Tỉnh/Thành phố <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
+                  <select
+                    value={selectedProvinceCode}
+                    onChange={handleProvinceChange}
                     className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Tỉnh/Thành phố"
+                    size="1"
                     required
-                  />
+                  >
+                    <option value="">Chọn Tỉnh/Thành phố</option>
+                    {provinces.map((province) => (
+                      <option key={province.code} value={province.code}>
+                        {province.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Quận/Huyện
                   </label>
-                  <input
-                    type="text"
-                    name="district"
-                    value={formData.district}
-                    onChange={handleInputChange}
+                  <select
+                    value={selectedDistrictCode}
+                    onChange={handleDistrictChange}
                     className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Quận/Huyện"
-                  />
+                    size="1"
+                    disabled={!selectedProvinceCode}
+                  >
+                    <option value="">Chọn Quận/Huyện</option>
+                    {districts.map((district) => (
+                      <option key={district.code} value={district.code}>
+                        {district.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium mb-1">
                     Phường/Xã
                   </label>
-                  <input
-                    type="text"
-                    name="ward"
+                  <select
                     value={formData.ward}
-                    onChange={handleInputChange}
+                    onChange={handleWardChange}
                     className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Phường/Xã"
-                  />
+                    size="1"
+                    disabled={!selectedDistrictCode}
+                  >
+                    <option value="">Chọn Phường/Xã</option>
+                    {wards.map((ward) => (
+                      <option key={ward.code} value={ward.name}>
+                        {ward.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -351,7 +453,7 @@ export default function Checkout() {
 
           {/* Right: Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow sticky top-4">
+            <div className="bg-white p-6 rounded-lg shadow lg:sticky lg:top-24 lg:self-start top-10">
               <h2 className="text-xl font-semibold mb-4">Đơn hàng</h2>
 
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
