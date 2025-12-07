@@ -1,6 +1,7 @@
 package iuh.fit.se.backend.dto.response;
 
 import iuh.fit.se.backend.entity.enums.OrderStatus;
+import iuh.fit.se.backend.entity.enums.PaymentStatus;
 import lombok.Builder;
 import lombok.Value;
 
@@ -15,6 +16,7 @@ public class OrderResponse {
     LocalDateTime createdAt;
     LocalDateTime updatedAt;
     OrderStatus status;
+    PaymentStatus paymentStatus;
 
     Long userId;
     String customerName;

@@ -10,6 +10,8 @@ import iuh.fit.se.backend.entity.OrderItem;
 import iuh.fit.se.backend.entity.Product;
 import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.entity.enums.OrderStatus;
+import iuh.fit.se.backend.entity.enums.PaymentMethod;
+import iuh.fit.se.backend.entity.enums.PaymentStatus;
 import iuh.fit.se.backend.repository.OrderRepository;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.UserRepository;
@@ -66,8 +68,9 @@ public class OrderService {
         order.setCity(request.getCity());
         order.setNote(request.getNote());
         
-        // Set payment method
+        // Set payment method and status
         order.setPaymentMethod(request.getPaymentMethod());
+        order.setPaymentStatus(PaymentStatus.PENDING);
 
         if (request.getOrderItems() != null) {
             for (OrderItemRequest itemReq : request.getOrderItems()) {
@@ -110,7 +113,12 @@ public class OrderService {
         }
 
         Order savedOrder = orderRepository.save(order);
-        emailService.sendOrderConfirmationEmail(savedOrder);
+        
+        // Chỉ gửi email xác nhận cho COD, VNPay sẽ gửi khi thanh toán thành công
+        if (savedOrder.getPaymentMethod() == PaymentMethod.CASH) {
+            emailService.sendOrderConfirmationEmail(savedOrder);
+        }
+        
         log.info("✅ Đơn hàng #{} đã được tạo và số lượng đã được trừ khỏi kho", savedOrder.getId());
         return savedOrder;
     }
@@ -247,6 +255,60 @@ public class OrderService {
         return toOrderResponse(saved);
     }
 
+    /**
+     * Update payment status for an order (used by VNPay callback)
+     * @param orderId Order ID
+     * @param paymentStatus New payment status
+     * @param transactionNo VNPay transaction number
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public void updatePaymentStatus(Long orderId, PaymentStatus paymentStatus, String transactionNo) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        // Check if payment status is already set (idempotency check)
+        if (order.getPaymentStatus() == paymentStatus) {
+            log.info("⏭️ Order #{} payment status already set to {}, skipping update", orderId, paymentStatus);
+            return;
+        }
+
+        order.setPaymentStatus(paymentStatus);
+        
+        try {
+            orderRepository.save(order);
+            
+            // Send confirmation email asynchronously to avoid blocking
+            if (paymentStatus == PaymentStatus.PAID) {
+                // Fetch fresh order with all relationships loaded before async call
+                Order orderWithRelations = orderRepository.findById(orderId)
+                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+                // Force load relationships
+                orderWithRelations.getOrderItems().size();
+                orderWithRelations.getUser().getEmail();
+                
+                final Order orderForEmail = orderWithRelations;
+                new Thread(() -> {
+                    try {
+                        emailService.sendOrderConfirmationEmail(orderForEmail);
+                    } catch (Exception e) {
+                        log.error("Failed to send order confirmation email for order #{}", orderId, e);
+                    }
+                }).start();
+            }
+        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+            log.warn("⚠️ Order #{} was updated by another transaction, retrying...", orderId);
+            // Retry once with fresh data
+            Order freshOrder = orderRepository.findById(orderId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+            
+            if (freshOrder.getPaymentStatus() != paymentStatus) {
+                freshOrder.setPaymentStatus(paymentStatus);
+                orderRepository.save(freshOrder);
+                log.info("✅ Order #{} payment status updated on retry", orderId);
+            }
+        }
+    }
+
     private OrderResponse toOrderResponse(Order order) {
         BigDecimal total = order.getOrderItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
@@ -277,6 +339,7 @@ public class OrderService {
                 .createdAt(order.getCreatedAt())
                 .updatedAt(order.getUpdatedAt())
                 .status(order.getStatus())
+                .paymentStatus(order.getPaymentStatus())
                 .userId(user != null ? user.getId() : null)
                 .customerName(user != null ? user.getFullName() : null)
                 .customerEmail(user != null ? user.getEmail() : null)
