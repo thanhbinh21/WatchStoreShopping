@@ -8,6 +8,13 @@ import { toast } from "sonner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import Breadcrumb from "../components/Breadcrumb";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const paymentMethods = [
   { value: "CASH", label: "Tiền mặt khi nhận hàng (COD)" },
@@ -37,6 +44,63 @@ export default function Checkout() {
   });
 
   const [loading, setLoading] = useState(false);
+  // state for address
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [selectedProvinceCode, setSelectedProvinceCode] = useState("");
+  const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
+  const [selectedWardCode, setSelectedWardCode] = useState("");
+
+  const fetchProvinces = async () => {
+    try {
+      const res = await fetch("https://provinces.open-api.vn/api/p/");
+      const json = await res.json();
+      setProvinces(json || []);
+    } catch (err) {
+      console.error("Failed to load provinces", err);
+    }
+  };
+
+  const fetchDistricts = async (provinceCode) => {
+    if (!provinceCode) return setDistricts([]);
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/p/${provinceCode}?depth=2`
+      );
+      const json = await res.json();
+      setDistricts(json?.districts || []);
+    } catch (err) {
+      console.error("Failed to load districts", err);
+    }
+  };
+
+  const fetchWards = async (districtCode) => {
+    if (!districtCode) return setWards([]);
+    try {
+      const res = await fetch(
+        `https://provinces.open-api.vn/api/d/${districtCode}?depth=2`
+      );
+      const json = await res.json();
+      setWards(json?.wards || []);
+    } catch (err) {
+      console.error("Failed to load wards", err);
+    }
+  };
+
+  // Load tỉnh thành khi component mount
+  useEffect(() => {
+    fetchProvinces();
+
+    const user = parseStoredUser();
+    if (user) {
+      setFormData((prev) => ({
+        ...prev,
+        fullName: user.fullName || "",
+        phone: user.phone || "",
+      }));
+    }
+  }, []);
 
   useEffect(() => {
     if (!selectedItems || selectedItems.length === 0) {
@@ -60,8 +124,10 @@ export default function Checkout() {
     if (
       !formData.fullName ||
       !formData.phone ||
-      !formData.address ||
-      !formData.city
+      !formData.address || // Số nhà
+      !formData.city || // Tỉnh
+      !formData.district || // Huyện
+      !formData.ward // Xã
     ) {
       toast.error("Vui lòng điền đầy đủ thông tin");
       return;
@@ -122,13 +188,16 @@ export default function Checkout() {
       if (formData.paymentMethod === "VNPAY") {
         try {
           // Store cart items in sessionStorage for later removal
-          sessionStorage.setItem('vnpay_cart_items', JSON.stringify(selectedItems));
-          
+          sessionStorage.setItem(
+            "vnpay_cart_items",
+            JSON.stringify(selectedItems)
+          );
+
           const vnpayResponse = await createVNPayPayment({
             orderId: order.id,
             amount: Math.round(totalPrice),
             orderInfo: `Thanh toan don hang ${order.id}`,
-            returnUrl: `${window.location.origin}/payment/vnpay-return`
+            returnUrl: `${window.location.origin}/payment/vnpay-return`,
           });
 
           if (vnpayResponse?.code === "00" && vnpayResponse?.paymentUrl) {
@@ -138,7 +207,9 @@ export default function Checkout() {
             window.location.href = vnpayResponse.paymentUrl;
             return;
           } else {
-            throw new Error(vnpayResponse?.message || "Không thể tạo thanh toán VNPay");
+            throw new Error(
+              vnpayResponse?.message || "Không thể tạo thanh toán VNPay"
+            );
           }
         } catch (vnpayError) {
           toast.dismiss(loadingToast);
@@ -163,7 +234,7 @@ export default function Checkout() {
       // Đóng toast loading và hiển thị toast thành công
       toast.dismiss(loadingToast);
       toast.success("Đơn hàng xử lý thành công!");
-      
+
       // Navigate không truyền message nữa để tránh toast trùng lặp
       navigate("/orders", {
         state: {
@@ -173,7 +244,7 @@ export default function Checkout() {
     } catch (error) {
       // Đóng toast loading khi có lỗi
       toast.dismiss(loadingToast);
-      
+
       const errorMsg =
         error.response?.data?.message ||
         error.message ||
@@ -238,47 +309,122 @@ export default function Checkout() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
+                {/* Tỉnh / Thành */}
+                <div className="min-w-48">
                   <label className="block text-sm font-medium mb-1">
                     Tỉnh/Thành phố <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Tỉnh/Thành phố"
-                    required
-                  />
+                  <Select
+                    value={
+                      selectedProvinceCode ? String(selectedProvinceCode) : ""
+                    }
+                    onValueChange={(value) => {
+                      const code = value;
+                      setSelectedProvinceCode(code);
+                      setSelectedDistrictCode("");
+                      setSelectedWardCode("");
+                      setDistricts([]);
+                      setWards([]);
+
+                      const prov = provinces.find(
+                        (p) => String(p.code) === String(code)
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        city: prov?.name || "",
+                        district: "",
+                        ward: "",
+                      }));
+
+                      if (code) fetchDistricts(code);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn Tỉnh/Thành" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {provinces.map((prov) => (
+                        <SelectItem key={prov.code} value={String(prov.code)}>
+                          {prov.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
+                {/* Quận / Huyện */}
+                <div className="min-w-48">
                   <label className="block text-sm font-medium mb-1">
-                    Quận/Huyện
+                    Quận/Huyện <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="district"
-                    value={formData.district}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Quận/Huyện"
-                  />
+                  <Select
+                    disabled={!selectedProvinceCode}
+                    value={
+                      selectedDistrictCode ? String(selectedDistrictCode) : ""
+                    }
+                    onValueChange={(value) => {
+                      const code = value;
+                      setSelectedDistrictCode(code);
+                      setSelectedWardCode("");
+                      setWards([]);
+
+                      const dist = districts.find(
+                        (d) => String(d.code) === String(code)
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        district: dist?.name || "",
+                        ward: "",
+                      }));
+
+                      if (code) fetchWards(code);
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn Quận/Huyện" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {districts.map((d) => (
+                        <SelectItem key={d.code} value={String(d.code)}>
+                          {d.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div>
+                {/* Phường / Xã */}
+                <div className="min-w-48">
                   <label className="block text-sm font-medium mb-1">
-                    Phường/Xã
+                    Phường/Xã <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="ward"
-                    value={formData.ward}
-                    onChange={handleInputChange}
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Phường/Xã"
-                  />
+                  <Select
+                    disabled={!selectedDistrictCode}
+                    value={selectedWardCode ? String(selectedWardCode) : ""}
+                    onValueChange={(value) => {
+                      const code = value;
+                      setSelectedWardCode(code);
+
+                      const ward = wards.find(
+                        (w) => String(w.code) === String(code)
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        ward: ward?.name || "",
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Chọn Phường/Xã" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {wards.map((w) => (
+                        <SelectItem key={w.code} value={String(w.code)}>
+                          {w.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
@@ -351,7 +497,7 @@ export default function Checkout() {
 
           {/* Right: Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow sticky top-4">
+            <div className="bg-white p-6 rounded-lg shadow sticky top-20">
               <h2 className="text-xl font-semibold mb-4">Đơn hàng</h2>
 
               <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">

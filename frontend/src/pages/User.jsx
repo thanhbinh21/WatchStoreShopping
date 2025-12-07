@@ -7,6 +7,13 @@ import { getCurrentUser, updateCurrentUser } from "@/api/userAPI";
 import { uploadAvatar } from "@/api/uploadAPI";
 import { toast } from "sonner";
 import Header from "@/components/Header.jsx";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const User = () => {
   const [loading, setLoading] = useState(true);
@@ -470,21 +477,27 @@ export const User = () => {
                   </div>
 
                   <div>
+                    {/* Bắt đầu phần Select Tỉnh/Thành - Quận/Huyện - Phường/Xã */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+                      {/* Tỉnh/Thành */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Tỉnh/Thành
                         </label>
-                        <select
-                          className="mt-1 block w-full rounded border p-2"
-                          value={selectedProvinceCode}
-                          onChange={async (e) => {
-                            const code = e.target.value;
+                        <Select
+                          value={
+                            selectedProvinceCode
+                              ? String(selectedProvinceCode)
+                              : ""
+                          }
+                          onValueChange={async (value) => {
+                            const code = value;
                             setSelectedProvinceCode(code);
                             setSelectedDistrictCode("");
                             setSelectedWardCode("");
                             setDistricts([]);
                             setWards([]);
+
                             if (code) {
                               await fetchDistricts(code);
                               const prov = provinces.find(
@@ -496,59 +509,60 @@ export const User = () => {
                                 country: "Việt Nam",
                               }));
                             }
-                            // recompute address
-                            const wardObj = wards.find(
-                              (w) => String(w.code) === String(selectedWardCode)
-                            );
-                            const districtObj = districts.find(
-                              (d) =>
-                                String(d.code) === String(selectedDistrictCode)
-                            );
+
+                            // Recompute address logic
                             const provinceObj = provinces.find(
                               (p) => String(p.code) === String(code)
                             );
-                            const composed = [
-                              street,
-                              wardObj?.name,
-                              districtObj?.name,
-                              provinceObj?.name,
-                            ]
+                            // Khi đổi tỉnh, quận và phường sẽ reset nên không cần tìm
+                            const composed = [street, provinceObj?.name]
                               .filter(Boolean)
                               .join(", ");
+
                             setProfile((p) => ({ ...p, address: composed }));
                           }}
                         >
-                          <option value="">Chọn tỉnh/thành</option>
-                          {provinces.map((prov) => (
-                            <option key={prov.code} value={prov.code}>
-                              {prov.name}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn tỉnh/thành" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {provinces.map((prov) => (
+                              <SelectItem
+                                key={prov.code}
+                                value={String(prov.code)}
+                              >
+                                {prov.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
+                      {/* Quận/Huyện */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Quận/Huyện
                         </label>
-                        <select
-                          className="mt-1 block w-full rounded border p-2"
-                          value={selectedDistrictCode}
-                          onChange={async (e) => {
-                            const code = e.target.value;
+                        <Select
+                          disabled={districts.length === 0}
+                          value={
+                            selectedDistrictCode
+                              ? String(selectedDistrictCode)
+                              : ""
+                          }
+                          onValueChange={async (value) => {
+                            const code = value;
                             setSelectedDistrictCode(code);
                             setSelectedWardCode("");
                             setWards([]);
+
                             if (code) {
                               await fetchWards(code);
                               const dist = districts.find(
                                 (d) => String(d.code) === String(code)
                               );
-                              // recompute address
-                              const wardObj = wards.find(
-                                (w) =>
-                                  String(w.code) === String(selectedWardCode)
-                              );
+
+                              // Recompute address logic
                               const provinceObj = provinces.find(
                                 (p) =>
                                   String(p.code) ===
@@ -556,36 +570,44 @@ export const User = () => {
                               );
                               const composed = [
                                 street,
-                                wardObj?.name,
                                 dist?.name,
                                 provinceObj?.name,
                               ]
                                 .filter(Boolean)
                                 .join(", ");
+
                               setProfile((p) => ({ ...p, address: composed }));
                             }
                           }}
-                          disabled={districts.length === 0}
                         >
-                          <option value="">Chọn quận/huyện</option>
-                          {districts.map((d) => (
-                            <option key={d.code} value={d.code}>
-                              {d.name}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn quận/huyện" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {districts.map((d) => (
+                              <SelectItem key={d.code} value={String(d.code)}>
+                                {d.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
+                      {/* Phường/Xã */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Phường/Xã
                         </label>
-                        <select
-                          className="mt-1 block w-full rounded border p-2"
-                          value={selectedWardCode}
-                          onChange={(e) => {
-                            const code = e.target.value;
+                        <Select
+                          disabled={wards.length === 0}
+                          value={
+                            selectedWardCode ? String(selectedWardCode) : ""
+                          }
+                          onValueChange={(value) => {
+                            const code = value;
                             setSelectedWardCode(code);
+
+                            // Recompute address logic
                             const wardObj = wards.find(
                               (w) => String(w.code) === String(code)
                             );
@@ -597,6 +619,7 @@ export const User = () => {
                               (p) =>
                                 String(p.code) === String(selectedProvinceCode)
                             );
+
                             const composed = [
                               street,
                               wardObj?.name,
@@ -605,17 +628,21 @@ export const User = () => {
                             ]
                               .filter(Boolean)
                               .join(", ");
+
                             setProfile((p) => ({ ...p, address: composed }));
                           }}
-                          disabled={wards.length === 0}
                         >
-                          <option value="">Chọn phường/xã</option>
-                          {wards.map((w) => (
-                            <option key={w.code} value={w.code}>
-                              {w.name}
-                            </option>
-                          ))}
-                        </select>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Chọn phường/xã" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {wards.map((w) => (
+                              <SelectItem key={w.code} value={String(w.code)}>
+                                {w.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
