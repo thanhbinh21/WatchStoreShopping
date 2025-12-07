@@ -201,4 +201,74 @@ public class AuthController {
             return ResponseEntity.status(500).body("Google login error: " + ex.getMessage());
         }
     }
+
+    @PostMapping("/facebook")
+    public ResponseEntity<?> facebookLogin(@RequestBody Map<String, String> body) {
+        String accessToken = body.get("accessToken");
+        if (accessToken == null || accessToken.isBlank()) {
+            return ResponseEntity.badRequest().body("accessToken is required");
+        }
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            String fbUrl = "https://graph.facebook.com/me?fields=id,name,email,picture&access_token=" + accessToken;
+            HttpRequest req = HttpRequest.newBuilder()
+                    .uri(URI.create(fbUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<String> resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+            if (resp.statusCode() != 200) {
+                return ResponseEntity.status(400).body("Invalid Facebook access token");
+            }
+
+            Map<String, Object> fbInfo = objectMapper.readValue(resp.body(), Map.class);
+            String email = (String) fbInfo.get("email");
+            String name = (String) fbInfo.get("name");
+            String fbId = (String) fbInfo.get("id");
+            String pictureUrl = null;
+            Object pictureObj = fbInfo.get("picture");
+            if (pictureObj instanceof Map) {
+                Object dataObj = ((Map) pictureObj).get("data");
+                if (dataObj instanceof Map) {
+                    pictureUrl = (String) ((Map) dataObj).get("url");
+                }
+            }
+
+            if (email == null || email.isBlank()) {
+                return ResponseEntity.status(400).body("Facebook login requires email permission");
+            }
+
+            var opt = userRepository.findByEmail(email.trim());
+            iuh.fit.se.backend.entity.User user;
+            if (opt.isPresent()) {
+                user = opt.get();
+            } else {
+                String baseUsername = email.split("@")[0].replaceAll("[^a-zA-Z0-9._-]", "");
+                String candidate = baseUsername;
+                int suffix = 1;
+                while (candidate.isBlank() || userRepository.findByUsername(candidate).isPresent()) {
+                    candidate = baseUsername + suffix++;
+                }
+
+                iuh.fit.se.backend.entity.User newUser = iuh.fit.se.backend.entity.User.builder()
+                        .username(candidate)
+                        .email(email.trim())
+                        .fullName(name != null ? name : candidate)
+                        .password(passwordEncoder.encode(UUID.randomUUID().toString()))
+                        .role(Role.USER)
+                        .avatarUrl(pictureUrl)
+                        .active(true)
+                        .build();
+
+                user = userRepository.save(newUser);
+            }
+
+            String token = jwtService.generateToken(user.getUsername(), user.getRole().toString());
+            return ResponseEntity.ok(new iuh.fit.se.backend.dto.response.LoginResponse(token, user.getRole().toString(), user));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return ResponseEntity.status(500).body("Facebook login error: " + ex.getMessage());
+        }
+    }
 }

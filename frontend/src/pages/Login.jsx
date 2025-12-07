@@ -18,6 +18,8 @@ import { ZaloIcon } from "@/components/ui/ZaloIcon";
 import { getGuestCart, clearGuestCart } from "@/api/guestCart";
 import { addToCart } from "@/api/cartAPI";
 import { googleSignIn } from "@/api/googleAuth";
+import { facebookSignIn } from "@/api/facebookAuth";
+import { FacebookIcon } from "@/components/ui/FacebookIcon";
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true);
@@ -207,6 +209,140 @@ export default function LoginRegister() {
       }
     }
   }, [isLogin]);
+
+  // Initialize Facebook SDK
+  useEffect(() => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      console.warn("VITE_FACEBOOK_APP_ID not set; Facebook login disabled");
+      return;
+    }
+
+    const initFB = () => {
+      try {
+        if (window.FB) {
+          window.FB.init({
+            appId: fbAppId,
+            cookie: true,
+            xfbml: false,
+            version: "v16.0",
+          });
+        }
+      } catch (err) {
+        console.error("FB init error", err);
+      }
+    };
+
+    // Ensure fb-root exists
+    if (!document.getElementById("fb-root")) {
+      const fbRoot = document.createElement("div");
+      fbRoot.id = "fb-root";
+      document.body.appendChild(fbRoot);
+    }
+
+    // If FB already loaded, init immediately
+    if (window.FB) {
+      initFB();
+      return;
+    }
+
+    // Otherwise dynamically load the SDK and init when ready
+    const existingScript = document.querySelector(
+      'script[src^="https://connect.facebook.net"]'
+    );
+    if (existingScript) {
+      // script may not have fired load event yet
+      existingScript.addEventListener("load", initFB);
+      return () => existingScript.removeEventListener("load", initFB);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://connect.facebook.net/vi_VN/sdk.js";
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+    script.onload = initFB;
+    script.onerror = () => console.error("Failed to load Facebook SDK");
+    document.body.appendChild(script);
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
+
+  const processFacebookToken = async (token) => {
+    setLoading(true);
+    const loadingToast = toast.loading("Đang xác thực với Facebook...");
+
+    try {
+      const res = await facebookSignIn(token);
+      const { data } = res;
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("role", data.role);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+      window.dispatchEvent(new Event("userUpdated"));
+      if (data.user?.id) await syncGuestCart(data.user.id);
+
+      toast.dismiss(loadingToast);
+      toast.success("Đăng nhập bằng Facebook thành công");
+      navigate("/home");
+    } catch (err) {
+      console.error("Facebook login error", err);
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data || "Đăng nhập Facebook thất bại");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = () => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      toast.error("Facebook App ID chưa cấu hình");
+      return;
+    }
+
+    const waitForFB = () =>
+      new Promise((resolve, reject) => {
+        let count = 0;
+        const maxTries = 20;
+        const interval = setInterval(() => {
+          if (window.FB) {
+            clearInterval(interval);
+            resolve(window.FB);
+          } else if (count++ >= maxTries) {
+            clearInterval(interval);
+            reject(new Error("Timeout: FB SDK not loaded"));
+          }
+        }, 300);
+      });
+
+    waitForFB()
+      .then((FB) => {
+        // SỬA LỖI: Bỏ từ khóa 'async' ở đây
+        FB.login(
+          (resp) => {
+            if (resp.status === "connected") {
+              const token = resp.authResponse.accessToken;
+              // Gọi hàm xử lý riêng
+              processFacebookToken(token);
+            } else {
+              console.log("User cancelled login");
+            }
+          },
+          { scope: "email,public_profile" }
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        toast.error("Không thể tải Facebook SDK. Hãy tắt AdBlock và thử lại.");
+      });
+  };
 
   const benefits = [
     {
@@ -519,16 +655,26 @@ export default function LoginRegister() {
                         Google
                       </Button>
                     </div>
+                    {/* Facebook button (custom) */}
+                    <Button
+                      variant="outline"
+                      className="flex items-center justify-center w-30  hover:bg-primary/0"
+                      onClick={handleFacebookLogin}
+                    >
+                      {/* simple text icon; replace with a proper SVG/icon as desired */}
+                      <FacebookIcon />
+                      Facebook
+                    </Button>
                     {/* KẾT THÚC: Sửa phần nút Google */}
 
-                    <Button
+                    {/* <Button
                       variant="outline"
                       className="flex items-center justify-center w-30 hover:bg-primary/0"
                       onClick={() => toast.info("Sắp ra mắt")}
                     >
                       <ZaloIcon />
                       Zalo
-                    </Button>
+                    </Button> */}
                   </div>
                 </>
               )}
