@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
 import { getSuppliers } from "@/api/supplierAPI";
-import { uploadProductImages } from "@/api/uploadAPI";
-import { useEffect, useState } from "react";
+import { uploadProductImages, deleteProductImage } from "@/api/uploadAPI";
+import { useEffect, useState, useRef } from "react";
 import { Loader2, Upload, X, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -38,6 +38,9 @@ export const ProductFormDialog = ({
   // State for multiple images - now stores File objects or existing URLs
   const [selectedImages, setSelectedImages] = useState([]); // Array of { file: File, preview: string, isPrimary: bool } or { imageUrl: string, isPrimary: bool }
   const [uploading, setUploading] = useState(false);
+
+  // Track deleted images (for cleanup when user removes existing images)
+  const deletedImagesRef = useRef([]);
 
   // Fetch data for dropdowns
   useEffect(() => {
@@ -90,6 +93,9 @@ export const ProductFormDialog = ({
       } else {
         setSelectedImages([]);
       }
+
+      // Reset deleted images tracking
+      deletedImagesRef.current = [];
     }
   }, [isOpen, isEditMode, formData.images]);
 
@@ -168,6 +174,11 @@ export const ProductFormDialog = ({
   const removeImage = (index) => {
     const imageToRemove = selectedImages[index];
 
+    // If it's an existing image (from server), track it for deletion
+    if (imageToRemove.isExisting && imageToRemove.imageUrl) {
+      deletedImagesRef.current.push(imageToRemove.imageUrl);
+    }
+
     // Revoke preview URL if it's a new file
     if (imageToRemove.preview) {
       URL.revokeObjectURL(imageToRemove.preview);
@@ -192,6 +203,22 @@ export const ProductFormDialog = ({
 
     setUploading(true);
     try {
+      // Delete removed images from Cloudinary (if in edit mode)
+      if (isEditMode && deletedImagesRef.current.length > 0) {
+        console.log(
+          "🗑️ Deleting removed images:",
+          deletedImagesRef.current.length
+        );
+        for (const imageUrl of deletedImagesRef.current) {
+          try {
+            await deleteProductImage(imageUrl);
+          } catch (err) {
+            console.error("Error deleting image:", err);
+            // Continue even if delete fails
+          }
+        }
+      }
+
       // Separate new files and existing URLs
       const newFiles = selectedImages.filter((img) => img.isNew && img.file);
       const existingUrls = selectedImages.filter(

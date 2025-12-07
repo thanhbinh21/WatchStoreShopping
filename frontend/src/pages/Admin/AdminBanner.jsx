@@ -93,6 +93,16 @@ export const AdminBanner = () => {
 
       // Upload new image if selected
       if (selectedImage && selectedImage.file) {
+        // Delete old image from Cloudinary if updating
+        if (editingId && form.imageUrl) {
+          try {
+            await deleteBannerImage(form.imageUrl);
+          } catch (err) {
+            console.error("Error deleting old image:", err);
+            // Continue even if delete fails
+          }
+        }
+
         const result = await uploadBannerImages([selectedImage.file]);
         if (result.success && result.fileNames.length > 0) {
           finalImageUrl = result.fileNames[0]; // Cloudinary URL
@@ -127,16 +137,13 @@ export const AdminBanner = () => {
     if (!deletingBanner) return;
 
     try {
-      // Xóa file ảnh nếu là local file
-      if (
-        deletingBanner.imageUrl &&
-        deletingBanner.imageUrl.startsWith("/images/banners/")
-      ) {
-        const filename = deletingBanner.imageUrl.split("/").pop();
+      // Xóa ảnh trên Cloudinary (cả local path và Cloudinary URL)
+      if (deletingBanner.imageUrl) {
         try {
-          await deleteBannerImage(filename);
+          await deleteBannerImage(deletingBanner.imageUrl);
         } catch (err) {
-          console.error("Error deleting image file:", err);
+          console.error("Error deleting image from Cloudinary:", err);
+          // Tiếp tục xóa banner ngay cả khi xóa ảnh thất bại
         }
       }
 

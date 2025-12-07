@@ -191,6 +191,16 @@ export const AdminPosts = () => {
 
       // Upload new image if selected
       if (selectedImage && selectedImage.file) {
+        // Delete old cover image from Cloudinary if updating
+        if (editingId && form.coverImageUrl) {
+          try {
+            await deletePostImage(form.coverImageUrl);
+          } catch (err) {
+            console.error("Error deleting old image:", err);
+            // Continue even if delete fails
+          }
+        }
+
         const result = await uploadPostImages([selectedImage.file]);
         if (result.success && result.fileNames.length > 0) {
           finalCoverImageUrl = result.fileNames[0]; // Cloudinary URL
@@ -259,16 +269,17 @@ export const AdminPosts = () => {
     if (!deletingPost) return;
 
     try {
-      // Auto-delete cover image if it's a local file
-      if (
-        deletingPost.coverImageUrl &&
-        deletingPost.coverImageUrl.startsWith("/images/posts/")
-      ) {
-        const filename = deletingPost.coverImageUrl.split("/").pop();
+      // Xóa ảnh bìa trên Cloudinary (cả local path và Cloudinary URL)
+      if (deletingPost.coverImageUrl) {
         try {
-          await deletePostImage(filename);
+          await deletePostImage(deletingPost.coverImageUrl);
+          console.log(
+            "✅ Deleted cover image from Cloudinary:",
+            deletingPost.coverImageUrl
+          );
         } catch (err) {
-          console.error("Error deleting cover image:", err);
+          console.error("⚠️ Error deleting cover image from Cloudinary:", err);
+          // Tiếp tục xóa post ngay cả khi xóa ảnh thất bại
         }
       }
 
