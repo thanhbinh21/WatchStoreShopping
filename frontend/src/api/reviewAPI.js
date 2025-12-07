@@ -18,8 +18,16 @@ export const updateReview = async (id, reviewData) => {
 };
 
 export const getReviewByUserAndProduct = async (userId, productId) => {
-    const response = await axiosInstance.get(`${REVIEW_URL}/user/${userId}/product/${productId}`);
-    return response.data;
+    try {
+        const response = await axiosInstance.get(`${REVIEW_URL}/user/${userId}/product/${productId}`);
+        return response.data;
+    } catch (error) {
+        // 404 means no review exists - return null instead of throwing
+        if (error.response?.status === 404) {
+            return null;
+        }
+        throw error;
+    }
 };
 
 export const createReview = async (reviewData) => {

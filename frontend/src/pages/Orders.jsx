@@ -133,16 +133,12 @@ export default function Orders() {
       if (order.status === "COMPLETED" && order.items) {
         for (const item of order.items) {
           if (item.productId) {
-            try {
-              const review = await getReviewByUserAndProduct(
-                userId,
-                item.productId
-              );
-              if (review) {
-                reviews[item.productId] = review;
-              }
-            } catch (err) {
-              // Không có review
+            const review = await getReviewByUserAndProduct(
+              userId,
+              item.productId
+            );
+            if (review) {
+              reviews[item.productId] = review;
             }
           }
         }
