@@ -10,11 +10,11 @@ import iuh.fit.se.backend.repository.CartRepository;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.service.CartService;
-import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -114,19 +114,18 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse removeItem(Long cartItemId) {
-        try {
-            CartItem item = cartItemRepository.findById(cartItemId)
-                    .orElseThrow();
-            Long userId = item.getCart().getUser().getId();
-            cartItemRepository.delete(item);
-            return getUserCart(userId);
-        } catch (java.util.NoSuchElementException e) {
-            // Item not found, return empty cart response
-            return new CartResponse(null, java.util.Collections.emptyList(), 0.0);
-        } catch (org.springframework.orm.ObjectOptimisticLockingFailureException e) {
-            // Item was already deleted by another request, return empty cart response
-            return new CartResponse(null, java.util.Collections.emptyList(), 0.0);
+        // Check if item exists
+        var itemOpt = cartItemRepository.findById(cartItemId);
+        if (itemOpt.isEmpty()) {
+            // Item already removed or doesn't exist - return empty response
+            // This is idempotent - calling delete on non-existent item is safe
+            return new CartResponse(null, new ArrayList<>(), 0.0);
         }
+        
+        CartItem item = itemOpt.get();
+        Long userId = item.getCart().getUser().getId();
+        cartItemRepository.delete(item);
+        return getUserCart(userId);
     }
 
     @Override

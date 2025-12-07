@@ -1,155 +1,136 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { removeCartItem } from "../api/cartAPI";
 import { handleVNPayReturn } from "../api/paymentAPI";
+import { removeCartItem } from "../api/cartAPI";
 import { toast } from "sonner";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 export default function VNPayReturn() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [status, setStatus] = useState("processing"); // processing, success, failed
-  const hasProcessed = useRef(false);
+  const [processing, setProcessing] = useState(true);
+  const [result, setResult] = useState(null);
 
   useEffect(() => {
-    const processPayment = async () => {
-      // Prevent double processing in React StrictMode
-      if (hasProcessed.current) {
-        return;
-      }
-      hasProcessed.current = true;
-      const vnp_ResponseCode = searchParams.get("vnp_ResponseCode");
-      const vnp_TransactionStatus = searchParams.get("vnp_TransactionStatus");
-
-      // Lấy thông tin pending order từ sessionStorage
-      const pendingOrderStr = sessionStorage.getItem("pendingOrder");
-      let pendingOrder = null;
-
-      if (pendingOrderStr) {
-        try {
-          pendingOrder = JSON.parse(pendingOrderStr);
-        } catch (e) {
-          console.error("Failed to parse pending order:", e);
-        }
-      }
-
-      // Gọi backend để verify payment và cập nhật payment status
+    // Prevent double execution
+    let isProcessing = false;
+    
+    const processPaymentReturn = async () => {
+      if (isProcessing) return;
+      isProcessing = true;
+      
       try {
-        const params = Object.fromEntries(searchParams.entries());
-        await handleVNPayReturn(params);
-        console.log("Backend verified and updated payment status");
-      } catch (error) {
-        console.error("Error verifying payment with backend:", error);
-      }
-
-      // Kiểm tra kết quả thanh toán
-      if (vnp_ResponseCode === "00" && vnp_TransactionStatus === "00") {
-        // Thanh toán thành công
-        setStatus("success");
-
-        // Xóa các sản phẩm đã mua khỏi giỏ hàng
-        if (pendingOrder?.cartItems && Array.isArray(pendingOrder.cartItems)) {
-          for (const cartItemId of pendingOrder.cartItems) {
-            try {
-              await removeCartItem(cartItemId);
-              console.log(`Removed cart item ${cartItemId}`);
-            } catch (error) {
-              // Ignore errors nếu item đã được xóa
-              console.log(
-                `Cart item ${cartItemId} already removed or not found`
-              );
-            }
-          }
+        // Convert URLSearchParams to object
+        const params = {};
+        for (const [key, value] of searchParams.entries()) {
+          params[key] = value;
         }
 
-        // Xóa pending order
-        sessionStorage.removeItem("pendingOrder");
+        console.log("VNPay return params:", params);
 
-        // Hiển thị thông báo thành công
-        toast.success("Thanh toán thành công!");
+        // Call API to verify payment (only once)
+        const response = await handleVNPayReturn(params);
+        console.log("VNPay verification response:", response);
 
-        // Redirect sau 3 giây
-        setTimeout(() => {
-          navigate("/orders", {
-            state: {
-              orderId: pendingOrder?.orderId,
-            },
-          });
-        }, 3000);
-      } else {
-        // Thanh toán thất bại
-        setStatus("failed");
-        toast.error("Thanh toán thất bại!");
+        setResult(response);
+        setProcessing(false);
 
-        // Xóa pending order
-        sessionStorage.removeItem("pendingOrder");
+        // If payment successful
+        if (response?.code === "00") {
+          toast.success("Thanh toán thành công!");
+          
+          // Clean up sessionStorage
+          sessionStorage.removeItem('vnpay_cart_items');
+          // Note: Backend already cleared cart items when creating the order
+          // No need to call removeCartItem API here
 
-        // Redirect về giỏ hàng sau 3 giây
+          // Redirect to orders page after 2 seconds
+          setTimeout(() => {
+            navigate("/orders", {
+              state: {
+                orderId: response?.orderId,
+                message: "Đơn hàng đã được thanh toán thành công qua VNPay"
+              }
+            });
+          }, 2000);
+        } else {
+          // Payment failed
+          toast.error("Thanh toán thất bại: " + (response?.message || "Vui lòng thử lại"));
+          
+          // Redirect to cart after 3 seconds
+          setTimeout(() => {
+            navigate("/cart");
+          }, 3000);
+        }
+
+      } catch (error) {
+        console.error("Error processing VNPay return:", error);
+        setProcessing(false);
+        toast.error("Có lỗi xảy ra khi xử lý thanh toán");
+        
         setTimeout(() => {
           navigate("/cart");
         }, 3000);
       }
     };
 
-    processPayment();
+    processPaymentReturn();
   }, [searchParams, navigate]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
-
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
+      
+      <div className="flex-1 flex items-center justify-center py-12 px-4">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-          {status === "processing" && (
+          {processing ? (
             <div className="text-center">
-              <Loader2 className="w-16 h-16 mx-auto text-blue-600 animate-spin mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Đang xử lý thanh toán
-              </h2>
-              <p className="text-gray-600">Vui lòng đợi trong giây lát...</p>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+              <h2 className="text-xl font-semibold mb-2">Đang xử lý thanh toán...</h2>
+              <p className="text-gray-600">Vui lòng đợi trong giây lát</p>
             </div>
-          )}
-
-          {status === "success" && (
+          ) : result?.code === "00" ? (
             <div className="text-center">
-              <CheckCircle className="w-16 h-16 mx-auto text-green-600 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Thanh toán thành công!
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Cảm ơn quý khách đã thanh toán. Đơn hàng của bạn đang được xử
-                lý.
-              </p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-800">
-                  Bạn sẽ được chuyển đến trang đơn hàng trong giây lát...
-                </p>
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
               </div>
+              <h2 className="text-2xl font-bold text-green-600 mb-2">Thanh toán thành công!</h2>
+              <p className="text-gray-600 mb-4">Đơn hàng của bạn đã được thanh toán thành công</p>
+              <div className="bg-gray-50 rounded p-4 text-left text-sm space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Mã đơn hàng:</span>
+                  <span className="font-semibold">#{result?.orderId}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Mã giao dịch:</span>
+                  <span className="font-semibold">{result?.vnp_TransactionNo}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Số tiền:</span>
+                  <span className="font-semibold text-red-600">
+                    {result?.vnp_Amount ? (parseInt(result.vnp_Amount) / 100).toLocaleString() : "0"}đ
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Ngân hàng:</span>
+                  <span className="font-semibold">{result?.vnp_BankCode || "N/A"}</span>
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-4">Đang chuyển đến trang đơn hàng...</p>
             </div>
-          )}
-
-          {status === "failed" && (
+          ) : (
             <div className="text-center">
-              <XCircle className="w-16 h-16 mx-auto text-red-600 mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Thanh toán thất bại
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Rất tiếc, giao dịch của bạn không thành công. Vui lòng thử lại.
-              </p>
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
-                <p className="text-sm text-red-800">
-                  Mã lỗi: {searchParams.get("vnp_ResponseCode")}
-                </p>
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
               </div>
-              <button
-                onClick={() => navigate("/cart")}
-                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition"
-              >
-                Quay về giỏ hàng
-              </button>
+              <h2 className="text-2xl font-bold text-red-600 mb-2">Thanh toán thất bại</h2>
+              <p className="text-gray-600 mb-4">{result?.message || "Đã có lỗi xảy ra trong quá trình thanh toán"}</p>
+              <p className="text-sm text-gray-500">Đang chuyển về giỏ hàng...</p>
             </div>
           )}
         </div>

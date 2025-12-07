@@ -70,10 +70,7 @@ function App() {
           />
           <Route path="/products" element={<ProductList />} />
           <Route path="/about" element={<About />} />
-          <Route
-            path="/promotional-products"
-            element={<PromotionalProducts />}
-          />
+          <Route path="/promotional-products" element={<PromotionalProducts />} />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
           <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
@@ -141,7 +138,7 @@ function App() {
           <Route path="checkout" element={<Checkout />} />
           <Route path="orders" element={<Orders />} />
           <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/vnpay-return" element={<VNPayReturn />} />
+          <Route path="/payment/vnpay-return" element={<VNPayReturn />} />
           {/* Not Found */}
           <Route path="*" element={<NotFound />} />
         </Routes>
