@@ -20,6 +20,10 @@ import {
   getNotificationsByUser,
   markAllNotificationsAsRead,
 } from "@/api/notificationAPI";
+import { 
+  connectNotificationWebSocket, 
+  disconnectNotificationWebSocket 
+} from "@/api/notificationWebSocket";
 import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
@@ -101,6 +105,47 @@ export default function Header() {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!userState?.id || !token) {
+      return;
+    }
+
+    console.log("🔌 Setting up WebSocket for user:", userState.id);
+
+    const handleNewNotification = (notification) => {
+      console.log("📬 New notification received via WebSocket:", notification);
+      
+      // Add new notification to the list
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadNotifications((prev) => prev + 1);
+      
+      // Show toast notification
+      toast.success(notification.title, {
+        description: notification.message,
+        duration: 5000,
+      });
+      
+      // Play notification sound (optional)
+      try {
+        const audio = new Audio("/notification.mp3");
+        audio.volume = 0.3;
+        audio.play().catch(() => {
+          // Ignore if audio fails to play
+        });
+      } catch (error) {
+        // Ignore audio errors
+      }
+    };
+
+    const ws = connectNotificationWebSocket(userState.id, handleNewNotification);
+
+    return () => {
+      console.log("🔌 Cleaning up WebSocket connection");
+      disconnectNotificationWebSocket();
+    };
+  }, [userState?.id, token]);
 
   // Load wishlist count
   useEffect(() => {
