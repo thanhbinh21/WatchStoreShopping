@@ -11,8 +11,8 @@ import {
   Bell,
   Heart,
   LifeBuoy,
-  Menu, // Thêm icon Menu
-  X, // Thêm icon X đóng menu
+  Menu,
+  X,
   ChevronRight,
   Package,
   Clock, // Icon cho Danh mục
@@ -40,14 +40,16 @@ import { MdTrendingUp } from "react-icons/md";
 import { getGeneralSettings } from "@/api/settingsAPI";
 import MegaMenu from "./MegaMenu";
 
-
 export default function Header() {
   const navigate = useNavigate();
   // State quản lý UI
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State cho mobile menu
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // State cho thanh search mobile
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+
+  // State quản lý Accordion trên Mobile
+  const [mobileSubmenu, setMobileSubmenu] = useState(""); // '', 'categories', 'brands', 'promotions', 'posts'
 
   // Data State
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,7 +58,8 @@ export default function Header() {
   const [cartCount, _setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
-  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] = useState(false);
+  const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
+    useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [settings, setSettings] = useState({
     siteName: "WATCH STORE",
@@ -79,7 +82,6 @@ export default function Header() {
   const notificationDropdownRef = useRef(null);
   const searchDropdownRef = useRef(null);
   const searchInputRef = useRef(null);
-
 
   // User info
   const token = localStorage.getItem("accessToken");
@@ -107,7 +109,7 @@ export default function Header() {
           page: 0,
           size: 6,
           sortBy: "createdAt",
-          order: "desc"
+          order: "desc",
         });
         setTrendingProducts(data.content || []);
       } catch (error) {
@@ -126,99 +128,99 @@ export default function Header() {
   }, [searchHistory]);
 
   // Xử lý tìm kiếm realtime
-useEffect(() => {
-  const delayDebounceFn = setTimeout(async () => {
-    if (!isSearchInputFocused) {
-      return;
-    }
-    if (searchTerm.trim() === "") {
-      setSearchSuggestions(null);
-      if (isSearchInputFocused) {
-        setIsSearchDropdownOpen(true);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (!isSearchInputFocused) {
+        return;
       }
-      return;
-    }
-    if (searchTerm.trim().length < 1) {
-      setSearchSuggestions({
-        exactMatches: [],
-        suggestedProducts: []
-      });
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const searchResults = await searchProducts(searchTerm);
-      console.log("Header: raw searchResults:", searchResults);
-      // Đảm bảo là array
-      const results = Array.isArray(searchResults) ? searchResults : [];
-      console.log("Header: normalized results length:", results.length);
-      const suggestions = {
-        exactMatches: results.slice(0, 5),
-        suggestedProducts: results.slice(5, 10)
-      };
-      setSearchSuggestions(suggestions);
-
-      if (isSearchInputFocused) {
-        setIsSearchDropdownOpen(true);
+      if (searchTerm.trim() === "") {
+        setSearchSuggestions(null);
+        if (isSearchInputFocused) {
+          setIsSearchDropdownOpen(true);
+        }
+        return;
       }
-    } catch (error) {
-      setSearchSuggestions({
-        exactMatches: [],
-        suggestedProducts: []
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, 300);
-
-  // --- Logic cũ giữ nguyên ---
-  const getNotificationType = (notification) => {
-    const title = notification.title?.toLowerCase() || "";
-    const message = notification.message?.toLowerCase() || "";
-
-    if (title.includes("khuyến mãi") || title.includes("🎉"))
-      return "promotion";
-    if (title.includes("đơn hàng") || message.includes("đơn hàng"))
-      return "order";
-    if (title.includes("đánh giá")) return "review";
-    return "general";
-  };
-
-  const handleNotificationClick = async (notification) => {
-    const type = getNotificationType(notification);
-    if (!notification.read) {
+      if (searchTerm.trim().length < 1) {
+        setSearchSuggestions({
+          exactMatches: [],
+          suggestedProducts: [],
+        });
+        return;
+      }
+      setIsLoading(true);
       try {
-        await markNotificationAsRead(notification.id, userState.id);
-        setNotifications((prev) =>
-          prev.map((item) =>
-            item.id === notification.id ? { ...item, read: true } : item
-          )
-        );
-        setUnreadNotifications((prev) => Math.max(0, prev - 1));
-      } catch (error) {
-        console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
-      }
-    }
-    setIsNotificationDropdownOpen(false);
-    switch (type) {
-      case "promotion":
-        navigate("/promotional-products");
-        break;
-      case "order":
-        navigate("/orders");
-        break;
-      case "review":
-        navigate("/profile");
-        break;
-      default:
-        break;
-    }
-  };
+        const searchResults = await searchProducts(searchTerm);
+        console.log("Header: raw searchResults:", searchResults);
+        // Đảm bảo là array
+        const results = Array.isArray(searchResults) ? searchResults : [];
+        console.log("Header: normalized results length:", results.length);
+        const suggestions = {
+          exactMatches: results.slice(0, 5),
+          suggestedProducts: results.slice(5, 10),
+        };
+        setSearchSuggestions(suggestions);
 
-  return () => {
-    clearTimeout(delayDebounceFn);
-  };
-}, [searchTerm, isSearchInputFocused]);
+        if (isSearchInputFocused) {
+          setIsSearchDropdownOpen(true);
+        }
+      } catch (error) {
+        setSearchSuggestions({
+          exactMatches: [],
+          suggestedProducts: [],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    // --- Logic Notification ---
+    const getNotificationType = (notification) => {
+      const title = notification.title?.toLowerCase() || "";
+      const message = notification.message?.toLowerCase() || "";
+
+      if (title.includes("khuyến mãi") || title.includes("🎉"))
+        return "promotion";
+      if (title.includes("đơn hàng") || message.includes("đơn hàng"))
+        return "order";
+      if (title.includes("đánh giá")) return "review";
+      return "general";
+    };
+
+    const handleNotificationClick = async (notification) => {
+      const type = getNotificationType(notification);
+      if (!notification.read) {
+        try {
+          await markNotificationAsRead(notification.id, userState.id);
+          setNotifications((prev) =>
+            prev.map((item) =>
+              item.id === notification.id ? { ...item, read: true } : item
+            )
+          );
+          setUnreadNotifications((prev) => Math.max(0, prev - 1));
+        } catch (error) {
+          console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
+        }
+      }
+      setIsNotificationDropdownOpen(false);
+      switch (type) {
+        case "promotion":
+          navigate("/promotional-products");
+          break;
+        case "order":
+          navigate("/orders");
+          break;
+        case "review":
+          navigate("/profile");
+          break;
+        default:
+          break;
+      }
+    };
+
+    return () => {
+      clearTimeout(delayDebounceFn);
+    };
+  }, [searchTerm, isSearchInputFocused]);
 
   // Fetch categories
   useEffect(() => {
@@ -251,42 +253,35 @@ useEffect(() => {
       setUnreadNotifications(unreadCount);
       return unreadCount;
     } catch (error) {
-      console.error("Lỗi khi tải thông báo:", error);
       setNotifications([]);
       setUnreadNotifications(0);
       return 0;
     }
   }, [userState?.id, token]);
 
+  // --- Effects ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch categories
         const categoriesData = await getCategories();
         const categoriesArray = Array.isArray(categoriesData)
           ? categoriesData
           : Array.isArray(categoriesData.data)
           ? categoriesData.data
           : [];
-        // Chỉ lấy categories có status ACTIVE
-        const activeCategories = categoriesArray.filter(
-          (cat) => cat.status === "ACTIVE"
-        );
-        setCategories(activeCategories);
+        setCategories(categoriesArray.filter((cat) => cat.status === "ACTIVE"));
 
-        // Fetch brands
         const brandsData = await getBrands();
         const brandsArray = Array.isArray(brandsData)
           ? brandsData
           : Array.isArray(brandsData.data)
           ? brandsData.data
           : [];
-        const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
-        setBrands(activeBrands);
+        setBrands(brandsArray.filter((b) => b.status === "ACTIVE"));
+
         const settingsData = await getGeneralSettings();
         setSettings(settingsData);
       } catch (error) {
-        console.error("Lỗi khi fetch data:", error);
         setCategories([]);
         setBrands([]);
       }
@@ -301,39 +296,17 @@ useEffect(() => {
   useEffect(() => {
     if (!userState?.id || !token) return;
     const handleNewNotification = (notification) => {
-      console.log("📬 New notification received via WebSocket:", notification);
-
-      // Add new notification to the list
       setNotifications((prev) => [notification, ...prev]);
       setUnreadNotifications((prev) => prev + 1);
-
-      // Trigger animation
       setNotificationAnimation(true);
       setTimeout(() => setNotificationAnimation(false), 600);
-
-      // Show toast notification
-      toast.success(notification.title, {
-        description: notification.message,
-        duration: 5000,
-      });
-
-      // Play notification sound (optional)
-      try {
-        const audio = new Audio("/notification.mp3");
-        audio.volume = 0.3;
-        audio.play().catch(() => {});
-      } catch (error) {}
+      toast.success(notification.title, { description: notification.message });
     };
-
     const ws = connectNotificationWebSocket(
       userState.id,
       handleNewNotification
     );
-
-    return () => {
-      console.log("🔌 Cleaning up WebSocket connection");
-      disconnectNotificationWebSocket();
-    };
+    return () => disconnectNotificationWebSocket();
   }, [userState?.id, token]);
 
   useEffect(() => {
@@ -365,7 +338,10 @@ useEffect(() => {
         getCart(user.id)
           .then((res) => {
             const totalQuantity = Array.isArray(res?.items)
-              ? res.items.reduce((sum, it) => sum + (Number(it.quantity) || 0), 0)
+              ? res.items.reduce(
+                  (sum, it) => sum + (Number(it.quantity) || 0),
+                  0
+                )
               : 0;
             _setCartCount(totalQuantity);
           })
@@ -385,7 +361,12 @@ useEffect(() => {
   useEffect(() => {
     const onUserUpdated = () => setUserState(parseStoredUser() || {});
     const onStorage = (e) => {
-      if (!e.key || e.key === "user" || e.key === "accessToken" || e.key === "role") {
+      if (
+        !e.key ||
+        e.key === "user" ||
+        e.key === "accessToken" ||
+        e.key === "role"
+      ) {
         setUserState(parseStoredUser() || {});
       }
     };
@@ -399,17 +380,30 @@ useEffect(() => {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
         setIsUserDropdownOpen(false);
       }
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(event.target)) {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
         setIsCategoryDropdownOpen(false);
       }
-      if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(event.target)
+      ) {
         setIsNotificationDropdownOpen(false);
       }
-      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target) &&
-          searchInputRef.current && !searchInputRef.current.contains(event.target)) {
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(event.target) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target)
+      ) {
         setIsSearchDropdownOpen(false);
         setIsSearchInputFocused(false);
       }
@@ -418,13 +412,14 @@ useEffect(() => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // --- Handlers ---
   const handleLogout = () => {
     localStorage.removeItem("accessToken");
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     localStorage.removeItem("refreshToken");
     window.dispatchEvent(new Event("userUpdated"));
-    setIsMobileMenuOpen(false); // Close mobile menu on logout
+    setIsMobileMenuOpen(false);
     navigate("/login");
   };
 
@@ -433,28 +428,34 @@ useEffect(() => {
     if (!term) return;
 
     // Lưu vào lịch sử tìm kiếm
-    const newHistory = [term, ...searchHistory.filter(item => item !== term)].slice(0, 10);
+    const newHistory = [
+      term,
+      ...searchHistory.filter((item) => item !== term),
+    ].slice(0, 10);
     setSearchHistory(newHistory);
     localStorage.setItem("searchHistory", JSON.stringify(newHistory));
 
     // Đóng dropdown và điều hướng
     setIsSearchDropdownOpen(false);
 
-    console.log("zzzz",term);
+    console.log("zzzz", term);
     navigate(`/products?name=${encodeURIComponent(term)}`);
-
+    setIsMobileSearchOpen(false);
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") handleSearch();
   };
 
   const handleCategoryClick = (categoryId) => {
     setIsCategoryDropdownOpen(false);
-    setIsMobileMenuOpen(false); // Close mobile menu
+    setIsMobileMenuOpen(false);
     navigate(`/products?category=${categoryId}`);
+  };
+
+  const handleBrandClick = (brandName) => {
+    setIsMobileMenuOpen(false);
+    navigate(`/products?brand=${encodeURIComponent(brandName)}`);
   };
 
   const handleToggleNotifications = async () => {
@@ -462,9 +463,7 @@ useEffect(() => {
       navigate("/login");
       return;
     }
-    if (!isNotificationDropdownOpen) {
-      await loadNotifications();
-    }
+    if (!isNotificationDropdownOpen) await loadNotifications();
     setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
   };
 
@@ -486,53 +485,60 @@ useEffect(() => {
     navigate(`/product/${product.productId || product.id}`);
   };
 
-const formatPrice = (product) => {
-  // Nếu product có currentPrice
-  if (product.currentPrice) {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(product.currentPrice);
-  }
-
-  // Nếu product có price
-  if (product.price) {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(product.price);
-  }
-
-  // Nếu product có productPrices
-  if (product.productPrices && Array.isArray(product.productPrices)) {
-    const currentPrice = product.productPrices.find(p => p.isCurrent);
-    if (currentPrice && currentPrice.price) {
-      return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-      }).format(currentPrice.price);
+  const formatPrice = (product) => {
+    // Nếu product có currentPrice
+    if (product.currentPrice) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(product.currentPrice);
     }
-  }
 
-  return 'Liên hệ';
-};
+    // Nếu product có price
+    if (product.price) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(product.price);
+    }
 
-// Helper to get a product's primary image URL safely
-const getPrimaryImage = (product) => {
-  if (!product) return "https://via.placeholder.com/80";
-  // Prefer common flattened fields
-  if (product.imageUrl) return product.imageUrl;
-  if (product.primaryImageUrl) return product.primaryImageUrl;
-  // Support nested productImages array
-  if (Array.isArray(product.productImages)) {
-    const primary = product.productImages.find((img) => img.isPrimary);
-    if (primary && primary.imageUrl) return primary.imageUrl;
-    if (product.productImages.length > 0 && product.productImages[0].imageUrl) return product.productImages[0].imageUrl;
-  }
-  // Support method-style accessor
-  if (typeof product.getPrimaryImageUrl === "function") return product.getPrimaryImageUrl();
-  return "https://via.placeholder.com/80";
-};
+    // Nếu product có productPrices
+    if (product.productPrices && Array.isArray(product.productPrices)) {
+      const currentPrice = product.productPrices.find((p) => p.isCurrent);
+      if (currentPrice && currentPrice.price) {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(currentPrice.price);
+      }
+    }
+
+    return "Liên hệ";
+  };
+
+  // Helper to get a product's primary image URL safely
+  const getPrimaryImage = (product) => {
+    if (!product) return "https://via.placeholder.com/80";
+    // Prefer common flattened fields
+    if (product.imageUrl) return product.imageUrl;
+    if (product.primaryImageUrl) return product.primaryImageUrl;
+    // Support nested productImages array
+    if (Array.isArray(product.productImages)) {
+      const primary = product.productImages.find((img) => img.isPrimary);
+      if (primary && primary.imageUrl) return primary.imageUrl;
+      if (product.productImages.length > 0 && product.productImages[0].imageUrl)
+        return product.productImages[0].imageUrl;
+    }
+    // Support method-style accessor
+    if (typeof product.getPrimaryImageUrl === "function")
+      return product.getPrimaryImageUrl();
+    return "https://via.placeholder.com/80";
+  };
+
+  // Helper toggle mobile submenu
+  const toggleSubmenu = (menu) => {
+    setMobileSubmenu(mobileSubmenu === menu ? "" : menu);
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-brand-primary text-brand-primary-foreground shadow-lg">
@@ -589,7 +595,7 @@ const getPrimaryImage = (product) => {
           </div>
 
           {/* --- DESKTOP: Search Bar --- */}
-{/* Search Bar */}
+          {/* Search Bar */}
           <div className="flex-1 max-w-2xl relative" ref={searchDropdownRef}>
             <div className="relative">
               <input
@@ -601,12 +607,12 @@ const getPrimaryImage = (product) => {
                   // Không tự động mở dropdown khi gõ, chỉ mở khi click/focus
                 }}
                 onFocus={() => {
-              setIsSearchInputFocused(true); // Đánh dấu input đang được focus
-              setIsSearchDropdownOpen(true); // Mở dropdown khi focus
-            }}
+                  setIsSearchInputFocused(true); // Đánh dấu input đang được focus
+                  setIsSearchDropdownOpen(true); // Mở dropdown khi focus
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="Bạn muốn mua gì hôm nay?"
-                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-brand-primary-foreground/20 text-brand-ink placeholder-text-muted"
+                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink placeholder-text-muted"
               />
               <button
                 onClick={handleSearch}
@@ -642,32 +648,39 @@ const getPrimaryImage = (product) => {
                           </button>
                         </div>
                         <div className="space-y-2">
-                          {searchHistory.slice(0, 5).map((item, index) => ( // Chỉ lấy 5 cái đầu
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer group"
-                              onClick={() => {
-                                setSearchTerm(item);
-                                setIsSearchDropdownOpen(false);
-                                setIsSearchInputFocused(false);
-                                navigate(`/products?name=${encodeURIComponent(item)}`);
-                              }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Clock size={16} className="text-gray-400" />
-                                <span className="text-gray-700">{item}</span>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSearchHistoryItem(index);
+                          {searchHistory.slice(0, 5).map(
+                            (
+                              item,
+                              index // Chỉ lấy 5 cái đầu
+                            ) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer group"
+                                onClick={() => {
+                                  setSearchTerm(item);
+                                  setIsSearchDropdownOpen(false);
+                                  setIsSearchInputFocused(false);
+                                  navigate(
+                                    `/products?name=${encodeURIComponent(item)}`
+                                  );
                                 }}
-                                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
                               >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ))}
+                                <div className="flex items-center gap-3">
+                                  <Clock size={16} className="text-gray-400" />
+                                  <span className="text-gray-700">{item}</span>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveSearchHistoryItem(index);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            )
+                          )}
                         </div>
                       </div>
                     )}
@@ -689,14 +702,22 @@ const getPrimaryImage = (product) => {
                             }}
                           >
                             <img
-                              src={product.imageUrl || product.getPrimaryImageUrl?.() || "https://via.placeholder.com/80"}
+                              src={
+                                product.imageUrl ||
+                                product.getPrimaryImageUrl?.() ||
+                                "https://via.placeholder.com/80"
+                              }
                               alt={product.name}
                               className="w-10 h-10 object-cover rounded"
                             />
                             <div className="flex-1">
-                              <p className="text-sm text-gray-700 truncate">{product.name}</p>
+                              <p className="text-sm text-gray-700 truncate">
+                                {product.name}
+                              </p>
                               <p className="text-sm font-semibold text-brand-primary">
-                                {formatPrice(product.price || product.currentPrice || 0)}
+                                {formatPrice(
+                                  product.price || product.currentPrice || 0
+                                )}
                               </p>
                             </div>
                           </div>
@@ -706,122 +727,137 @@ const getPrimaryImage = (product) => {
                   </div>
                 )}
 
-          {/* Khi đã nhập - Hiển thị suggestions */}
-          {searchTerm.trim() && (
-            <div className="p-4">
-              {isLoading ? (
-                <div className="flex justify-center items-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
-                  <span className="ml-3 text-gray-500">Đang tìm kiếm...</span>
-                </div>
-              ) : searchSuggestions ? (
-                <>
-                  {/* Debug info */}
-                  <div className="mb-2 text-xs text-gray-400">
-                    Tìm thấy {searchSuggestions.exactMatches?.length + searchSuggestions.suggestedProducts?.length} kết quả
+                {/* Khi đã nhập - Hiển thị suggestions */}
+                {searchTerm.trim() && (
+                  <div className="p-4">
+                    {isLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+                        <span className="ml-3 text-gray-500">
+                          Đang tìm kiếm...
+                        </span>
+                      </div>
+                    ) : searchSuggestions ? (
+                      <>
+                        {/* Debug info */}
+                        <div className="mb-2 text-xs text-gray-400">
+                          Tìm thấy{" "}
+                          {searchSuggestions.exactMatches?.length +
+                            searchSuggestions.suggestedProducts?.length}{" "}
+                          kết quả
+                        </div>
+
+                        {/* Có phải bạn muốn tìm */}
+                        {searchSuggestions.exactMatches?.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="font-semibold text-gray-700 mb-3">
+                              Có phải bạn muốn tìm
+                            </h3>
+                            <div className="space-y-3">
+                              {searchSuggestions.exactMatches.map((product) => (
+                                <div
+                                  key={product.id}
+                                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                  onClick={() => {
+                                    setIsSearchDropdownOpen(false);
+                                    setIsSearchInputFocused(false);
+                                    handleSuggestionClick(product);
+                                  }}
+                                >
+                                  <img
+                                    src={getPrimaryImage(product)}
+                                    alt={product.name}
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      e.target.src =
+                                        "https://via.placeholder.com/80";
+                                    }}
+                                  />
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
+                                      {product.name}
+                                    </p>
+                                    <p className="text-sm font-semibold text-brand-primary mt-1">
+                                      {formatPrice(product)}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Sản phẩm gợi ý */}
+                        {searchSuggestions.suggestedProducts?.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-gray-700 mb-3">
+                              Sản phẩm gợi ý
+                            </h3>
+                            <div className="grid grid-cols-1 gap-3">
+                              {searchSuggestions.suggestedProducts.map(
+                                (product) => (
+                                  <div
+                                    key={product.id}
+                                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                    onClick={() => {
+                                      setIsSearchDropdownOpen(false);
+                                      setIsSearchInputFocused(false);
+                                      handleSuggestionClick(product);
+                                    }}
+                                  >
+                                    <img
+                                      src={getPrimaryImage(product)}
+                                      alt={product.name}
+                                      className="w-10 h-10 object-cover rounded"
+                                      onError={(e) => {
+                                        e.target.src =
+                                          "https://via.placeholder.com/80";
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <p className="text-sm text-gray-700 truncate">
+                                        {product.name}
+                                      </p>
+                                      <p className="text-sm font-semibold text-brand-primary">
+                                        {formatPrice(product)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Không tìm thấy kết quả */}
+                        {searchSuggestions.exactMatches?.length === 0 &&
+                          searchSuggestions.suggestedProducts?.length === 0 && (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500">
+                                Không tìm thấy sản phẩm phù hợp
+                              </p>
+                              <p className="text-sm text-gray-400 mt-1">
+                                Từ khóa: "{searchTerm}"
+                              </p>
+                            </div>
+                          )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">
+                          Nhập từ khóa để tìm kiếm
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Có phải bạn muốn tìm */}
-                  {(searchSuggestions.exactMatches?.length > 0) && (
-                    <div className="mb-6">
-                      <h3 className="font-semibold text-gray-700 mb-3">
-                        Có phải bạn muốn tìm
-                      </h3>
-                      <div className="space-y-3">
-                        {searchSuggestions.exactMatches.map((product) => (
-                          <div
-                            key={product.id}
-                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-
-                            onClick={() => {
-                              setIsSearchDropdownOpen(false);
-                              setIsSearchInputFocused(false);
-                              handleSuggestionClick(product);
-                            }}
-                          >
-                            <img
-                              src={getPrimaryImage(product)}
-                              alt={product.name}
-                              className="w-12 h-12 object-cover rounded"
-                              onError={(e) => {
-                                e.target.src = 'https://via.placeholder.com/80';
-                              }}
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-800 line-clamp-2">
-                                {product.name}
-                              </p>
-                              <p className="text-sm font-semibold text-brand-primary mt-1">
-                                {formatPrice(product)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Sản phẩm gợi ý */}
-                  {(searchSuggestions.suggestedProducts?.length > 0) && (
-                    <div>
-                      <h3 className="font-semibold text-gray-700 mb-3">
-                        Sản phẩm gợi ý
-                      </h3>
-                      <div className="grid grid-cols-1 gap-3">
-                        {searchSuggestions.suggestedProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            onClick={() => {
-                              setIsSearchDropdownOpen(false);
-                              setIsSearchInputFocused(false);
-                              handleSuggestionClick(product);
-                            }}
-                          >
-                            <img
-                              src={getPrimaryImage(product)}
-                              alt={product.name}
-                              className="w-10 h-10 object-cover rounded"
-                              onError={(e) => {
-                                e.target.src = 'https://via.placeholder.com/80';
-                              }}
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700 truncate">{product.name}</p>
-                              <p className="text-sm font-semibold text-brand-primary">
-                                {formatPrice(product)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Không tìm thấy kết quả */}
-                  {searchSuggestions.exactMatches?.length === 0 && 
-                  searchSuggestions.suggestedProducts?.length === 0 && (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">Không tìm thấy sản phẩm phù hợp</p>
-                      <p className="text-sm text-gray-400 mt-1">Từ khóa: "{searchTerm}"</p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">Nhập từ khóa để tìm kiếm</p>
-                </div>
-              )}
-            </div>
-          )}
+                )}
               </div>
             )}
           </div>
 
-
-          {/* --- ACTION ICONS GROUP --- */}
+          {/* --- ACTION ICONS --- */}
           <div className="flex items-center gap-1 md:gap-2">
-            {/* MOBILE ONLY: Search Toggle Icon */}
+            {/* Mobile Search Icon */}
             <button
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className="lg:hidden cursor-pointer p-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg"
@@ -845,7 +881,7 @@ const getPrimaryImage = (product) => {
               <span className="hidden xl:inline font-medium">Yêu thích</span>
               {wishlistCount > 0 && (
                 <span
-                  className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1 transition-all ${
+                  className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1 ${
                     wishlistAnimation ? "animate-ping" : ""
                   }`}
                 >
@@ -869,7 +905,7 @@ const getPrimaryImage = (product) => {
               />
               <span className="hidden xl:inline font-medium">Giỏ hàng</span>
               {cartCount > 0 && (
-                <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1">
+                <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>
               )}
@@ -892,7 +928,7 @@ const getPrimaryImage = (product) => {
                 <span className="hidden xl:inline font-medium">Thông báo</span>
                 {unreadNotifications > 0 && (
                   <span
-                    className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1 transition-all ${
+                    className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 flex items-center justify-center px-1 ${
                       notificationAnimation ? "animate-ping" : ""
                     }`}
                   >
@@ -900,7 +936,6 @@ const getPrimaryImage = (product) => {
                   </span>
                 )}
               </button>
-
               {isNotificationDropdownOpen && (
                 <div className="fixed inset-x-4 top-16 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-80 bg-brand-primary-foreground rounded-lg shadow-xl border border-border overflow-hidden z-50">
                   <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -933,7 +968,7 @@ const getPrimaryImage = (product) => {
                           <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                             {notification.message}
                           </p>
-                          <p className="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                          <p className="mt-2 text-[11px] text-muted-foreground">
                             {formatNotificationDate(notification.createdAt)}
                           </p>
                         </div>
@@ -944,7 +979,7 @@ const getPrimaryImage = (product) => {
               )}
             </div>
 
-            {/* User Menu (Hidden on Mobile - Moved to Sidebar) */}
+            {/* Desktop User Menu */}
             <div className="relative hidden md:block" ref={userDropdownRef}>
               {token ? (
                 <>
@@ -956,7 +991,7 @@ const getPrimaryImage = (product) => {
                       <img
                         src={userState.avatarUrl}
                         alt="avatar"
-                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border"
+                        className="w-8 h-8 rounded-full object-cover border"
                       />
                     ) : (
                       <User size={20} />
@@ -965,7 +1000,6 @@ const getPrimaryImage = (product) => {
                       {userState.fullName || userState.username || "User"}
                     </span>
                   </button>
-
                   {isUserDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-52 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border z-50">
                       <div className="px-4 py-3 border-b border-border">
@@ -1031,7 +1065,7 @@ const getPrimaryImage = (product) => {
               ) : (
                 <button
                   onClick={() => navigate("/login")}
-                  className="flex items-center gap-2 px-3 py-2 bg-brand-foreground rounded-lg font-semibold bg-brand-primary-foreground/10 hover:bg-brand-primary-foreground/20 text-brand-primary-foreground transition-colors"
+                  className="flex items-center gap-2 px-3 py-2 bg-brand-primary-foreground/10 hover:bg-brand-primary-foreground/20 text-brand-primary-foreground rounded-lg transition-colors"
                 >
                   <User size={18} />
                   <span className="hidden xl:inline">Đăng nhập</span>
@@ -1041,7 +1075,7 @@ const getPrimaryImage = (product) => {
           </div>
         </div>
 
-        {/* --- MOBILE: Search Bar Expand --- */}
+        {/* --- MOBILE SEARCH BAR --- */}
         {isMobileSearchOpen && (
           <div className="pb-3 lg:hidden">
             <div className="relative">
@@ -1052,7 +1086,7 @@ const getPrimaryImage = (product) => {
                 onKeyDown={handleKeyDown}
                 autoFocus
                 placeholder="Bạn muốn mua gì?"
-                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink placeholder-text-muted text-sm shadow-inner"
+                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink text-sm shadow-inner"
               />
               <button
                 onClick={handleSearch}
@@ -1065,8 +1099,7 @@ const getPrimaryImage = (product) => {
         )}
       </div>
 
-      {/* --- MOBILE MENU SIDEBAR (Drawer) --- */}
-      {/* Backdrop */}
+      {/* --- MOBILE MENU SIDEBAR --- */}
       {isMobileMenuOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-60 lg:hidden transition-opacity"
@@ -1074,14 +1107,12 @@ const getPrimaryImage = (product) => {
         />
       )}
 
-      {/* Sidebar Content */}
       <div
-        className={`fixed top-0 left-0 bottom-0 w-[80%] max-w-sm bg-white z-70 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+        className={`fixed top-0 left-0 bottom-0 w-[85%] max-w-sm bg-white z-70 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4 flex flex-col h-full">
-          {/* Header Sidebar */}
           <div className="flex items-center justify-between mb-6">
             <div className="font-bold text-xl text-brand-primary">Menu</div>
             <button
@@ -1092,9 +1123,15 @@ const getPrimaryImage = (product) => {
             </button>
           </div>
 
-          {/* User Info Section Mobile */}
+          {/* User Info */}
           {token ? (
-            <div className="mb-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3">
+            <div
+              className="mb-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3 hover:cursor-pointer hover:bg-gray-100"
+              onClick={() => {
+                navigate("/profile");
+                setIsMobileMenuOpen(false);
+              }}
+            >
               {userState.avatarUrl ? (
                 <img
                   src={userState.avatarUrl}
@@ -1127,40 +1164,211 @@ const getPrimaryImage = (product) => {
             </button>
           )}
 
-          {/* Navigation Links */}
-          <div className="flex-1 space-y-1">
-            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 px-2">
-              Danh mục
-            </div>
-            {categories.map((cat) => (
+          {/* --- ACCORDION MENUS --- */}
+          <div className="flex-1 space-y-2">
+            {/* 1. Loại Đồng Hồ (Categories) */}
+            <div>
               <button
-                key={cat.id}
-                onClick={() => handleCategoryClick(cat.id)}
-                className="w-full flex items-center justify-between px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                onClick={() => toggleSubmenu("categories")}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium"
               >
-                <span>{cat.name}</span>
-                <ChevronRight size={16} className="text-gray-400" />
-              </button>
-            ))}
-
-            <div className="border-t border-gray-100 my-4"></div>
-
-            {token && (
-              <>
-                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
-                  Tài khoản
+                <div className="flex items-center gap-3">
+                  <Clock size={18} className="text-brand-primary" />
+                  <span>Loại Đồng Hồ</span>
                 </div>
-                {role === "ADMIN" && (
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    mobileSubmenu === "categories" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {mobileSubmenu === "categories" && (
+                <div className="pl-10 pr-2 pb-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
                   <button
                     onClick={() => {
-                      navigate("/admin");
-                      setIsMobileMenuOpen(false);
+                      handleCategoryClick(null);
                     }}
-                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
                   >
-                    <LayoutDashboard size={18} /> Quản trị
+                    Tất cả đồng hồ
                   </button>
-                )}
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleCategoryClick(cat.id)}
+                      className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 2. Thương Hiệu (Brands) */}
+            <div>
+              <button
+                onClick={() => toggleSubmenu("brands")}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium"
+              >
+                <div className="flex items-center gap-3">
+                  <Hash size={18} className="text-brand-primary" />
+                  <span>Thương Hiệu</span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    mobileSubmenu === "brands" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {mobileSubmenu === "brands" && (
+                <div className="pl-10 pr-2 pb-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/products");
+                    }}
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                  >
+                    Tất cả thương hiệu
+                  </button>
+                  <div className="grid grid-cols-2 gap-2 mt-1">
+                    {brands.slice(0, 10).map((brand) => (
+                      <button
+                        key={brand.id}
+                        onClick={() => handleBrandClick(brand.name)}
+                        className="text-left py-1.5 text-sm text-gray-600 hover:text-brand-primary truncate"
+                      >
+                        {brand.name}
+                      </button>
+                    ))}
+                  </div>
+                  {brands.length > 10 && (
+                    <button
+                      onClick={() => {
+                        setIsMobileMenuOpen(false);
+                        navigate("/products");
+                      }}
+                      className="w-full text-left py-2 text-sm font-medium text-brand-primary mt-1"
+                    >
+                      Xem thêm...
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* 3. Khuyến Mãi (Promotions) */}
+            <div>
+              <button
+                onClick={() => toggleSubmenu("promotions")}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium"
+              >
+                <div className="flex items-center gap-3">
+                  <Gift size={18} className="text-red-500" />
+                  <span>Khuyến Mãi</span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    mobileSubmenu === "promotions" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {mobileSubmenu === "promotions" && (
+                <div className="pl-10 pr-2 pb-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/promotional-products");
+                    }}
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                  >
+                    Tất cả khuyến mãi
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/promotional-products?status=active");
+                    }}
+                    className="w-full text-left py-2 text-sm text-green-600 hover:underline"
+                  >
+                    ● Đang diễn ra
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/products?sort=discount");
+                    }}
+                    className="w-full text-left py-2 text-sm text-red-600 hover:underline"
+                  >
+                    ● Sản phẩm SALE sốc
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Bài Viết (Posts) */}
+            <div>
+              <button
+                onClick={() => toggleSubmenu("posts")}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 text-gray-700 font-medium"
+              >
+                <div className="flex items-center gap-3">
+                  <FileText size={18} className="text-brand-primary" />
+                  <span>Bài Viết</span>
+                </div>
+                <ChevronDown
+                  size={16}
+                  className={`transition-transform ${
+                    mobileSubmenu === "posts" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {mobileSubmenu === "posts" && (
+                <div className="pl-10 pr-2 pb-2 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/posts");
+                    }}
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                  >
+                    Tất cả bài viết
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/posts?category=news");
+                    }}
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                  >
+                    Tin công nghệ
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      navigate("/posts?category=review");
+                    }}
+                    className="w-full text-left py-2 text-sm text-gray-600 hover:text-brand-primary"
+                  >
+                    Đánh giá sản phẩm
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="border-t border-gray-100 my-2"></div>
+
+            {/* User Account Links (Mobile) */}
+            {token && (
+              <>
                 <button
                   onClick={() => {
                     navigate("/profile");
@@ -1188,9 +1396,6 @@ const getPrimaryImage = (product) => {
                 >
                   <Heart size={18} /> Sản phẩm yêu thích
                 </button>
-
-                <div className="border-t border-gray-100 my-4"></div>
-
                 <button
                   onClick={handleLogout}
                   className="w-full flex items-center gap-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg font-medium"

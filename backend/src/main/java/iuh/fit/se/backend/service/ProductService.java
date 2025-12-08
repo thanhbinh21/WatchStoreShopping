@@ -10,6 +10,7 @@ import iuh.fit.se.backend.dto.response.PriceRangeResponse;
 import iuh.fit.se.backend.specification.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -77,6 +78,51 @@ public class ProductService {
         if (status != null) {
             spec = (spec == null ? ProductSpecification.hasStatus(status)
                 : spec.and(ProductSpecification.hasStatus(status)));
+        }
+
+        // Handle sorting by price specially because `price` is not a direct Product field
+        if ("price".equalsIgnoreCase(sortBy)) {
+            // load all matching products, sort in-memory by current price, then page
+            List<Product> matched = productRepository.findAll(spec);
+            matched.sort((a, b) -> {
+                int cmp = a.getCurrentPrice().compareTo(b.getCurrentPrice());
+                return order.equalsIgnoreCase("desc") ? -cmp : cmp;
+            });
+            int start = page * size;
+            int end = Math.min(start + size, matched.size());
+            List<Product> pageContent = start >= matched.size() ? List.of() : matched.subList(start, end);
+            Page<Product> productPage = new PageImpl<>(pageContent, PageRequest.of(page, size), matched.size());
+
+            return productPage.map(p -> {
+                Double avg = reviewRepository.getAverageRating(p.getId());
+                Long total = reviewRepository.getTotalReviews(p.getId());
+
+                ProductResponse response = new ProductResponse();
+                response.setId(p.getId());
+                response.setName(p.getName());
+                response.setBrand(p.getBrand().getName());
+                response.setBrandId(p.getBrand().getId());
+                response.setDescription(p.getDescription());
+                response.setPrice(p.getCurrentPrice());
+                response.setImageUrl(p.getPrimaryImageUrl());
+                response.setCategoryName(p.getCategory() != null ? p.getCategory().getName() : null);
+                response.setCategoryId(p.getCategory() != null ? p.getCategory().getId() : null);
+                response.setSupplierName(p.getSupplier() != null ? p.getSupplier().getName() : null);
+                response.setSupplierId(p.getSupplier() != null ? p.getSupplier().getId() : null);
+                response.setStatus(p.getStatus() != null ? p.getStatus().toString() : null);
+                response.setCreatedAt(p.getCreatedAt());
+                response.setStockQuantity(p.getStockQuantity());
+                response.setRating(avg != null ? avg : 0.0);
+                response.setNumOfRating(total != null ? total : 0L);
+
+                // Include inventories for admin to edit stock
+                response.setInventories(p.getInventories());
+                response.setProductImages(p.getProductImages());
+                response.setProductPrices(p.getProductPrices());
+                response.setProductSpecs(p.getProductSpecs());
+
+                return response;
+            });
         }
 
         Sort sort = Sort.by(order.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC, sortBy);
