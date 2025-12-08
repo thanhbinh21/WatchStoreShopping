@@ -23,7 +23,9 @@ import { FacebookIcon } from "@/components/ui/FacebookIcon";
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [fbLoading, setFbLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [form, setForm] = useState({
     username: "",
@@ -40,6 +42,7 @@ export default function LoginRegister() {
 
   // Ref để gắn nút Google ẩn vào
   const googleButtonRef = useRef(null);
+  const googleTimeoutRef = useRef(null);
 
   const syncGuestCart = async (userId) => {
     const guestItems = getGuestCart();
@@ -82,7 +85,7 @@ export default function LoginRegister() {
       return;
     }
 
-    setLoading(true);
+    setSubmitLoading(true);
     try {
       if (isLogin) {
         const res = await axiosInstance.post("/auth/login", {
@@ -134,7 +137,7 @@ export default function LoginRegister() {
       toast.error(errorMsg);
       setError(errorMsg);
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
@@ -145,7 +148,7 @@ export default function LoginRegister() {
       return;
     }
 
-    setLoading(true);
+    setGoogleLoading(true);
     try {
       const res = await googleSignIn(response.credential);
       const { data } = res;
@@ -166,7 +169,11 @@ export default function LoginRegister() {
       console.error("Google login error", err);
       toast.error(err.response?.data || "Đăng nhập Google thất bại");
     } finally {
-      setLoading(false);
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
+      setGoogleLoading(false);
     }
   };
 
@@ -271,7 +278,7 @@ export default function LoginRegister() {
   }, []);
 
   const processFacebookToken = async (token) => {
-    setLoading(true);
+    setFbLoading(true);
     const loadingToast = toast.loading("Đang xác thực với Facebook...");
 
     try {
@@ -296,7 +303,7 @@ export default function LoginRegister() {
       toast.dismiss(loadingToast);
       toast.error(err.response?.data || "Đăng nhập Facebook thất bại");
     } finally {
-      setLoading(false);
+      setFbLoading(false);
     }
   };
 
@@ -322,6 +329,9 @@ export default function LoginRegister() {
         }, 300);
       });
 
+    // mark loading immediately when user clicks Facebook
+    setFbLoading(true);
+
     waitForFB()
       .then((FB) => {
         // SỬA LỖI: Bỏ từ khóa 'async' ở đây
@@ -333,6 +343,7 @@ export default function LoginRegister() {
               processFacebookToken(token);
             } else {
               console.log("User cancelled login");
+              setFbLoading(false);
             }
           },
           { scope: "email,public_profile" }
@@ -340,6 +351,7 @@ export default function LoginRegister() {
       })
       .catch((err) => {
         console.error(err);
+        setFbLoading(false);
         toast.error("Không thể tải Facebook SDK. Hãy tắt AdBlock và thử lại.");
       });
   };
@@ -554,10 +566,10 @@ export default function LoginRegister() {
 
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={submitLoading}
                   className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
                 >
-                  {loading ? (
+                  {submitLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Đang xử lý...
@@ -650,6 +662,7 @@ export default function LoginRegister() {
                       <Button
                         variant="outline"
                         className="flex items-center justify-center w-full relative z-10"
+                        disabled={googleLoading}
                       >
                         <GoogleIcon />
                         Google
@@ -660,9 +673,16 @@ export default function LoginRegister() {
                       variant="outline"
                       className="flex items-center justify-center w-30  hover:bg-primary/0"
                       onClick={handleFacebookLogin}
+                      disabled={fbLoading}
                     >
                       {/* simple text icon; replace with a proper SVG/icon as desired */}
-                      <FacebookIcon />
+                      {fbLoading ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <FacebookIcon />
+                      )}
+                      <>{/* Đang xử lý... */}</>
+                      {/*  */}
                       Facebook
                     </Button>
                     {/* KẾT THÚC: Sửa phần nút Google */}
