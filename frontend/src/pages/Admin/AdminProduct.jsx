@@ -169,7 +169,10 @@ export const AdminProduct = () => {
             : Array.isArray(v?.content)
             ? v.content
             : [];
-        setBrands(normalize(bRes));
+        const brandsArray = normalize(bRes);
+        // Chỉ lấy brands có status ACTIVE
+        const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
+        setBrands(activeBrands);
         const categoriesArray = normalize(cRes);
         // Chỉ lấy categories có status ACTIVE
         const activeCategories = categoriesArray.filter(

@@ -158,13 +158,13 @@ export default function Header() {
 
         // Fetch brands
         const brandsData = await getBrands();
-        setBrands(
-          Array.isArray(brandsData)
-            ? brandsData
-            : Array.isArray(brandsData.data)
-            ? brandsData.data
-            : []
-        );
+        const brandsArray = Array.isArray(brandsData)
+          ? brandsData
+          : Array.isArray(brandsData.data)
+          ? brandsData.data
+          : [];
+        const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
+        setBrands(activeBrands);
         const settingsData = await getGeneralSettings();
         setSettings(settingsData);
       } catch (error) {

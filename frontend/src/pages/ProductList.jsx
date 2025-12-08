@@ -118,8 +118,14 @@ export default function ProductList() {
 
   const fetchBrands = async () => {
     try {
-      const data = await getBrands();
-      setBrands(Array.isArray(data) ? data : []);
+      const brandsData = await getBrands();
+      const brandsArray = Array.isArray(brandsData)
+        ? brandsData
+        : Array.isArray(brandsData.data)
+        ? brandsData.data
+        : [];
+      const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
+      setBrands(activeBrands);
     } catch (error) {
       console.error("Error fetching brands:", error);
     }
