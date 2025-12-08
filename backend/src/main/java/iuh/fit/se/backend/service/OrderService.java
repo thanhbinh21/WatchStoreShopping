@@ -41,6 +41,7 @@ public class OrderService {
     private final CartService cartService;
     private final ProductRepository productRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     public List<OrderResponse> getOrdersByUser(Long userId) {
         return orderRepository.findByUserId(userId)
@@ -253,6 +254,17 @@ public class OrderService {
         order.setStatus(status);
 
         Order saved = orderRepository.save(order);
+        
+        // Gửi thông báo cho user về thay đổi trạng thái đơn hàng
+        if (oldStatus != status && order.getUser() != null) {
+            notificationService.createOrderStatusChangedNotification(
+                order.getUser(), 
+                order.getId(), 
+                oldStatus.name(), 
+                status.name()
+            );
+        }
+        
         return toOrderResponse(saved);
     }
 

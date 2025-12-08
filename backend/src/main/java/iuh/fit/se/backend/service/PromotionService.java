@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 public class PromotionService {
     private final PromotionRepository promotionRepository;
     private final ProductRepository productRepository;
+    private final NotificationService notificationService;
 
     public List<Promotion> getAll() {
         return promotionRepository.findAll();
@@ -40,6 +41,8 @@ public class PromotionService {
     public Promotion save(Promotion promotion, List<Long> productIds) {
         ensureUniqueName(promotion);
         validatePromotion(promotion);
+        
+        boolean isNewPromotion = promotion.getId() == null;
 
         if (productIds != null) {
             List<Long> normalizedIds = productIds.stream()
@@ -64,7 +67,24 @@ public class PromotionService {
             promotion.setProducts(Collections.emptyList());
         }
 
-        return promotionRepository.save(promotion);
+        Promotion saved = promotionRepository.save(promotion);
+        
+        // Gửi thông báo cho tất cả users khi tạo promotion mới
+        if (isNewPromotion) {
+            String promotionDetails = String.format(
+                "Giảm giá %s%% từ %s đến %s. Áp dụng cho %d sản phẩm!",
+                saved.getDiscount(),
+                saved.getStartDate(),
+                saved.getEndDate(),
+                saved.getProducts() != null ? saved.getProducts().size() : 0
+            );
+            notificationService.notifyAllUsers(
+                "🎉 Khuyến mãi mới: " + saved.getName(),
+                promotionDetails
+            );
+        }
+        
+        return saved;
     }
 
     private void ensureUniqueName(Promotion promotion) {

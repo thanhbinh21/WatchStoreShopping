@@ -133,12 +133,17 @@ export default function Orders() {
       if (order.status === "COMPLETED" && order.items) {
         for (const item of order.items) {
           if (item.productId) {
-            const review = await getReviewByUserAndProduct(
-              userId,
-              item.productId
-            );
-            if (review) {
-              reviews[item.productId] = review;
+            try {
+              const review = await getReviewByUserAndProduct(
+                userId,
+                item.productId
+              );
+              if (review) {
+                reviews[item.productId] = review;
+              }
+            } catch (error) {
+              // Silently ignore errors (404 means no review exists, which is expected)
+              // Don't log anything to keep console clean
             }
           }
         }

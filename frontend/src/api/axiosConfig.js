@@ -26,17 +26,13 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Suppress console errors for 404 on review endpoints (user hasn't reviewed yet)
-    const isReviewNotFound = 
+    // Check if this is an expected 404 error that should be suppressed (e.g., user hasn't reviewed product)
+    const isExpected404 = 
       error.response?.status === 404 && 
-      originalRequest?.url?.includes('/reviews/user/');
+      (originalRequest?.suppressError404 || originalRequest?.url?.includes('/reviews/user/'));
     
-    if (!isReviewNotFound) {
-      // Only log non-review 404 errors
-      if (error.response?.status !== 404) {
-        console.error('API Error:', error);
-      }
-    }
+    // Don't log expected 404 errors - silently handle them
+    // These are normal business logic, not actual errors
 
     // Nếu lỗi là token expired
     // Do not try refresh for auth endpoints (login/register/refresh-token)
