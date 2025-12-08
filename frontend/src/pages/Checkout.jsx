@@ -20,22 +20,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Loader2,
+  MapPin,
+  Phone,
+  User,
+  CreditCard,
+  ShoppingBag,
+  TicketPercent,
+} from "lucide-react";
 
 const paymentMethods = [
   { value: "CASH", label: "Tiền mặt khi nhận hàng (COD)" },
   { value: "VNPAY", label: "Thanh toán qua VNPay" },
-  // Các phương thức thanh toán khác sẽ phát triển sau
-  // { value: 'BANK_TRANSFER', label: 'Chuyển khoản ngân hàng' },
-  // { value: 'MOMO', label: 'Ví MoMo' },
 ];
 
 export default function Checkout() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Lấy dữ liệu từ trang Giỏ hàng chuyển qua
   const { selectedItems, totalPrice } = location.state || {
     selectedItems: [],
     totalPrice: 0,
   };
+
+  // --- LOGIC TÍNH TOÁN GIẢM GIÁ MỚI THÊM ---
+  // Tính tổng tiền gốc (chưa giảm giá) dựa trên giá gốc của sản phẩm
+  const originalTotal = selectedItems.reduce((sum, item) => {
+    return sum + Number(item.price || 0) * (item.quantity || 1);
+  }, 0);
+
+  // Tính số tiền được giảm
+  const totalDiscount = originalTotal - totalPrice;
+  // ------------------------------------------
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -49,7 +67,6 @@ export default function Checkout() {
   });
 
   const [loading, setLoading] = useState(false);
-  // state for address
   const [provinces, setProvinces] = useState([]);
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
@@ -57,6 +74,7 @@ export default function Checkout() {
   const [selectedDistrictCode, setSelectedDistrictCode] = useState("");
   const [selectedWardCode, setSelectedWardCode] = useState("");
 
+  // ... (Giữ nguyên các hàm fetchProvinces, fetchDistricts, fetchWards...)
   const fetchProvinces = async () => {
     try {
       const res = await fetch("https://provinces.open-api.vn/api/p/");
@@ -93,10 +111,8 @@ export default function Checkout() {
     }
   };
 
-  // Load tỉnh thành khi component mount
   useEffect(() => {
     fetchProvinces();
-
     const user = parseStoredUser();
     if (user) {
       setFormData((prev) => ({
@@ -114,58 +130,6 @@ export default function Checkout() {
     }
   }, [selectedItems, navigate]);
 
-  // Load provinces on mount
-  useEffect(() => {
-    const loadProvinces = async () => {
-      try {
-        const data = await getProvinces();
-        setProvinces(data);
-      } catch (error) {
-        console.error("Failed to load provinces:", error);
-      }
-    };
-    loadProvinces();
-  }, []);
-
-  // Load districts when province changes
-  useEffect(() => {
-    const loadDistricts = async () => {
-      if (selectedProvinceCode) {
-        try {
-          const data = await getDistrictsByProvince(selectedProvinceCode);
-          setDistricts(data);
-          setWards([]); // Reset wards
-          setFormData((prev) => ({ ...prev, district: "", ward: "" }));
-          setSelectedDistrictCode("");
-        } catch (error) {
-          console.error("Failed to load districts:", error);
-        }
-      } else {
-        setDistricts([]);
-        setWards([]);
-      }
-    };
-    loadDistricts();
-  }, [selectedProvinceCode]);
-
-  // Load wards when district changes
-  useEffect(() => {
-    const loadWards = async () => {
-      if (selectedDistrictCode) {
-        try {
-          const data = await getWardsByDistrict(selectedDistrictCode);
-          setWards(data);
-          setFormData((prev) => ({ ...prev, ward: "" }));
-        } catch (error) {
-          console.error("Failed to load wards:", error);
-        }
-      } else {
-        setWards([]);
-      }
-    };
-    loadWards();
-  }, [selectedDistrictCode]);
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -174,52 +138,25 @@ export default function Checkout() {
     }));
   };
 
-  const handleProvinceChange = (e) => {
-    const selectedOption = e.target.selectedOptions[0];
-    const provinceName = selectedOption.text;
-    const provinceCode = e.target.value;
-
-    setSelectedProvinceCode(provinceCode);
-    setFormData((prev) => ({ ...prev, city: provinceName }));
-  };
-
-  const handleDistrictChange = (e) => {
-    const selectedOption = e.target.selectedOptions[0];
-    const districtName = selectedOption.text;
-    const districtCode = e.target.value;
-
-    setSelectedDistrictCode(districtCode);
-    setFormData((prev) => ({ ...prev, district: districtName }));
-  };
-
-  const handleWardChange = (e) => {
-    const wardName = e.target.selectedOptions[0].text;
-    setFormData((prev) => ({ ...prev, ward: wardName }));
-  };
-
   const handleSubmitOrder = async (e) => {
     e.preventDefault();
 
-    // Validate form
     if (
       !formData.fullName ||
       !formData.phone ||
-      !formData.address || // Số nhà
-      !formData.city || // Tỉnh
-      !formData.district || // Huyện
-      !formData.ward // Xã
+      !formData.address ||
+      !formData.city ||
+      !formData.district ||
+      !formData.ward
     ) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      toast.error("Vui lòng điền đầy đủ thông tin giao hàng");
       return;
     }
 
     setLoading(true);
-
-    // Hiển thị toast đang xử lý
     const loadingToast = toast.loading("Đơn hàng đang xử lý...");
 
     try {
-      // Get user from localStorage
       const user = parseStoredUser();
       if (!user?.id) {
         toast.dismiss(loadingToast);
@@ -228,22 +165,61 @@ export default function Checkout() {
         return;
       }
 
-      // Prepare order request
       const orderRequest = {
         userId: user.id,
-        orderItems: selectedItems.map((item) => {
-          // CartItemDto có productId trực tiếp
-          const productId = item.productId;
-          if (!productId) {
-            console.error("Invalid cart item:", item);
-            throw new Error("Sản phẩm không hợp lệ trong giỏ hàng");
-          }
-          return {
-            productId: productId,
-            quantity: item.quantity || 1,
-          };
-        }),
-        // Shipping information
+        // Build order items and include final unit price (apply totalDiscount proportionally)
+        orderItems: (() => {
+          const items = [];
+          const totalItems = selectedItems.length;
+          let runningSubtotal = 0;
+
+          selectedItems.forEach((item, idx) => {
+            const productId = item.productId;
+            if (!productId) throw new Error("Sản phẩm không hợp lệ");
+            const qty = item.quantity || 1;
+
+            // base price (original product price shown in cart)
+            const base = Number(item.price || 0);
+
+            // If the item already has a discountedPrice field use it
+            if (
+              item.discountedPrice !== undefined &&
+              item.discountedPrice !== null
+            ) {
+              const unitPrice = Math.round(Number(item.discountedPrice));
+              runningSubtotal += unitPrice * qty;
+              items.push({ productId, quantity: qty, price: unitPrice });
+              return;
+            }
+
+            // If there is a totalDiscount, distribute it proportionally
+            let unitPrice;
+            if (totalDiscount > 0 && originalTotal > 0) {
+              const itemTotal = base * qty;
+              const proportion = itemTotal / originalTotal;
+              const itemTotalAfter = itemTotal - proportion * totalDiscount;
+              unitPrice = Math.round(itemTotalAfter / qty);
+
+              // If this is the last item, fix rounding diff so totals match exactly
+              if (idx === totalItems - 1) {
+                const expectedTotal = Math.round(totalPrice);
+                const currentTotal = runningSubtotal + unitPrice * qty;
+                const diff = expectedTotal - currentTotal;
+                if (diff !== 0) {
+                  // adjust unitPrice to absorb the remaining diff
+                  unitPrice = unitPrice + Math.round(diff / qty);
+                }
+              }
+            } else {
+              unitPrice = Math.round(base);
+            }
+
+            runningSubtotal += unitPrice * qty;
+            items.push({ productId, quantity: qty, price: unitPrice });
+          });
+
+          return items;
+        })(),
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,
@@ -251,31 +227,21 @@ export default function Checkout() {
         district: formData.district || "",
         city: formData.city,
         note: formData.note || "",
-        // Payment method
         paymentMethod: formData.paymentMethod,
       };
 
-      console.log("Order request:", orderRequest);
-
-      // Create order
       const response = await createOrder(orderRequest);
-      console.log("Order response:", response);
-
-      // Backend có thể trả về response.data hoặc trực tiếp data
       const order = response?.data || response;
 
-      // If payment method is VNPay, redirect to VNPay payment gateway
       if (formData.paymentMethod === "VNPAY") {
         try {
-          // Store cart items in sessionStorage for later removal
           sessionStorage.setItem(
             "vnpay_cart_items",
             JSON.stringify(selectedItems)
           );
-
           const vnpayResponse = await createVNPayPayment({
             orderId: order.id,
-            amount: Math.round(totalPrice),
+            amount: Math.round(totalPrice), // VNPay thanh toán số tiền cuối cùng
             orderInfo: `Thanh toan don hang ${order.id}`,
             returnUrl: `${window.location.origin}/payment/vnpay-return`,
           });
@@ -283,61 +249,42 @@ export default function Checkout() {
           if (vnpayResponse?.code === "00" && vnpayResponse?.paymentUrl) {
             toast.dismiss(loadingToast);
             toast.success("Đang chuyển đến cổng thanh toán VNPay...");
-            // Redirect to VNPay
             window.location.href = vnpayResponse.paymentUrl;
             return;
           } else {
             throw new Error(
-              vnpayResponse?.message || "Không thể tạo thanh toán VNPay"
+              vnpayResponse?.message || "Lỗi tạo thanh toán VNPay"
             );
           }
         } catch (vnpayError) {
           toast.dismiss(loadingToast);
-          toast.error("Lỗi khi tạo thanh toán VNPay: " + vnpayError.message);
+          toast.error("Lỗi VNPay: " + vnpayError.message);
           return;
         }
       }
 
-      // For COD payment, remove cart items and navigate to orders
-      // Xóa các sản phẩm đã mua khỏi giỏ hàng
       try {
         for (const item of selectedItems) {
-          if (item.id) {
-            await removeCartItem(item.id);
-          }
+          if (item.id) await removeCartItem(item.id);
         }
       } catch (error) {
-        console.error("Error removing cart items:", error);
-        // Không fail order nếu không xóa được cart
+        console.error("Lỗi xóa giỏ hàng:", error);
       }
 
-      // Đóng toast loading và hiển thị toast thành công
       toast.dismiss(loadingToast);
-      toast.success("Đơn hàng xử lý thành công!");
-
-      // Navigate không truyền message nữa để tránh toast trùng lặp
-      navigate("/orders", {
-        state: {
-          orderId: order?.id,
-        },
-      });
+      toast.success("Đặt hàng thành công!");
+      navigate("/orders", { state: { orderId: order?.id } });
     } catch (error) {
-      // Đóng toast loading khi có lỗi
       toast.dismiss(loadingToast);
-
       const errorMsg =
-        error.response?.data?.message ||
-        error.message ||
-        "Có lỗi xảy ra khi đặt hàng";
+        error.response?.data?.message || error.message || "Lỗi đặt hàng";
       toast.error(errorMsg);
     } finally {
       setLoading(false);
     }
   };
 
-  if (!selectedItems || selectedItems.length === 0) {
-    return null;
-  }
+  if (!selectedItems || selectedItems.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -349,287 +296,332 @@ export default function Checkout() {
         ]}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 flex-1">
-        <h1 className="text-2xl font-bold mb-6">Thanh toán</h1>
+      <div className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 md:mb-8">
+          Thanh toán
+        </h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Delivery Information Form */}
-          <div className="lg:col-span-2 bg-white p-6 rounded-lg shadow">
-            <h2 className="text-xl font-semibold mb-4">Thông tin giao hàng</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* LEFT COLUMN: Delivery Form */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-brand-primary" />
+                Thông tin giao hàng
+              </h2>
 
-            <form onSubmit={handleSubmitOrder} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Họ và tên <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Nhập họ và tên"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Số điện thoại <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Nhập số điện thoại"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Tỉnh / Thành */}
-                <div className="min-w-48">
-                  <label className="block text-sm font-medium mb-1">
-                    Tỉnh/Thành phố <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    value={
-                      selectedProvinceCode ? String(selectedProvinceCode) : ""
-                    }
-                    onValueChange={(value) => {
-                      const code = value;
-                      setSelectedProvinceCode(code);
-                      setSelectedDistrictCode("");
-                      setSelectedWardCode("");
-                      setDistricts([]);
-                      setWards([]);
-
-                      const prov = provinces.find(
-                        (p) => String(p.code) === String(code)
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        city: prov?.name || "",
-                        district: "",
-                        ward: "",
-                      }));
-
-                      if (code) fetchDistricts(code);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn Tỉnh/Thành" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {provinces.map((prov) => (
-                        <SelectItem key={prov.code} value={String(prov.code)}>
-                          {prov.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Quận / Huyện */}
-                <div className="min-w-48">
-                  <label className="block text-sm font-medium mb-1">
-                    Quận/Huyện <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    disabled={!selectedProvinceCode}
-                    value={
-                      selectedDistrictCode ? String(selectedDistrictCode) : ""
-                    }
-                    onValueChange={(value) => {
-                      const code = value;
-                      setSelectedDistrictCode(code);
-                      setSelectedWardCode("");
-                      setWards([]);
-
-                      const dist = districts.find(
-                        (d) => String(d.code) === String(code)
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        district: dist?.name || "",
-                        ward: "",
-                      }));
-
-                      if (code) fetchWards(code);
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn Quận/Huyện" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {districts.map((d) => (
-                        <SelectItem key={d.code} value={String(d.code)}>
-                          {d.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Phường / Xã */}
-                <div className="min-w-48">
-                  <label className="block text-sm font-medium mb-1">
-                    Phường/Xã <span className="text-red-500">*</span>
-                  </label>
-                  <Select
-                    disabled={!selectedDistrictCode}
-                    value={selectedWardCode ? String(selectedWardCode) : ""}
-                    onValueChange={(value) => {
-                      const code = value;
-                      setSelectedWardCode(code);
-
-                      const ward = wards.find(
-                        (w) => String(w.code) === String(code)
-                      );
-                      setFormData((prev) => ({
-                        ...prev,
-                        ward: ward?.name || "",
-                      }));
-                    }}
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Chọn Phường/Xã" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {wards.map((w) => (
-                        <SelectItem key={w.code} value={String(w.code)}>
-                          {w.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Địa chỉ cụ thể <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Số nhà, tên đường..."
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Ghi chú
-                </label>
-                <textarea
-                  name="note"
-                  value={formData.note}
-                  onChange={handleInputChange}
-                  rows="3"
-                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
-                  placeholder="Ghi chú thêm (tùy chọn)"
-                />
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-3">
-                  Phương thức thanh toán
-                </h3>
-                <div className="space-y-2">
-                  {paymentMethods.map((method) => (
-                    <label
-                      key={method.value}
-                      className="flex items-center p-3 border rounded cursor-pointer hover:bg-gray-50"
-                    >
-                      <input
-                        type="radio"
-                        name="paymentMethod"
-                        value={method.value}
-                        checked={formData.paymentMethod === method.value}
-                        onChange={handleInputChange}
-                        className="mr-3"
-                      />
-                      <span>{method.label}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3 rounded-lg text-white font-semibold ${
-                  loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700"
-                }`}
+              <form
+                id="checkout-form"
+                onSubmit={handleSubmitOrder}
+                className="space-y-5"
               >
-                {loading ? "Đang xử lý..." : "Đặt hàng"}
-              </button>
-            </form>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Họ và tên <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                      <input
+                        type="text"
+                        name="fullName"
+                        value={formData.fullName}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none transition-all"
+                        placeholder="Nguyễn Văn A"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Số điện thoại <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                      <input
+                        type="tel"
+                        name="phone"
+                        value={formData.phone}
+                        onChange={handleInputChange}
+                        className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none transition-all"
+                        placeholder="09xx xxx xxx"
+                        required
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Select Tỉnh */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Tỉnh/Thành <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      value={selectedProvinceCode}
+                      onValueChange={(value) => {
+                        setSelectedProvinceCode(value);
+                        setSelectedDistrictCode("");
+                        setSelectedWardCode("");
+                        setDistricts([]);
+                        setWards([]);
+
+                        const prov = provinces.find(
+                          (p) => String(p.code) === String(value)
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          city: prov?.name || "",
+                          district: "",
+                          ward: "",
+                        }));
+
+                        if (value) fetchDistricts(value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-[42px]">
+                        <SelectValue placeholder="Chọn Tỉnh/Thành" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {provinces.map((prov) => (
+                          <SelectItem key={prov.code} value={String(prov.code)}>
+                            {prov.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Select Huyện */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Quận/Huyện <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      disabled={!selectedProvinceCode}
+                      value={selectedDistrictCode}
+                      onValueChange={(value) => {
+                        setSelectedDistrictCode(value);
+                        setSelectedWardCode("");
+                        setWards([]);
+
+                        const dist = districts.find(
+                          (d) => String(d.code) === String(value)
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          district: dist?.name || "",
+                          ward: "",
+                        }));
+
+                        if (value) fetchWards(value);
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-[42px]">
+                        <SelectValue placeholder="Chọn Quận/Huyện" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((d) => (
+                          <SelectItem key={d.code} value={String(d.code)}>
+                            {d.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Select Xã */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                      Phường/Xã <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      disabled={!selectedDistrictCode}
+                      value={selectedWardCode}
+                      onValueChange={(value) => {
+                        setSelectedWardCode(value);
+                        const ward = wards.find(
+                          (w) => String(w.code) === String(value)
+                        );
+                        setFormData((prev) => ({
+                          ...prev,
+                          ward: ward?.name || "",
+                        }));
+                      }}
+                    >
+                      <SelectTrigger className="w-full h-[42px]">
+                        <SelectValue placeholder="Chọn Phường/Xã" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {wards.map((w) => (
+                          <SelectItem key={w.code} value={String(w.code)}>
+                            {w.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Địa chỉ cụ thể <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none"
+                    placeholder="Số nhà, tên đường, tòa nhà..."
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Ghi chú đơn hàng
+                  </label>
+                  <textarea
+                    name="note"
+                    value={formData.note}
+                    onChange={handleInputChange}
+                    rows="3"
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none resize-none"
+                    placeholder="Ví dụ: Giao hàng giờ hành chính, gọi trước khi giao..."
+                  />
+                </div>
+              </form>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <CreditCard className="w-5 h-5 text-brand-primary" />
+                Phương thức thanh toán
+              </h2>
+              <div className="space-y-3">
+                {paymentMethods.map((method) => (
+                  <label
+                    key={method.value}
+                    className={`relative flex items-center p-4 border rounded-xl cursor-pointer transition-all ${
+                      formData.paymentMethod === method.value
+                        ? "border-brand-primary bg-brand-primary/5 ring-1 ring-brand-primary"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value={method.value}
+                      checked={formData.paymentMethod === method.value}
+                      onChange={handleInputChange}
+                      className="w-4 h-4 text-brand-primary border-gray-300 focus:ring-brand-primary"
+                    />
+                    <span className="ml-3 font-medium text-gray-900">
+                      {method.label}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
           </div>
 
-          {/* Right: Order Summary */}
-          <div className="lg:col-span-1">
-            <div className="bg-white p-6 rounded-lg shadow sticky top-20">
-              <h2 className="text-xl font-semibold mb-4">Đơn hàng</h2>
+          {/* RIGHT COLUMN: Order Summary */}
+          <div className="lg:col-span-4">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 sticky top-24">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-brand-primary" />
+                Đơn hàng của bạn
+              </h2>
 
-              <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
+              <div className="space-y-4 mb-6 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
                 {selectedItems.map((item) => {
-                  // CartItemDto có imageUrl, productName, price trực tiếp
                   const imageUrl =
                     item.imageUrl || "https://via.placeholder.com/60";
-                  const productName = item.productName || "Sản phẩm";
+                  // Ở đây dùng item.price gốc (vì nó là thông tin sản phẩm)
                   const price = Number(item.price) || 0;
 
                   return (
                     <div
                       key={item.id}
-                      className="flex items-start space-x-3 pb-3 border-b"
+                      className="flex gap-3 py-3 border-b border-gray-100 last:border-0"
                     >
-                      <img
-                        src={imageUrl}
-                        alt={productName}
-                        className="w-16 h-16 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium line-clamp-2">
-                          {productName}
+                      <div className="h-16 w-16 shrink-0 overflow-hidden rounded-md border border-gray-200">
+                        <img
+                          src={imageUrl}
+                          alt={item.productName}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col">
+                        <h3 className="text-sm font-medium text-gray-900 line-clamp-2">
+                          {item.productName}
                         </h3>
-                        <p className="text-sm text-gray-600">
-                          SL: {item.quantity}
-                        </p>
-                        <p className="text-sm font-semibold text-red-600">
-                          {(price * item.quantity).toLocaleString()}đ
-                        </p>
+                        <div className="mt-1 flex items-end justify-between text-sm">
+                          <p className="text-gray-500">x {item.quantity}</p>
+                          <p className="font-semibold text-gray-900">
+                            {(price * item.quantity).toLocaleString()}đ
+                          </p>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
 
-              <div className="space-y-2 text-sm border-t pt-4">
-                <div className="flex justify-between">
-                  <span>Tạm tính:</span>
-                  <span>{totalPrice.toLocaleString()}đ</span>
+              {/* BẮT ĐẦU PHẦN TỔNG TIỀN ĐÃ CẬP NHẬT */}
+              <div className="space-y-3 pt-4 border-t border-gray-100">
+                {/* Tổng tiền gốc */}
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Tổng tiền hàng</span>
+                  <span>{originalTotal.toLocaleString()}đ</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Phí vận chuyển:</span>
-                  <span>Miễn phí</span>
+
+                {/* Giảm giá - Chỉ hiện nếu có giảm */}
+                {totalDiscount > 0 && (
+                  <div className="flex justify-between text-sm text-green-600 font-medium">
+                    <span className="flex items-center gap-1">
+                      <TicketPercent className="w-4 h-4" /> Giảm giá
+                    </span>
+                    <span>-{totalDiscount.toLocaleString()}đ</span>
+                  </div>
+                )}
+
+                {/* Phí vận chuyển */}
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Phí vận chuyển</span>
+                  <span className="text-green-600 font-medium">Miễn phí</span>
                 </div>
-                <div className="flex justify-between text-lg font-bold border-t pt-2">
-                  <span>Tổng cộng:</span>
-                  <span className="text-red-600">
+
+                {/* Tổng thanh toán cuối cùng */}
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <span className="text-base font-semibold text-gray-900">
+                    Tổng thanh toán
+                  </span>
+                  <span className="text-xl font-bold text-brand-primary">
                     {totalPrice.toLocaleString()}đ
                   </span>
                 </div>
               </div>
+              {/* KẾT THÚC PHẦN TỔNG TIỀN */}
+
+              <button
+                type="submit"
+                form="checkout-form"
+                disabled={loading}
+                className="w-full mt-6 bg-brand-primary text-white py-3.5 rounded-xl font-semibold hover:bg-brand-primary-dark transition-all shadow-md hover:shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Đang xử lý...
+                  </>
+                ) : (
+                  "Đặt hàng ngay"
+                )}
+              </button>
             </div>
           </div>
         </div>
