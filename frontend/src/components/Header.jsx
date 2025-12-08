@@ -24,6 +24,7 @@ import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
+import { getGeneralSettings } from "@/api/settingsAPI";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -39,6 +40,10 @@ export default function Header() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [cartAnimation, setCartAnimation] = useState(false);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
+  const [settings, setSettings] = useState({
+    siteName: "WATCH STORE",
+    logo: "",
+  });
   const userDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
@@ -72,20 +77,25 @@ export default function Header() {
     }
   }, [userState?.id, token]);
 
-  // Fetch categories
+  // Fetch categories and settings
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch categories
         const data = await getCategories();
         setCategories(
           Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
         );
+
+        // Fetch settings
+        const settingsData = await getGeneralSettings();
+        setSettings(settingsData);
       } catch (error) {
-        console.error("Lỗi khi fetch categories:", error);
+        console.error("Lỗi khi fetch data:", error);
         setCategories([]);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -264,9 +274,19 @@ export default function Header() {
           {/* Logo */}
           <div
             onClick={() => navigate("/home")}
-            className="text-brand-primary-foreground text-xl md:text-2xl font-bold cursor-pointer hover:opacity-90 transition-opacity whitespace-nowrap shrink-0"
+            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
           >
-            WATCH STORE
+            {settings.logo ? (
+              <img
+                src={settings.logo}
+                alt={settings.siteName}
+                className="h-12 w-auto object-contain"
+              />
+            ) : (
+              <div className="text-brand-primary-foreground text-xl md:text-2xl font-bold whitespace-nowrap">
+                {settings.siteName}
+              </div>
+            )}
           </div>
 
           {/* Category Dropdown */}

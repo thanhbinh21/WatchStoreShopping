@@ -33,6 +33,7 @@ export const AdminPosts = () => {
   const [deletingPost, setDeletingPost] = useState(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [postDetail, setPostDetail] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // {file: File, preview: string} or null
   const [form, setForm] = useState({
     title: "",
     slug: "",
@@ -140,6 +141,7 @@ export const AdminPosts = () => {
 
   const handleEdit = (post) => {
     setEditingId(post.id);
+    setSelectedImage(null); // Reset
     setForm({
       title: post.title || "",
       slug: post.slug || "",
@@ -158,6 +160,7 @@ export const AdminPosts = () => {
 
   const handleNew = () => {
     setEditingId(null);
+    setSelectedImage(null);
     setForm({
       title: "",
       slug: "",
@@ -182,9 +185,31 @@ export const AdminPosts = () => {
       return;
     }
 
+    setUploading(true);
     try {
+      let finalCoverImageUrl = form.coverImageUrl;
+
+      // Upload new image if selected
+      if (selectedImage && selectedImage.file) {
+        // Delete old cover image from Cloudinary if updating
+        if (editingId && form.coverImageUrl) {
+          try {
+            await deletePostImage(form.coverImageUrl);
+          } catch (err) {
+            console.error("Error deleting old image:", err);
+            // Continue even if delete fails
+          }
+        }
+
+        const result = await uploadPostImages([selectedImage.file]);
+        if (result.success && result.fileNames.length > 0) {
+          finalCoverImageUrl = result.fileNames[0]; // Cloudinary URL
+        }
+      }
+
       const data = {
         ...form,
+        coverImageUrl: finalCoverImageUrl,
         categoryId: form.categoryId || null,
       };
 
@@ -197,6 +222,7 @@ export const AdminPosts = () => {
       }
 
       setShowForm(false);
+      setSelectedImage(null);
       loadPosts();
     } catch (error) {
       console.error("Save post error:", error);
@@ -211,33 +237,27 @@ export const AdminPosts = () => {
       } else {
         toast.error(editingId ? "Lỗi cập nhật bài viết" : "Lỗi tạo bài viết");
       }
-    }
-  };
-
-  const handleCoverImageUpload = async (e) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    try {
-      setUploading(true);
-      const result = await uploadPostImages(files);
-
-      if (result.success && result.fileNames && result.fileNames.length > 0) {
-        const uploadedFileName = result.fileNames[0];
-        setTimeout(() => {
-          setForm({
-            ...form,
-            coverImageUrl: `/images/posts/${uploadedFileName}`,
-          });
-        }, 1000);
-        toast.success("Upload ảnh bìa thành công");
-      }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Lỗi upload ảnh bìa");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleCoverImageUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File vượt quá 5MB");
+      return;
+    }
+
+    // Create preview
+    const preview = URL.createObjectURL(file);
+    setSelectedImage({ file, preview });
+
+    // Reset input
+    e.target.value = "";
   };
 
   const handleDelete = (post) => {
@@ -249,16 +269,17 @@ export const AdminPosts = () => {
     if (!deletingPost) return;
 
     try {
-      // Auto-delete cover image if it's a local file
-      if (
-        deletingPost.coverImageUrl &&
-        deletingPost.coverImageUrl.startsWith("/images/posts/")
-      ) {
-        const filename = deletingPost.coverImageUrl.split("/").pop();
+      // Xóa ảnh bìa trên Cloudinary (cả local path và Cloudinary URL)
+      if (deletingPost.coverImageUrl) {
         try {
-          await deletePostImage(filename);
+          await deletePostImage(deletingPost.coverImageUrl);
+          console.log(
+            "✅ Deleted cover image from Cloudinary:",
+            deletingPost.coverImageUrl
+          );
         } catch (err) {
-          console.error("Error deleting cover image:", err);
+          console.error("⚠️ Error deleting cover image from Cloudinary:", err);
+          // Tiếp tục xóa post ngay cả khi xóa ảnh thất bại
         }
       }
 
@@ -464,70 +485,71 @@ export const AdminPosts = () => {
                   Ảnh bìa
                 </label>
                 <div className="space-y-2">
+                  {/* Preview image */}
+                  {(selectedImage || form.coverImageUrl) && (
+                    <div className="relative">
+                      <img
+                        src={
+                          selectedImage
+                            ? selectedImage.preview
+                            : form.coverImageUrl.startsWith("http")
+                            ? form.coverImageUrl
+                            : `/images/posts/${form.coverImageUrl}`
+                        }
+                        alt="Preview"
+                        className="w-full h-32 object-cover rounded-lg border"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (selectedImage) {
+                            URL.revokeObjectURL(selectedImage.preview);
+                            setSelectedImage(null);
+                          }
+                          setForm({ ...form, coverImageUrl: "" });
+                        }}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Upload button */}
                   <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
-                    {uploading ? (
-                      <div className="text-center">
-                        <div className="text-brand-primary mb-1">
-                          Đang upload...
-                        </div>
-                      </div>
-                    ) : form.coverImageUrl ? (
-                      <div className="relative w-full h-full p-2">
-                        <img
-                          src={form.coverImageUrl}
-                          alt="Preview"
-                          className="w-full h-full object-contain rounded"
-                          onError={(e) => {
-                            try {
-                              e.currentTarget.onerror = null;
-                              const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='300' height='200'><rect fill='#e2e8f0' width='100%' height='100%'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='#94a3b8' font-size='16'>Image Error</text></svg>`;
-                              e.currentTarget.src = `data:image/svg+xml;utf8,${encodeURIComponent(
-                                svg
-                              )}`;
-                              // eslint-disable-next-line no-unused-vars
-                            } catch (err) {
-                              e.currentTarget.src = "";
-                            }
-                          }}
+                    <div className="text-center">
+                      <svg
+                        className="mx-auto h-12 w-12 text-gray-400"
+                        stroke="currentColor"
+                        fill="none"
+                        viewBox="0 0 48 48"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
                         />
-                      </div>
-                    ) : (
-                      <div className="text-center">
-                        <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
-                          stroke="currentColor"
-                          fill="none"
-                          viewBox="0 0 48 48"
-                        >
-                          <path
-                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                        <p className="mt-1 text-sm text-gray-600">
-                          Click để upload ảnh
-                        </p>
-                      </div>
-                    )}
+                      </svg>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {selectedImage || form.coverImageUrl
+                          ? "Thay đổi ảnh"
+                          : "Click để chọn ảnh"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        PNG, JPG, JPEG tối đa 5MB. Upload khi Save.
+                      </p>
+                    </div>
                     <input
                       type="file"
                       className="hidden"
                       accept="image/*"
                       onChange={handleCoverImageUpload}
-                      disabled={uploading}
                     />
                   </label>
-                  <input
-                    type="text"
-                    placeholder="Hoặc dán URL ảnh"
-                    className="w-full border rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    value={form.coverImageUrl}
-                    onChange={(e) =>
-                      setForm({ ...form, coverImageUrl: e.target.value })
-                    }
-                  />
                 </div>
               </div>
               <div>
@@ -634,9 +656,14 @@ export const AdminPosts = () => {
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                disabled={uploading}
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {editingId ? "Cập nhật" : "Tạo mới"}
+                {uploading
+                  ? "Đang upload..."
+                  : editingId
+                  ? "Cập nhật"
+                  : "Tạo mới"}
               </button>
             </div>
           </form>

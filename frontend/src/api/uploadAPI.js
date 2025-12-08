@@ -33,19 +33,18 @@ export const uploadProductImages = async (files) => {
   }
 };
 
-// Xóa ảnh sản phẩm
-export const deleteProductImage = async (filename) => {
+// Xóa ảnh sản phẩm (gửi Cloudinary URL)
+export const deleteProductImage = async (imageUrl) => {
   try {
     const token = localStorage.getItem("accessToken");
 
-    const response = await axios.delete(
-      `${UPLOAD_URL}/product-images/${filename}`,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }
-    );
+    const response = await axios.delete(`${UPLOAD_URL}/product-images`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
     return response.data;
   } catch (err) {
     console.error("Error deleting image:", err);
@@ -80,19 +79,18 @@ export const uploadBannerImages = async (files) => {
   }
 };
 
-// Xóa ảnh banner
-export const deleteBannerImage = async (filename) => {
+// Xóa ảnh banner (gửi Cloudinary URL)
+export const deleteBannerImage = async (imageUrl) => {
   try {
     const token = localStorage.getItem("accessToken");
 
-    const response = await axios.delete(
-      `${UPLOAD_URL}/banner-images/${filename}`,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }
-    );
+    const response = await axios.delete(`${UPLOAD_URL}/banner-images`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
     return response.data;
   } catch (err) {
     console.error("Error deleting banner image:", err);
@@ -127,19 +125,18 @@ export const uploadPostImages = async (files) => {
   }
 };
 
-// Xóa ảnh bài viết
-export const deletePostImage = async (filename) => {
+// Xóa ảnh bài viết (gửi Cloudinary URL)
+export const deletePostImage = async (imageUrl) => {
   try {
     const token = localStorage.getItem("accessToken");
 
-    const response = await axios.delete(
-      `${UPLOAD_URL}/post-images/${filename}`,
-      {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
-      }
-    );
+    const response = await axios.delete(`${UPLOAD_URL}/post-images`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
     return response.data;
   } catch (err) {
     console.error("Error deleting post image:", err);
@@ -179,6 +176,133 @@ export const deleteAvatar = async (filename) => {
     return response.data;
   } catch (err) {
     console.error("Error deleting avatar:", err);
+    throw err;
+  }
+};
+
+// Upload logo (settings)
+export const uploadLogo = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/logo`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading logo:", err);
+    throw err;
+  }
+};
+
+// Delete logo
+export const deleteLogo = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/logo`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting logo:", err);
+    throw err;
+  }
+};
+
+// Upload payment method images
+export const uploadPaymentMethodImages = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(
+      `${UPLOAD_URL}/payment-methods`,
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading payment method images:", err);
+    throw err;
+  }
+};
+
+// Delete payment method image
+export const deletePaymentMethodImage = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/payment-methods`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting payment method image:", err);
+    throw err;
+  }
+};
+
+// Upload social media images
+export const uploadSocialMediaImages = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/social-media`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading social media images:", err);
+    throw err;
+  }
+};
+
+// Delete social media image
+export const deleteSocialMediaImage = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/social-media`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting social media image:", err);
     throw err;
   }
 };
