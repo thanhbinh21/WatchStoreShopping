@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
 import HeroSection from "@/components/HeroSection";
-import CollectionsSection from "@/components/CollectionsSection";
+// import CollectionsSection from "@/components/CollectionsSection"; // Tạm ẩn theo code gốc
 import SaleBanner from "@/components/SaleBanner";
 import BrandSection from "@/components/BrandSection";
 import ProductList from "@/components/ProductList";
@@ -53,116 +53,126 @@ export const Home = () => {
     setSelectedCategory(category);
   };
 
-   const handleAddToCart = async (product) => {
-  const token = localStorage.getItem("accessToken");
-  const user = parseStoredUser();
+  const handleAddToCart = async (product) => {
+    const token = localStorage.getItem("accessToken");
+    const user = parseStoredUser();
 
-  // Fetch full product data vì wishlist product không đủ thông tin
-  const full = await getProductById(product.id);
-  if (!full) {
-    toast.error("Không lấy được thông tin sản phẩm 😢");
-    return;
-  }
-
-  // Guest cart
-  if (!token || !user?.id) {
-    addToGuestCart(full, 1);
-    toast.success("Đã thêm vào giỏ hàng (Khách) 🛒");
-    window.dispatchEvent(new Event("cartUpdated"));
-    return;
-  }
-
-  const maxStock = Number.isFinite(full.stockQuantity)
-    ? full.stockQuantity
-    : Number.isFinite(full.stock)
-    ? full.stock
-    : Infinity;
-
-  if (maxStock <= 0) {
-    toast.error("Sản phẩm hết hàng");
-    return;
-  }
-
-  try {
-    const cart = await getCart(user.id);
-    const existing = (cart.items || []).find(
-      (i) => i.productId === full.id || i.id === full.id
-    );
-
-    const currentQty = existing ? existing.quantity : 0;
-
-    if (currentQty + 1 > maxStock) {
-      toast.error("Không thể thêm vượt quá tồn kho");
+    // Fetch full product data vì wishlist product không đủ thông tin
+    const full = await getProductById(product.id);
+    if (!full) {
+      toast.error("Không lấy được thông tin sản phẩm 😢");
       return;
     }
 
-    await addToCart(user.id, full.id, 1);
-    toast.success("Đã thêm vào giỏ hàng ✅");
-    window.dispatchEvent(new Event("cartUpdated"));
-  } catch (err) {
-    console.error(err);
-    toast.error("Thêm vào giỏ hàng thất bại 😢");
-  }
-};
+    // Guest cart
+    if (!token || !user?.id) {
+      addToGuestCart(full, 1);
+      toast.success("Đã thêm vào giỏ hàng (Khách) 🛒");
+      window.dispatchEvent(new Event("cartUpdated"));
+      return;
+    }
 
+    const maxStock = Number.isFinite(full.stockQuantity)
+      ? full.stockQuantity
+      : Number.isFinite(full.stock)
+      ? full.stock
+      : Infinity;
+
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+
+    try {
+      const cart = await getCart(user.id);
+      const existing = (cart.items || []).find(
+        (i) => i.productId === full.id || i.id === full.id
+      );
+
+      const currentQty = existing ? existing.quantity : 0;
+
+      if (currentQty + 1 > maxStock) {
+        toast.error("Không thể thêm vượt quá tồn kho");
+        return;
+      }
+
+      await addToCart(user.id, full.id, 1);
+      toast.success("Đã thêm vào giỏ hàng ✅");
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (err) {
+      console.error(err);
+      toast.error("Thêm vào giỏ hàng thất bại 😢");
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
       {/* Header */}
       <Header />
 
-      {/* Navbar for search and categories (breadcrumb items passed explicitly) */}
-      <Breadcrumb items={[]} />
+      {/* Navbar for search and categories */}
+      {/* Ẩn breadcrumb ở trang chủ vì thường không cần thiết, hoặc để trống như logic cũ */}
+      <div className="hidden md:block">
+        <Breadcrumb items={[]} />
+      </div>
 
-      {/* Banner Slider from CMS */}
-      {hasBanners && (
-        <div className="px-4 pt-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <BannerSlider startIndex={0} />
-            <div className="hidden md:block">
-              <BannerSlider startIndex={2} />
+      <main className="flex-1 w-full">
+        {/* Banner Slider Section */}
+        {hasBanners && (
+          <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {/* Slider 1: Luôn hiện */}
+              <div className="rounded-xl overflow-hidden shadow-sm">
+                <BannerSlider startIndex={0} />
+              </div>
+
+              {/* Slider 2: Ẩn trên mobile để tiết kiệm diện tích dọc */}
+              <div className="hidden md:block rounded-xl overflow-hidden shadow-sm">
+                <BannerSlider startIndex={2} />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Hero Section */}
-      <HeroSection />
+        {/* Hero Section */}
+        <HeroSection />
 
-      {/* Sale Banner - Products on Sale */}
-      <SaleBanner onAddToCart={handleAddToCart} />
+        {/* Sale Banner - Products on Sale */}
+        <SaleBanner onAddToCart={handleAddToCart} />
 
-      {/* Brand Section */}
-      <BrandSection />
+        {/* Brand Section */}
+        <BrandSection />
 
-      {/* Collections Section */}
-      {/* <CollectionsSection 
-        onProductsChange={handleProductsChange}
-        onCategorySelect={handleCategorySelect}
-      /> */}
+        {/* Collections Section (Optional/Commented out in original) */}
+        {/* <CollectionsSection 
+          onProductsChange={handleProductsChange}
+          onCategorySelect={handleCategorySelect}
+        /> */}
 
-      {/* Products Section */}
-      <section id="products-section" className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <ProductList
-            category={selectedCategory}
-            sortBy={sortBy}
-            order={order}
-            pageSize={8}
-            title={
-              selectedCategory ? selectedCategory.name : "Sản Phẩm Mới Nhất"
-            }
-            description={
-              selectedCategory
-                ? `Khám phá bộ sưu tập ${selectedCategory.name} với thiết kế đẳng cấp và công nghệ tiên tiến`
-                : "Khám phá bộ sưu tập đồng hồ cao cấp với thiết kế đẳng cấp và công nghệ tiên tiến"
-            }
-            onAddToCart={handleAddToCart}
-          />
-        </div>
-      </section>
+        {/* Products Section */}
+        <section id="products-section" className="py-12 md:py-20 bg-gray-50">
+          <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+            <ProductList
+              category={selectedCategory}
+              sortBy={sortBy}
+              order={order}
+              pageSize={8}
+              title={
+                selectedCategory ? selectedCategory.name : "Sản Phẩm Mới Nhất"
+              }
+              description={
+                selectedCategory
+                  ? `Khám phá bộ sưu tập ${selectedCategory.name} với thiết kế đẳng cấp và công nghệ tiên tiến`
+                  : "Khám phá bộ sưu tập đồng hồ cao cấp với thiết kế đẳng cấp và công nghệ tiên tiến"
+              }
+              onAddToCart={handleAddToCart}
+            />
+          </div>
+        </section>
 
-      <LatestPosts />
+        {/* Latest Posts */}
+        <LatestPosts />
+      </main>
 
       {/* Footer */}
       <Footer />
