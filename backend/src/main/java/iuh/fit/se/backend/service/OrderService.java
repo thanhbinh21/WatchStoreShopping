@@ -345,34 +345,54 @@ public class OrderService {
                 .sum();
 
         List<OrderItemResponse> items = order.getOrderItems().stream()
-                .map(item -> {
-                    Product product = item.getProduct();
-                    return OrderItemResponse.builder()
-                            .id(item.getId())
-                            .productId(product != null ? product.getId() : null)
-                            .productName(product != null ? product.getName() : null)
-                            .productImageUrl(product != null ? product.getPrimaryImageUrl() : null)
-                            .price(item.getPrice())
-                            .quantity(item.getQuantity())
-                            .build();
-                })
-                .collect(Collectors.toList());
+            .map(item -> {
+                Product product = item.getProduct();
+                Integer productStock = product != null ? product.getStockQuantity() : null;
+                String supplierName = null;
+                if (product != null && product.getSupplier() != null) {
+                supplierName = product.getSupplier().getName();
+                }
+                java.math.BigDecimal subtotal = item.getPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity()));
+
+                return OrderItemResponse.builder()
+                    .id(item.getId())
+                    .productId(product != null ? product.getId() : null)
+                    .productName(item.getProductName() != null ? item.getProductName() : (product != null ? product.getName() : null))
+                    .productImageUrl(item.getProductImageUrl() != null ? item.getProductImageUrl() : (product != null ? product.getPrimaryImageUrl() : null))
+                    .price(item.getPrice())
+                    .quantity(item.getQuantity())
+                    .subtotal(subtotal)
+                    .supplierName(supplierName)
+                    .productStock(productStock)
+                    .build();
+            })
+            .collect(Collectors.toList());
 
         User user = order.getUser();
 
         return OrderResponse.builder()
-                .id(order.getId())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .status(order.getStatus())
-                .paymentStatus(order.getPaymentStatus())
-                .userId(user != null ? user.getId() : null)
-                .customerName(user != null ? user.getFullName() : null)
-                .customerEmail(user != null ? user.getEmail() : null)
-                .username(user != null ? user.getUsername() : null)
-                .totalAmount(total)
-                .totalQuantity(totalQuantity)
-                .items(items)
-                .build();
+            .id(order.getId())
+            .createdAt(order.getCreatedAt())
+            .updatedAt(order.getUpdatedAt())
+            .status(order.getStatus())
+            .paymentStatus(order.getPaymentStatus())
+            .userId(user != null ? user.getId() : null)
+            .customerName(user != null ? user.getFullName() : null)
+            .customerEmail(user != null ? user.getEmail() : null)
+            .username(user != null ? user.getUsername() : null)
+            .fullName(order.getFullName())
+            .phone(order.getPhone())
+            .address(order.getAddress())
+            .ward(order.getWard())
+            .district(order.getDistrict())
+            .city(order.getCity())
+            .note(order.getNote())
+            .paymentMethod(order.getPaymentMethod())
+            .transactionId(order.getTransactionId())
+            .paidAt(order.getPaidAt())
+            .totalAmount(total)
+            .totalQuantity(totalQuantity)
+            .items(items)
+            .build();
     }
 }
