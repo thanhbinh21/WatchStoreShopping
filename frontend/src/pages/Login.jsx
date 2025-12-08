@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosConfig";
-import { User, Lock, Mail, Loader2, Gift, ShieldCheck } from "lucide-react"; // Thêm icon Gift
+import { Loader2, Gift, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,15 @@ import { GoogleIcon } from "@/components/ui/GoogleIcon";
 import { ZaloIcon } from "@/components/ui/ZaloIcon";
 import { getGuestCart, clearGuestCart } from "@/api/guestCart";
 import { addToCart } from "@/api/cartAPI";
-
+import { googleSignIn } from "@/api/googleAuth";
+import { facebookSignIn } from "@/api/facebookAuth";
+import { FacebookIcon } from "@/components/ui/FacebookIcon";
 
 export default function LoginRegister() {
   const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [fbLoading, setFbLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [form, setForm] = useState({
     username: "",
@@ -36,6 +40,10 @@ export default function LoginRegister() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Ref để gắn nút Google ẩn vào
+  const googleButtonRef = useRef(null);
+  const googleTimeoutRef = useRef(null);
+
   const syncGuestCart = async (userId) => {
     const guestItems = getGuestCart();
     if (!guestItems || guestItems.length === 0) return;
@@ -49,7 +57,11 @@ export default function LoginRegister() {
         }
         const qty = Math.min(item.quantity, maxStock);
         if (qty < item.quantity) {
-          toast.warning(`Số lượng sản phẩm ${item.productName || item.id} đã được điều chỉnh theo tồn kho`);
+          toast.warning(
+            `Số lượng sản phẩm ${
+              item.productName || item.id
+            } đã được điều chỉnh theo tồn kho`
+          );
         }
         await addToCart(userId, item.id, qty);
       } catch (err) {
@@ -59,7 +71,6 @@ export default function LoginRegister() {
 
     clearGuestCart();
   };
-
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -74,7 +85,7 @@ export default function LoginRegister() {
       return;
     }
 
-    setLoading(true);
+    setSubmitLoading(true);
     try {
       if (isLogin) {
         const res = await axiosInstance.post("/auth/login", {
@@ -95,12 +106,9 @@ export default function LoginRegister() {
           localStorage.setItem("refreshToken", data.refreshToken);
         }
 
-        // Dispatch event để các component khác biết user đã thay đổi
         window.dispatchEvent(new Event("userUpdated"));
-
         await syncGuestCart(data.user.id);
 
-        // Chuyển đến /home cho cả admin và user
         navigate("/home");
         toast.success("Đăng nhập thành công!");
       } else {
@@ -129,14 +137,223 @@ export default function LoginRegister() {
       toast.error(errorMsg);
       setError(errorMsg);
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
+  };
+
+  // Handle Google credential response
+  const handleGoogleCredential = async (response) => {
+    if (!response?.credential) {
+      toast.error("Google sign-in failed");
+      return;
+    }
+
+    setGoogleLoading(true);
+    try {
+      const res = await googleSignIn(response.credential);
+      const { data } = res;
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("role", data.role);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+      window.dispatchEvent(new Event("userUpdated"));
+
+      if (data.user?.id) await syncGuestCart(data.user.id);
+      navigate("/home");
+      toast.success("Đăng nhập bằng Google thành công");
+    } catch (err) {
+      console.error("Google login error", err);
+      toast.error(err.response?.data || "Đăng nhập Google thất bại");
+    } finally {
+      if (googleTimeoutRef.current) {
+        clearTimeout(googleTimeoutRef.current);
+        googleTimeoutRef.current = null;
+      }
+      setGoogleLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Initialize Google Identity button
+    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+    if (!clientId) return;
+
+    const mount = () => {
+      if (window.google?.accounts?.id && googleButtonRef.current) {
+        try {
+          window.google.accounts.id.initialize({
+            client_id: clientId,
+            callback: handleGoogleCredential,
+            auto_select: false,
+          });
+
+          // Render nút Google thật vào ref, nhưng chúng ta sẽ ẩn nó bằng CSS
+          // Tăng width lên 400 để đảm bảo cover được nút trên mobile khi nó giãn ra
+          window.google.accounts.id.renderButton(googleButtonRef.current, {
+            theme: "outline",
+            size: "large",
+            width: "400",
+            height: "50",
+          });
+        } catch (err) {
+          console.error("Google Identity init error", err);
+        }
+      }
+    };
+
+    if (window.google && window.google.accounts) {
+      mount();
+    } else {
+      const script = document.querySelector(
+        'script[src="https://accounts.google.com/gsi/client"]'
+      );
+      if (script) {
+        script.addEventListener("load", mount);
+        return () => script.removeEventListener("load", mount);
+      }
+    }
+  }, [isLogin]);
+
+  // Initialize Facebook SDK
+  useEffect(() => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      console.warn("VITE_FACEBOOK_APP_ID not set; Facebook login disabled");
+      return;
+    }
+
+    const initFB = () => {
+      try {
+        if (window.FB) {
+          window.FB.init({
+            appId: fbAppId,
+            cookie: true,
+            xfbml: false,
+            version: "v16.0",
+          });
+        }
+      } catch (err) {
+        console.error("FB init error", err);
+      }
+    };
+
+    if (!document.getElementById("fb-root")) {
+      const fbRoot = document.createElement("div");
+      fbRoot.id = "fb-root";
+      document.body.appendChild(fbRoot);
+    }
+
+    if (window.FB) {
+      initFB();
+      return;
+    }
+
+    const existingScript = document.querySelector(
+      'script[src^="https://connect.facebook.net"]'
+    );
+    if (existingScript) {
+      existingScript.addEventListener("load", initFB);
+      return () => existingScript.removeEventListener("load", initFB);
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://connect.facebook.net/vi_VN/sdk.js";
+    script.async = true;
+    script.defer = true;
+    script.crossOrigin = "anonymous";
+    script.onload = initFB;
+    script.onerror = () => console.error("Failed to load Facebook SDK");
+    document.body.appendChild(script);
+    return () => {
+      script.onload = null;
+      script.onerror = null;
+    };
+  }, []);
+
+  const processFacebookToken = async (token) => {
+    setFbLoading(true);
+    const loadingToast = toast.loading("Đang xác thực với Facebook...");
+
+    try {
+      const res = await facebookSignIn(token);
+      const { data } = res;
+
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("role", data.role);
+      if (data.user) localStorage.setItem("user", JSON.stringify(data.user));
+      else localStorage.removeItem("user");
+      if (data.refreshToken)
+        localStorage.setItem("refreshToken", data.refreshToken);
+
+      window.dispatchEvent(new Event("userUpdated"));
+      if (data.user?.id) await syncGuestCart(data.user.id);
+
+      toast.dismiss(loadingToast);
+      toast.success("Đăng nhập bằng Facebook thành công");
+      navigate("/home");
+    } catch (err) {
+      console.error("Facebook login error", err);
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data || "Đăng nhập Facebook thất bại");
+    } finally {
+      setFbLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = () => {
+    const fbAppId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (!fbAppId) {
+      toast.error("Facebook App ID chưa cấu hình");
+      return;
+    }
+
+    const waitForFB = () =>
+      new Promise((resolve, reject) => {
+        let count = 0;
+        const maxTries = 20;
+        const interval = setInterval(() => {
+          if (window.FB) {
+            clearInterval(interval);
+            resolve(window.FB);
+          } else if (count++ >= maxTries) {
+            clearInterval(interval);
+            reject(new Error("Timeout: FB SDK not loaded"));
+          }
+        }, 300);
+      });
+
+    setFbLoading(true);
+
+    waitForFB()
+      .then((FB) => {
+        FB.login(
+          (resp) => {
+            if (resp.status === "connected") {
+              const token = resp.authResponse.accessToken;
+              processFacebookToken(token);
+            } else {
+              console.log("User cancelled login");
+              setFbLoading(false);
+            }
+          },
+          { scope: "email,public_profile" }
+        );
+      })
+      .catch((err) => {
+        console.error(err);
+        setFbLoading(false);
+        toast.error("Không thể tải Facebook SDK. Hãy tắt AdBlock và thử lại.");
+      });
   };
 
   const benefits = [
     {
       icon: ShieldCheck,
-      text: "Chiết khấu đến 5% khi mua các sản phẩm tại CellphoneS",
+      text: "Chiết khấu đến 5% khi mua các sản phẩm tại WatchStore",
     },
     { icon: Gift, text: "Miễn phí giao hàng cho thành viên SMEM, SVIP" },
     { icon: Gift, text: "Tặng voucher sinh nhật đến 500.000đ" },
@@ -150,14 +367,12 @@ export default function LoginRegister() {
 
   return (
     <div className="min-h-screen w-full relative">
-      {/* Lavender Blush Flow Gradient (Top Left to Bottom Right) */}
       <div
         className="absolute inset-0 z-0"
         style={{
           background: `linear-gradient(135deg, #E1BEE7 0%, #F3E5F5 20%, #FCE4EC 40%, #FFF0F5 60%, #F8BBD9 80%, #E1BEE7 100%)`,
         }}
       />
-      {/* Your Content/Components */}
       <>
         {/* Popup thành công */}
         <Dialog open={showSuccess} onOpenChange={setShowSuccess}>
@@ -183,19 +398,18 @@ export default function LoginRegister() {
           </DialogContent>
         </Dialog>
 
-        {/* Giao diện chính mới */}
+        {/* Giao diện chính */}
         <div className="flex items-center justify-center min-h-screen min-w-screen p-4 absolute z-10">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden">
-            {/* Cột trái: Quảng cáo */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 relative bg-white">
-              {/* Box đỏ viền */}
+            {/* Cột trái: Quảng cáo - Ẩn trên Mobile (hidden), Hiện trên Desktop (md:block) */}
+            <div className="hidden md:block w-1/2 p-12 relative bg-white">
               <div className="border-2 border-red-600 rounded-lg p-6 h-full">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Nhập hội khách hàng thành viên{" "}
                   <span className="text-red-600">SMEMBER</span>
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Để không bỏ lỡ các ưu đãi hấp dẫn từ CellphoneS
+                  Để không bỏ lỡ các ưu đãi hấp dẫn từ WatchStore
                 </p>
 
                 <ul className="space-y-4">
@@ -213,13 +427,11 @@ export default function LoginRegister() {
                 >
                   Xem chi tiết chính sách ưu đãi Smember
                 </a>
-
-                {/* <img src="/path/to/mascot.png" alt="Mascot" className="absolute bottom-0 right-0 w-1/2" /> */}
               </div>
             </div>
 
-            {/* Cột phải: Form */}
-            <div className="w-full md:w-1/2 p-8 md:p-12">
+            {/* Cột phải: Form - Full width trên Mobile */}
+            <div className="w-full md:w-1/2 p-6 md:p-12">
               <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
                 {isLogin ? "Đăng nhập SMEMBER" : "Đăng ký thành viên"}
               </h2>
@@ -229,7 +441,6 @@ export default function LoginRegister() {
               )}
 
               <form onSubmit={handleSubmit} className="space-y-4">
-                {/* Trường chung: Tên đăng nhập */}
                 <div>
                   <label
                     htmlFor="username"
@@ -253,7 +464,6 @@ export default function LoginRegister() {
                   />
                 </div>
 
-                {/* Trường chỉ có khi Đăng ký */}
                 {!isLogin && (
                   <>
                     <div>
@@ -296,7 +506,6 @@ export default function LoginRegister() {
                   </>
                 )}
 
-                {/* Trường chung: Mật khẩu */}
                 <div>
                   <label
                     htmlFor="password"
@@ -316,7 +525,6 @@ export default function LoginRegister() {
                   />
                 </div>
 
-                {/* Trường chỉ có khi Đăng ký */}
                 {!isLogin && (
                   <div>
                     <label
@@ -338,7 +546,6 @@ export default function LoginRegister() {
                   </div>
                 )}
 
-                {/* Link Quên mật khẩu (chỉ hiển thị khi đăng nhập) */}
                 {isLogin && (
                   <div className="text-right">
                     <button
@@ -353,10 +560,10 @@ export default function LoginRegister() {
 
                 <Button
                   type="submit"
-                  disabled={loading}
+                  disabled={submitLoading}
                   className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center"
                 >
-                  {loading ? (
+                  {submitLoading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       Đang xử lý...
@@ -369,10 +576,9 @@ export default function LoginRegister() {
                 </Button>
               </form>
 
-              {/* Dialog: Forgot password */}
               {forgotOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                  <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                  <div className="bg-white p-6 rounded-lg w-full max-w-md m-4">
                     <h3 className="text-lg font-semibold mb-2">
                       Đặt lại mật khẩu
                     </h3>
@@ -426,7 +632,6 @@ export default function LoginRegister() {
                 </div>
               )}
 
-              {/* Phần đăng nhập bằng MXH (chỉ hiển thị khi đăng nhập) */}
               {isLogin && (
                 <>
                   <div className="flex items-center my-6">
@@ -437,28 +642,48 @@ export default function LoginRegister() {
                     <hr className="grow border-gray-300" />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  {/* Social Buttons Container: Mobile (dọc), Desktop (ngang) */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    {/* Nút Google */}
+                    <div className="relative w-full sm:w-auto min-w-[130px]">
+                      {/* Lớp phủ Google (ẩn) */}
+                      <div
+                        ref={googleButtonRef}
+                        className="absolute inset-0 z-20 opacity-0 overflow-hidden"
+                        style={{ transform: "scale(1.05)" }}
+                      />
+
+                      {/* Nút Google Giao diện */}
+                      <Button
+                        variant="outline"
+                        className="flex items-center justify-center w-full relative z-10"
+                        disabled={googleLoading}
+                        type="button"
+                      >
+                        <GoogleIcon className="mr-2 h-5 w-5" />
+                        Google
+                      </Button>
+                    </div>
+
+                    {/* Nút Facebook */}
                     <Button
                       variant="outline"
-                      className="flex items-center justify-center w-30"
-                      onClick={() => toast.info("Sắp ra mắt")}
+                      className="flex items-center justify-center w-full sm:w-auto min-w-[130px] hover:bg-gray-100"
+                      onClick={handleFacebookLogin}
+                      disabled={fbLoading}
+                      type="button"
                     >
-                      <GoogleIcon />
-                      Google
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex items-center justify-center w-30"
-                      onClick={() => toast.info("Sắp ra mắt")}
-                    >
-                      <ZaloIcon />
-                      Zalo
+                      {fbLoading ? (
+                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      ) : (
+                        <FacebookIcon className="mr-2 h-5 w-5" />
+                      )}
+                      Facebook
                     </Button>
                   </div>
                 </>
               )}
 
-              {/* Link chuyển đổi Đăng nhập/Đăng ký */}
               <div className="mt-6 text-center text-sm text-gray-600">
                 {isLogin ? "Bạn chưa có tài khoản?" : "Đã có tài khoản?"}{" "}
                 <button

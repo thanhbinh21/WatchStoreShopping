@@ -55,6 +55,25 @@ export const CategoryDetailPanel = ({ categoryDetail, onClose }) => {
               </p>
             </div>
 
+            {/* Trạng thái */}
+            <div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Trạng thái
+              </p>
+              <Badge
+                variant={
+                  categoryDetail.status === "ACTIVE" ? "default" : "secondary"
+                }
+                className={
+                  categoryDetail.status === "ACTIVE"
+                    ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                    : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                }
+              >
+                {categoryDetail.status === "ACTIVE" ? "Hoạt động" : "Ẩn"}
+              </Badge>
+            </div>
+
             {/* Số sản phẩm */}
             <div>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">

@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
 import { getSuppliers } from "@/api/supplierAPI";
-import { uploadProductImages } from "@/api/uploadAPI";
-import { useEffect, useState } from "react";
+import { uploadProductImages, deleteProductImage } from "@/api/uploadAPI";
+import { useEffect, useState, useRef } from "react";
 import { Loader2, Upload, X, Star } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,12 +35,12 @@ export const ProductFormDialog = ({
   const [suppliers, setSuppliers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // State for multiple images
-  const [uploadedImages, setUploadedImages] = useState([]);
+  // State for multiple images - now stores File objects or existing URLs
+  const [selectedImages, setSelectedImages] = useState([]); // Array of { file: File, preview: string, isPrimary: bool } or { imageUrl: string, isPrimary: bool }
   const [uploading, setUploading] = useState(false);
 
-  // State for URL input
-  const [imageUrlInput, setImageUrlInput] = useState("");
+  // Track deleted images (for cleanup when user removes existing images)
+  const deletedImagesRef = useRef([]);
 
   // Fetch data for dropdowns
   useEffect(() => {
@@ -62,17 +62,25 @@ export const ProductFormDialog = ({
               ? res.content
               : [];
 
-          console.log("Raw suppliers response:", suppliersRes);
-
           const normalizedBrands = normalize(brandsRes);
           const normalizedCategories = normalize(categoriesRes);
           const normalizedSuppliers = normalize(suppliersRes);
 
-          console.log("Normalized suppliers:", normalizedSuppliers);
+          const activeBrands = normalizedBrands.filter(
+            (b) => b.status === "ACTIVE"
+          );
 
-          setBrands(normalizedBrands);
-          setCategories(normalizedCategories);
-          setSuppliers(normalizedSuppliers);
+          const activeCategories = normalizedCategories.filter(
+            (cat) => cat.status === "ACTIVE"
+          );
+
+          const activeSuppliers = normalizedSuppliers.filter(
+            (sup) => sup.status === "ACTIVE"
+          );
+
+          setBrands(activeBrands);
+          setCategories(activeCategories);
+          setSuppliers(activeSuppliers);
         } catch (error) {
           console.error("Error fetching dropdown data:", error);
         } finally {
@@ -83,44 +91,46 @@ export const ProductFormDialog = ({
 
       // Load existing images if edit mode
       if (isEditMode && formData.images) {
-        setUploadedImages(
+        setSelectedImages(
           formData.images.map((img) => ({
             imageUrl: img.imageUrl,
             isPrimary: img.isPrimary,
+            isExisting: true, // Mark as existing (already uploaded)
           }))
         );
       } else {
-        setUploadedImages([]);
+        setSelectedImages([]);
       }
+
+      // Reset deleted images tracking
+      deletedImagesRef.current = [];
     }
   }, [isOpen, isEditMode, formData.images]);
 
-  // Handle file upload
-  const handleFileUpload = async (e) => {
+  // Handle file selection (NOT upload yet - just preview)
+  const handleFileUpload = (e) => {
     const files = Array.from(e.target.files || []);
     if (files.length === 0) return;
 
-    setUploading(true);
-    try {
-      const result = await uploadProductImages(files);
-
-      const newImages = result.fileNames.map((fileName, index) => ({
-        imageUrl: fileName,
-        isPrimary: uploadedImages.length === 0 && index === 0, // First image is primary if no images exist
-      }));
-
-      const updatedImages = [...uploadedImages, ...newImages];
-      setUploadedImages(updatedImages);
-      toast.success(`Upload thành công ${files.length} ảnh`);
-
-      // Reset input file để có thể chọn lại
-      e.target.value = "";
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Lỗi khi upload ảnh");
-    } finally {
-      setUploading(false);
+    // Validate file size
+    const invalidFiles = files.filter((f) => f.size > 5 * 1024 * 1024);
+    if (invalidFiles.length > 0) {
+      toast.error(`${invalidFiles.length} file vượt quá 5MB`);
+      return;
     }
+
+    // Create preview URLs
+    const newImages = files.map((file, index) => ({
+      file: file,
+      preview: URL.createObjectURL(file),
+      isPrimary: selectedImages.length === 0 && index === 0,
+      isNew: true, // Mark as new (not uploaded yet)
+    }));
+
+    setSelectedImages([...selectedImages, ...newImages]);
+
+    // Reset input
+    e.target.value = "";
   };
 
   // Product specs local state (array of { name, value })
@@ -160,8 +170,8 @@ export const ProductFormDialog = ({
 
   // Set primary image
   const setPrimaryImage = (index) => {
-    setUploadedImages(
-      uploadedImages.map((img, i) => ({
+    setSelectedImages(
+      selectedImages.map((img, i) => ({
         ...img,
         isPrimary: i === index,
       }))
@@ -170,49 +180,99 @@ export const ProductFormDialog = ({
 
   // Remove image
   const removeImage = (index) => {
-    const newImages = uploadedImages.filter((_, i) => i !== index);
+    const imageToRemove = selectedImages[index];
+
+    // If it's an existing image (from server), track it for deletion
+    if (imageToRemove.isExisting && imageToRemove.imageUrl) {
+      deletedImagesRef.current.push(imageToRemove.imageUrl);
+    }
+
+    // Revoke preview URL if it's a new file
+    if (imageToRemove.preview) {
+      URL.revokeObjectURL(imageToRemove.preview);
+    }
+
+    const newImages = selectedImages.filter((_, i) => i !== index);
     // If removed image was primary and there are other images, set first as primary
-    if (uploadedImages[index].isPrimary && newImages.length > 0) {
+    if (selectedImages[index].isPrimary && newImages.length > 0) {
       newImages[0].isPrimary = true;
     }
-    setUploadedImages(newImages);
-  };
-
-  // Add image from URL
-  const handleAddImageUrl = () => {
-    if (!imageUrlInput.trim()) {
-      toast.error("Vui lòng nhập URL hình ảnh");
-      return;
-    }
-
-    // Validate URL format (basic check)
-    try {
-      new URL(imageUrlInput);
-    } catch (e) {
-      toast.error("URL không hợp lệ");
-      return;
-    }
-
-    const newImage = {
-      imageUrl: imageUrlInput.trim(),
-      isPrimary: uploadedImages.length === 0, // First image is primary
-    };
-
-    setUploadedImages([...uploadedImages, newImage]);
-    setImageUrlInput("");
-    toast.success("Đã thêm hình ảnh từ URL");
+    setSelectedImages(newImages);
   };
 
   // Handle form submit with images
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    // If onSubmitWithImages is provided, use it with uploadedImages
-    if (onSubmitWithImages) {
-      onSubmitWithImages(e, uploadedImages);
-    } else {
-      // Fallback to regular onSubmit
-      onSubmit(e);
+    if (selectedImages.length === 0) {
+      toast.error("Vui lòng chọn ít nhất 1 ảnh sản phẩm");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Delete removed images from Cloudinary (if in edit mode)
+      if (isEditMode && deletedImagesRef.current.length > 0) {
+        console.log(
+          "🗑️ Deleting removed images:",
+          deletedImagesRef.current.length
+        );
+        for (const imageUrl of deletedImagesRef.current) {
+          try {
+            await deleteProductImage(imageUrl);
+          } catch (err) {
+            console.error("Error deleting image:", err);
+            // Continue even if delete fails
+          }
+        }
+      }
+
+      // Separate new files and existing URLs
+      const newFiles = selectedImages.filter((img) => img.isNew && img.file);
+      const existingUrls = selectedImages.filter(
+        (img) => img.isExisting || !img.file
+      );
+
+      let uploadedUrls = [];
+
+      // Upload new files to Cloudinary
+      if (newFiles.length > 0) {
+        const files = newFiles.map((img) => img.file);
+        const result = await uploadProductImages(files);
+        uploadedUrls = result.fileNames; // Array of Cloudinary URLs
+      }
+
+      // Combine: existing URLs + newly uploaded URLs
+      const allImageUrls = [
+        ...existingUrls.map((img) => ({
+          imageUrl: img.imageUrl,
+          isPrimary: img.isPrimary,
+        })),
+        ...uploadedUrls.map((url, idx) => ({
+          imageUrl: url,
+          isPrimary: existingUrls.length === 0 && idx === 0, // First new image is primary if no existing
+        })),
+      ];
+
+      // Find which one should be primary
+      const primaryIndex = selectedImages.findIndex((img) => img.isPrimary);
+      if (primaryIndex !== -1) {
+        allImageUrls.forEach((img, idx) => {
+          img.isPrimary = idx === primaryIndex;
+        });
+      }
+
+      // Call parent submit with all image URLs
+      if (onSubmitWithImages) {
+        onSubmitWithImages(e, allImageUrls);
+      } else {
+        onSubmit(e);
+      }
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Lỗi khi upload ảnh");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -237,7 +297,10 @@ export const ProductFormDialog = ({
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Tên sản phẩm */}
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-name`}>Tên sản phẩm *</Label>
+              <Label htmlFor={`${mode}-name`}>
+                Tên sản phẩm<span className="text-red-500">*</span>
+              </Label>
+
               <Input
                 id={`${mode}-name`}
                 name="name"
@@ -251,7 +314,9 @@ export const ProductFormDialog = ({
             {/* Brand, Category, Supplier */}
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-brandId`}>Thương hiệu *</Label>
+                <Label htmlFor={`${mode}-brandId`}>
+                  Thương hiệu<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-brandId`}
                   name="brandId"
@@ -270,7 +335,9 @@ export const ProductFormDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-categoryId`}>Danh mục *</Label>
+                <Label htmlFor={`${mode}-categoryId`}>
+                  Danh mục<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-categoryId`}
                   name="categoryId"
@@ -291,7 +358,9 @@ export const ProductFormDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-supplierId`}>Nhà cung cấp *</Label>
+                <Label htmlFor={`${mode}-supplierId`}>
+                  Nhà cung cấp<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-supplierId`}
                   name="supplierId"
@@ -315,7 +384,9 @@ export const ProductFormDialog = ({
             {/* Giá và Tồn kho */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-price`}>Giá sản phẩm (₫) *</Label>
+                <Label htmlFor={`${mode}-price`}>
+                  Giá sản phẩm (₫)<span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id={`${mode}-price`}
                   name="price"
@@ -330,7 +401,7 @@ export const ProductFormDialog = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`${mode}-stockQuantity`}>
-                  Số lượng tồn kho *
+                  Số lượng tồn kho<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id={`${mode}-stockQuantity`}
@@ -349,16 +420,22 @@ export const ProductFormDialog = ({
             <div className="space-y-2">
               <Label>Hình ảnh sản phẩm</Label>
 
-              {/* Uploaded images grid */}
-              {uploadedImages.length > 0 && (
+              {/* Selected images grid */}
+              {selectedImages.length > 0 && (
                 <div className="grid grid-cols-4 gap-3 mb-3">
-                  {uploadedImages.map((img, index) => {
+                  {selectedImages.map((img, index) => {
                     // Helper to get image src
-                    const getImageSrc = (url) => {
-                      if (!url) return "";
-                      if (url.startsWith("http") || url.startsWith("data:"))
-                        return url;
-                      return `/images/products/${url}`;
+                    const getImageSrc = () => {
+                      if (img.preview) return img.preview; // New file preview
+                      if (img.imageUrl) {
+                        if (
+                          img.imageUrl.startsWith("http") ||
+                          img.imageUrl.startsWith("data:")
+                        )
+                          return img.imageUrl;
+                        return `/images/products/${img.imageUrl}`;
+                      }
+                      return "";
                     };
 
                     return (
@@ -370,7 +447,7 @@ export const ProductFormDialog = ({
                         }}
                       >
                         <img
-                          src={getImageSrc(img.imageUrl)}
+                          src={getImageSrc()}
                           alt={`Product ${index + 1}`}
                           className="w-full h-24 object-cover"
                           onError={(e) => {
@@ -421,9 +498,7 @@ export const ProductFormDialog = ({
                   className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 transition-colors"
                 >
                   <Upload className="size-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">
-                    {uploading ? "Đang upload..." : "Chọn ảnh"}
-                  </span>
+                  <span className="text-sm text-gray-600">Chọn ảnh</span>
                   <input
                     id={`${mode}-images`}
                     type="file"
@@ -431,44 +506,13 @@ export const ProductFormDialog = ({
                     multiple
                     className="hidden"
                     onChange={handleFileUpload}
-                    disabled={uploading}
                   />
                 </label>
-                {uploading && (
-                  <Loader2 className="size-5 animate-spin text-gray-400" />
-                )}
-              </div>
-
-              {/* URL Input */}
-              <div className="flex items-center gap-2 mt-3">
-                <div className="flex-1">
-                  <Input
-                    type="url"
-                    placeholder="Hoặc nhập URL hình ảnh (http://... hoặc https://...)"
-                    value={imageUrlInput}
-                    onChange={(e) => setImageUrlInput(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddImageUrl();
-                      }
-                    }}
-                  />
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleAddImageUrl}
-                  disabled={!imageUrlInput.trim()}
-                  className="cursor-pointer"
-                >
-                  Thêm URL
-                </Button>
               </div>
 
               <p className="text-xs text-gray-500">
-                Chọn nhiều ảnh (PNG, JPG, JPEG - tối đa 5MB/file) hoặc nhập URL
-                hình ảnh. Click <Star className="inline size-3" /> để đặt ảnh
-                chính.
+                Chọn nhiều ảnh (PNG, JPG, JPEG - tối đa 5MB/file). Click{" "}
+                <Star className="inline size-3" /> để đặt ảnh chính.
               </p>
             </div>
 
@@ -537,7 +581,9 @@ export const ProductFormDialog = ({
 
             {/* Trạng thái */}
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-status`}>Trạng thái *</Label>
+              <Label htmlFor={`${mode}-status`}>
+                Trạng thái <span className="text-red-500">*</span>
+              </Label>
               <select
                 id={`${mode}-status`}
                 name="status"
@@ -564,12 +610,21 @@ export const ProductFormDialog = ({
               </Button>
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploading}
                 className={
                   "bg-brand-primary hover:bg-brand-primary-soft cursor-pointer"
                 }
               >
-                {isEditMode ? "Cập nhật" : "Thêm sản phẩm"}
+                {uploading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin mr-2" />
+                    Đang upload...
+                  </>
+                ) : isEditMode ? (
+                  "Cập nhật"
+                ) : (
+                  "Thêm sản phẩm"
+                )}
               </Button>
             </DialogFooter>
           </form>

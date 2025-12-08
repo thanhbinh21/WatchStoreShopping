@@ -41,6 +41,7 @@ public class OrderService {
     private final CartService cartService;
     private final ProductRepository productRepository;
     private final EmailService emailService;
+    private final NotificationService notificationService;
 
     public List<OrderResponse> getOrdersByUser(Long userId) {
         return orderRepository.findByUserId(userId)
@@ -105,7 +106,14 @@ public class OrderService {
                 item.setOrder(order);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getCurrentPrice()); //  chốt giá tại thời điểm đặt hàng
+
+                // If frontend provided a final unit price (e.g., discounted price), use it.
+                if (itemReq.getPrice() != null) {
+                    item.setPrice(itemReq.getPrice());
+                } else {
+                    item.setPrice(product.getCurrentPrice()); // chốt giá tại thời điểm đặt hàng
+                }
+
                 item.setProductName(product.getName()); // snapshot tên sản phẩm
                 item.setProductImageUrl(product.getPrimaryImageUrl()); // snapshot ảnh sản phẩm
 
@@ -146,7 +154,12 @@ public class OrderService {
                 item.setOrder(existing);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getCurrentPrice()); // giữ giá tại thời điểm cập nhật
+                // Preserve provided price (e.g., discounted unit price) when updating, otherwise use current price
+                if (itemReq.getPrice() != null) {
+                    item.setPrice(itemReq.getPrice());
+                } else {
+                    item.setPrice(product.getCurrentPrice()); // giữ giá tại thời điểm cập nhật
+                }
 
                 existing.getOrderItems().add(item);
             }
@@ -253,6 +266,17 @@ public class OrderService {
         order.setStatus(status);
 
         Order saved = orderRepository.save(order);
+        
+        // Gửi thông báo cho user về thay đổi trạng thái đơn hàng
+        if (oldStatus != status && order.getUser() != null) {
+            notificationService.createOrderStatusChangedNotification(
+                order.getUser(), 
+                order.getId(), 
+                oldStatus.name(), 
+                status.name()
+            );
+        }
+        
         return toOrderResponse(saved);
     }
 
@@ -333,34 +357,54 @@ public class OrderService {
                 .sum();
 
         List<OrderItemResponse> items = order.getOrderItems().stream()
-                .map(item -> {
-                    Product product = item.getProduct();
-                    return OrderItemResponse.builder()
-                            .id(item.getId())
-                            .productId(product != null ? product.getId() : null)
-                            .productName(product != null ? product.getName() : null)
-                            .productImageUrl(product != null ? product.getPrimaryImageUrl() : null)
-                            .price(item.getPrice())
-                            .quantity(item.getQuantity())
-                            .build();
-                })
-                .collect(Collectors.toList());
+            .map(item -> {
+                Product product = item.getProduct();
+                Integer productStock = product != null ? product.getStockQuantity() : null;
+                String supplierName = null;
+                if (product != null && product.getSupplier() != null) {
+                supplierName = product.getSupplier().getName();
+                }
+                java.math.BigDecimal subtotal = item.getPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity()));
+
+                return OrderItemResponse.builder()
+                    .id(item.getId())
+                    .productId(product != null ? product.getId() : null)
+                    .productName(item.getProductName() != null ? item.getProductName() : (product != null ? product.getName() : null))
+                    .productImageUrl(item.getProductImageUrl() != null ? item.getProductImageUrl() : (product != null ? product.getPrimaryImageUrl() : null))
+                    .price(item.getPrice())
+                    .quantity(item.getQuantity())
+                    .subtotal(subtotal)
+                    .supplierName(supplierName)
+                    .productStock(productStock)
+                    .build();
+            })
+            .collect(Collectors.toList());
 
         User user = order.getUser();
 
         return OrderResponse.builder()
-                .id(order.getId())
-                .createdAt(order.getCreatedAt())
-                .updatedAt(order.getUpdatedAt())
-                .status(order.getStatus())
-                .paymentStatus(order.getPaymentStatus())
-                .userId(user != null ? user.getId() : null)
-                .customerName(user != null ? user.getFullName() : null)
-                .customerEmail(user != null ? user.getEmail() : null)
-                .username(user != null ? user.getUsername() : null)
-                .totalAmount(total)
-                .totalQuantity(totalQuantity)
-                .items(items)
-                .build();
+            .id(order.getId())
+            .createdAt(order.getCreatedAt())
+            .updatedAt(order.getUpdatedAt())
+            .status(order.getStatus())
+            .paymentStatus(order.getPaymentStatus())
+            .userId(user != null ? user.getId() : null)
+            .customerName(user != null ? user.getFullName() : null)
+            .customerEmail(user != null ? user.getEmail() : null)
+            .username(user != null ? user.getUsername() : null)
+            .fullName(order.getFullName())
+            .phone(order.getPhone())
+            .address(order.getAddress())
+            .ward(order.getWard())
+            .district(order.getDistrict())
+            .city(order.getCity())
+            .note(order.getNote())
+            .paymentMethod(order.getPaymentMethod())
+            .transactionId(order.getTransactionId())
+            .paidAt(order.getPaidAt())
+            .totalAmount(total)
+            .totalQuantity(totalQuantity)
+            .items(items)
+            .build();
     }
 }

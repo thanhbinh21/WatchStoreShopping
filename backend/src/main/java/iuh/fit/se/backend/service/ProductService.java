@@ -2,6 +2,7 @@ package iuh.fit.se.backend.service;
 
 import iuh.fit.se.backend.dto.response.ProductResponse;
 import iuh.fit.se.backend.entity.Product;
+import iuh.fit.se.backend.entity.enums.ProductStatus;
 import iuh.fit.se.backend.repository.ProductRepository;
 import iuh.fit.se.backend.repository.ProductPriceRepository;
 import iuh.fit.se.backend.repository.ReviewRepository;
@@ -41,7 +42,10 @@ public class ProductService {
     }
 
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+            .orElse(null);
+        product.setStatus(ProductStatus.DISCONTINUED);
+        productRepository.save(product);
     }
 
         public Page<ProductResponse> searchProducts(

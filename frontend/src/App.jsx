@@ -6,12 +6,9 @@ import { AdminDashboard } from "./pages/Admin/AdminDashboard";
 import { AdminMethodPayments } from "./pages/Admin/AdminMethodPayments";
 import { AdminInvoice } from "./pages/Admin/AdminInvoice";
 import { AdminOrders } from "./pages/Admin/AdminOrders";
-import { AdminPricing } from "./pages/Admin/AdminPricing";
 import { AdminProduct } from "./pages/Admin/AdminProduct";
 import { AdminSettings } from "./pages/Admin/AdminSettings";
 import { AdminProductStock } from "./pages/Admin/AdminProductStock";
-import { AdminTable } from "./pages/Admin/AdminTable";
-import { AdminTeam } from "./pages/Admin/AdminTeam";
 import { AdminReview } from "./pages/Admin/AdminReview";
 import { AdminViewReport } from "./pages/Admin/AdminViewReport";
 import { Dashboard } from "./pages/Dashboard";
@@ -25,6 +22,8 @@ import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
 import { AdminCategories } from "./pages/Admin/AdminCategories";
+import { AdminBrands } from "./pages/Admin/AdminBrands";
+import { AdminSuppliers } from "./pages/Admin/AdminSuppliers";
 import ProductDetail from "./pages/ProductDetail";
 import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
@@ -42,11 +41,13 @@ import AIChatWidget from "./components/AIChat/AIChatWidget";
 import Support from "./pages/Support";
 import About from "./pages/About";
 import VNPayReturn from "./pages/VNPayReturn";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <ChatProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Public */}
           <Route
@@ -70,7 +71,10 @@ function App() {
           />
           <Route path="/products" element={<ProductList />} />
           <Route path="/about" element={<About />} />
-          <Route path="/promotional-products" element={<PromotionalProducts />} />
+          <Route
+            path="/promotional-products"
+            element={<PromotionalProducts />}
+          />
           <Route path="/posts" element={<PostList />} />
           <Route path="/posts/:categorySlug" element={<PostList />} />
           <Route path="/posts/:categorySlug/:postSlug" element={<PostList />} />
@@ -99,20 +103,19 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProduct />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="brands" element={<AdminBrands />} />
+            <Route path="suppliers" element={<AdminSuppliers />} />
             <Route path="banners" element={<AdminBanner />} />
             <Route path="post-categories" element={<AdminPostCategory />} />
             <Route path="posts" element={<AdminPosts />} />
             <Route path="orders" element={<AdminOrders />} />
             <Route path="stock" element={<AdminProductStock />} />
-            <Route path="pricing" element={<AdminPricing />} />
             <Route path="payments" element={<AdminMethodPayments />} />
             <Route path="promotions" element={<AdminPromotions />} />
             <Route path="reviews" element={<AdminReview />} />
             <Route path="users" element={<AdminUser />} />
             <Route path="invoice" element={<AdminInvoice />} />
             <Route path="reports" element={<AdminViewReport />} />
-            <Route path="team" element={<AdminTeam />} />
-            <Route path="table" element={<AdminTable />} />
             <Route path="settings" element={<AdminSettings />} />
             <Route path="chat" element={<AdminChat />} />
           </Route>

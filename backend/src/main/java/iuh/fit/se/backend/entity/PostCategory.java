@@ -2,6 +2,7 @@ package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import iuh.fit.se.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,10 @@ public class PostCategory {
 
     @Column(name = "display_order")
     private Integer displayOrder;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Status status = Status.ACTIVE;
 
     @CreationTimestamp
     @Column(name = "created_at")

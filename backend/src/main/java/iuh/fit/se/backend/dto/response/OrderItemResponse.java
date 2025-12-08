@@ -14,4 +14,10 @@ public class OrderItemResponse {
     String productImageUrl;
     BigDecimal price;
     Integer quantity;
+    /** Subtotal = price * quantity */
+    BigDecimal subtotal;
+    /** Supplier / vendor name if available */
+    String supplierName;
+    /** Current stock at time of query (sum of inventories) */
+    Integer productStock;
 }

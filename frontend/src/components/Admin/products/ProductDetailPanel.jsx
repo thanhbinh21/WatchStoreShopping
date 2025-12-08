@@ -46,40 +46,46 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                     </h3>
                   </div>
                   <div className="flex gap-2 overflow-x-auto pb-2">
-                    {productDetail.productImages.map((img) => {
-                      // Helper to get image src
-                      const getImageSrc = (url) => {
-                        if (!url) return "";
-                        if (url.startsWith("http") || url.startsWith("data:"))
-                          return url;
-                        return `/images/products/${url}`;
-                      };
+                    {[...productDetail.productImages]
+                      .sort((a, b) => {
+                        if (a.isPrimary) return -1;
+                        if (b.isPrimary) return 1;
+                        return 0;
+                      })
+                      .map((img) => {
+                        // Helper to get image src
+                        const getImageSrc = (url) => {
+                          if (!url) return "";
+                          if (url.startsWith("http") || url.startsWith("data:"))
+                            return url;
+                          return `/images/products/${url}`;
+                        };
 
-                      return (
-                        <div
-                          key={img.id}
-                          className="relative flex-shrink-0 w-24 h-24"
-                        >
-                          <img
-                            src={getImageSrc(img.imageUrl)}
-                            alt={productDetail.name}
-                            className="w-full h-full object-cover rounded-md"
-                            onError={(e) => {
-                              e.target.src =
-                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
-                            }}
-                          />
-                          {img.isPrimary && (
-                            <Badge
-                              className="absolute top-1 right-1 text-[10px] px-1 py-0"
-                              variant="default"
-                            >
-                              Chính
-                            </Badge>
-                          )}
-                        </div>
-                      );
-                    })}
+                        return (
+                          <div
+                            key={img.id}
+                            className="relative flex-shrink-0 w-24 h-24"
+                          >
+                            <img
+                              src={getImageSrc(img.imageUrl)}
+                              alt={productDetail.name}
+                              className="w-full h-full object-cover rounded-md"
+                              onError={(e) => {
+                                e.target.src =
+                                  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                              }}
+                            />
+                            {img.isPrimary && (
+                              <Badge
+                                className="absolute top-1 right-1 text-[10px] px-1 py-0 bg-brand-primary text-white"
+                                variant="default"
+                              >
+                                Chính
+                              </Badge>
+                            )}
+                          </div>
+                        );
+                      })}
                   </div>
                 </div>
               )}
@@ -106,8 +112,27 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                         ? "default"
                         : "secondary"
                     }
+                    className={
+                      productDetail.status === "ACTIVE"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                        : productDetail.status === "INACTIVE"
+                        ? "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                        : productDetail.status === "DISCONTINUED"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                        : productDetail.status === "OUT_OF_STOCK"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        : ""
+                    }
                   >
-                    {productDetail.status}
+                    {productDetail.status === "ACTIVE"
+                      ? "Hoạt động"
+                      : productDetail.status === "INACTIVE"
+                      ? "Tạm ngưng"
+                      : productDetail.status === "DISCONTINUED"
+                      ? "Ngừng bán"
+                      : productDetail.status === "OUT_OF_STOCK"
+                      ? "Hết hàng"
+                      : "Không xác định"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -222,7 +247,10 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                             {price.price.toLocaleString("vi-VN")} ₫
                           </span>
                           {price.isCurrent && (
-                            <Badge variant="default" className="text-xs">
+                            <Badge
+                              variant="default"
+                              className="text-xs bg-brand-primary text-white"
+                            >
                               Hiện tại
                             </Badge>
                           )}

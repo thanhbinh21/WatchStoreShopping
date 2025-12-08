@@ -33,16 +33,13 @@ export const CategoryFormDialog = ({
               ? "Cập nhật thông tin danh mục"
               : "Nhập thông tin để tạo danh mục sản phẩm mới"}
           </DialogDescription>
-          <DialogDescription>
-            {isEditMode
-              ? "Cập nhật thông tin danh mục"
-              : "Điền thông tin để thêm danh mục mới"}
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Tên danh mục */}
           <div className="space-y-2">
-            <Label htmlFor={`${mode}-name`}>Tên danh mục *</Label>
+            <Label htmlFor={`${mode}-name`}>
+              Tên danh mục<span className="text-red-500">*</span>
+            </Label>
             <Input
               id={`${mode}-name`}
               name="name"
@@ -65,6 +62,24 @@ export const CategoryFormDialog = ({
               rows={4}
             />
           </div>
+
+          {/* Trạng thái (chỉ hiện khi edit) */}
+          {isEditMode && (
+            <div className="space-y-2">
+              <Label htmlFor={`${mode}-status`}>Trạng thái *</Label>
+              <select
+                id={`${mode}-status`}
+                name="status"
+                value={formData.status || "ACTIVE"}
+                onChange={onChange}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                required
+              >
+                <option value="ACTIVE">Hoạt động</option>
+                <option value="INACTIVE">Ẩn</option>
+              </select>
+            </div>
+          )}
 
           <DialogFooter>
             <Button

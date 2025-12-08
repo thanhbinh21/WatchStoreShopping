@@ -1,41 +1,55 @@
 package iuh.fit.se.backend.controller;
 
+import iuh.fit.se.backend.service.CloudinaryService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 @RestController
 @RequestMapping("/api/upload")
 @CrossOrigin(origins = "http://localhost:5173")
+@RequiredArgsConstructor
 public class FileUploadController {
 
-    // Đường dẫn lưu file (tương đối với thư mục frontend/public)
-    private static final String PRODUCT_UPLOAD_DIR = "../frontend/public/images/products/";
-    private static final String BANNER_UPLOAD_DIR = "../frontend/public/images/banners/";
-    private static final String POST_UPLOAD_DIR = "../frontend/public/images/posts/";
-    private static final String AVATAR_UPLOAD_DIR = "../frontend/public/images/avatars/";
+    private final CloudinaryService cloudinaryService;
 
     @PostMapping("/product-images")
     public ResponseEntity<?> uploadProductImages(@RequestParam("files") MultipartFile[] files) {
-        return uploadImages(files, PRODUCT_UPLOAD_DIR, "product");
+        return uploadImages(files, "products");
     }
 
     @PostMapping("/banner-images")
     public ResponseEntity<?> uploadBannerImages(@RequestParam("files") MultipartFile[] files) {
-        return uploadImages(files, BANNER_UPLOAD_DIR, "banner");
+        return uploadImages(files, "banners");
     }
 
     @PostMapping("/post-images")
     public ResponseEntity<?> uploadPostImages(@RequestParam("files") MultipartFile[] files) {
-        return uploadImages(files, POST_UPLOAD_DIR, "post");
+        return uploadImages(files, "posts");
+    }
+
+    @PostMapping("/logo")
+    public ResponseEntity<?> uploadLogo(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/logos");
+    }
+
+    @PostMapping("/payment-methods")
+    public ResponseEntity<?> uploadPaymentMethodImages(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/payment-methods");
+    }
+
+    @PostMapping("/social-media")
+    public ResponseEntity<?> uploadSocialMediaImages(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "settings/social-media");
+    }
+
+    @PostMapping("/brand-logos")
+    public ResponseEntity<?> uploadBrandLogos(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "brands");
     }
 
     @PostMapping("/avatar")
@@ -52,23 +66,14 @@ public class FileUploadController {
                 return ResponseEntity.badRequest().body("File must be smaller than 5MB");
             }
 
-            File dir = new File(AVATAR_UPLOAD_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
-            String originalFilename = file.getOriginalFilename();
-            String extension = "";
-            if (originalFilename != null && originalFilename.contains(".")) {
-                extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-            }
-            String uniqueFilename = "avatar-" + System.currentTimeMillis() + "-" + UUID.randomUUID().toString().substring(0, 8) + extension;
-
-            Path target = Paths.get(AVATAR_UPLOAD_DIR + uniqueFilename);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            // Upload to Cloudinary
+            Map uploadResult = cloudinaryService.uploadImage(file, "avatars");
+            String imageUrl = (String) uploadResult.get("url");
 
             Map<String, Object> resp = new HashMap<>();
             resp.put("success", true);
-            resp.put("filename", uniqueFilename);
-            resp.put("url", "/images/avatars/" + uniqueFilename);
+            resp.put("filename", uploadResult.get("public_id"));
+            resp.put("url", imageUrl);
             return ResponseEntity.ok(resp);
         } catch (IOException e) {
             e.printStackTrace();
@@ -76,15 +81,9 @@ public class FileUploadController {
         }
     }
 
-    private ResponseEntity<?> uploadImages(MultipartFile[] files, String uploadDir, String prefix) {
+    private ResponseEntity<?> uploadImages(MultipartFile[] files, String folder) {
         try {
             List<String> fileNames = new ArrayList<>();
-
-            // Tạo thư mục nếu chưa tồn tại
-            File dir = new File(uploadDir);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
 
             for (MultipartFile file : files) {
                 if (file.isEmpty()) {
@@ -102,20 +101,10 @@ public class FileUploadController {
                     return ResponseEntity.badRequest().body("File không được vượt quá 5MB");
                 }
 
-                // Generate unique filename
-                String originalFilename = file.getOriginalFilename();
-                String extension = "";
-                if (originalFilename != null && originalFilename.contains(".")) {
-                    extension = originalFilename.substring(originalFilename.lastIndexOf("."));
-                }
-                String uniqueFilename = prefix + "-" + System.currentTimeMillis() + "-" +
-                        UUID.randomUUID().toString().substring(0, 8) + extension;
-
-                // Save file
-                Path filePath = Paths.get(uploadDir + uniqueFilename);
-                Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-
-                fileNames.add(uniqueFilename);
+                // Upload to Cloudinary
+                Map uploadResult = cloudinaryService.uploadImage(file, folder);
+                String imageUrl = (String) uploadResult.get("url");
+                fileNames.add(imageUrl);
             }
 
             Map<String, Object> response = new HashMap<>();
@@ -131,25 +120,45 @@ public class FileUploadController {
         }
     }
 
-    @DeleteMapping("/product-images/{filename}")
-    public ResponseEntity<?> deleteProductImage(@PathVariable String filename) {
-        return deleteImage(filename, PRODUCT_UPLOAD_DIR);
+    @DeleteMapping("/product-images")
+    public ResponseEntity<?> deleteProductImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
     }
 
-    @DeleteMapping("/banner-images/{filename}")
-    public ResponseEntity<?> deleteBannerImage(@PathVariable String filename) {
-        return deleteImage(filename, BANNER_UPLOAD_DIR);
+    @DeleteMapping("/banner-images")
+    public ResponseEntity<?> deleteBannerImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
     }
 
-    @DeleteMapping("/post-images/{filename}")
-    public ResponseEntity<?> deletePostImage(@PathVariable String filename) {
-        return deleteImage(filename, POST_UPLOAD_DIR);
+    @DeleteMapping("/post-images")
+    public ResponseEntity<?> deletePostImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
     }
 
-    private ResponseEntity<?> deleteImage(String filename, String uploadDir) {
+    @DeleteMapping("/logo")
+    public ResponseEntity<?> deleteLogo(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/payment-methods")
+    public ResponseEntity<?> deletePaymentMethodImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/social-media")
+    public ResponseEntity<?> deleteSocialMediaImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/brand-logos")
+    public ResponseEntity<?> deleteBrandLogo(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    private ResponseEntity<?> deleteImage(String imageUrl) {
         try {
-            Path filePath = Paths.get(uploadDir + filename);
-            Files.deleteIfExists(filePath);
+            String publicId = cloudinaryService.extractPublicId(imageUrl);
+            cloudinaryService.deleteImage(publicId);
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
@@ -157,7 +166,7 @@ public class FileUploadController {
 
             return ResponseEntity.ok(response);
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(500).body("Lỗi khi xóa file: " + e.getMessage());
         }

@@ -37,7 +37,7 @@ export const AdminProduct = () => {
   const [maxPriceInput, setMaxPriceInput] = useState(String(appliedMaxPrice));
   const [priceMaxLimit, setPriceMaxLimit] = useState(PRICE_MAX);
   const [isApplyingPrice, setIsApplyingPrice] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   // filters
   const [brandFilter, setBrandFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -169,8 +169,16 @@ export const AdminProduct = () => {
             : Array.isArray(v?.content)
             ? v.content
             : [];
-        setBrands(normalize(bRes));
-        setCategories(normalize(cRes));
+        const brandsArray = normalize(bRes);
+        // Chỉ lấy brands có status ACTIVE
+        const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
+        setBrands(activeBrands);
+        const categoriesArray = normalize(cRes);
+        // Chỉ lấy categories có status ACTIVE
+        const activeCategories = categoriesArray.filter(
+          (cat) => cat.status === "ACTIVE"
+        );
+        setCategories(activeCategories);
       } catch (e) {
         console.error("Error loading brands/categories", e);
       }
@@ -377,13 +385,14 @@ export const AdminProduct = () => {
 
   const confirmDelete = async () => {
     try {
+      // Xóa mềm: đổi status sang DISCONTINUED (ngừng bán vĩnh viễn), không xóa ảnh
       await deleteProduct(selectedProduct.id);
-      toast.success("Xóa sản phẩm thành công");
+      toast.success("Đã ngừng bán sản phẩm");
       setIsDeleteOpen(false);
       fetchProducts();
     } catch (err) {
-      console.error("Lỗi khi xóa sản phẩm:", err);
-      toast.error("Không thể xóa sản phẩm");
+      console.error("Lỗi khi ngừng bán sản phẩm:", err);
+      toast.error("Không thể ngừng bán sản phẩm");
     }
   };
 
@@ -528,7 +537,7 @@ export const AdminProduct = () => {
               setAppliedMaxPrice(priceMaxLimit);
               setMinPriceInput("");
               setMaxPriceInput(String(priceMaxLimit));
-              setStatusFilter("");
+              setStatusFilter("ACTIVE");
               setSearchTerm("");
               setPage(1);
             }}
@@ -593,7 +602,7 @@ export const AdminProduct = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
-        onClose={setIsDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
         itemName={selectedProduct?.name}
         onConfirm={confirmDelete}
         title="Xác nhận xóa sản phẩm"

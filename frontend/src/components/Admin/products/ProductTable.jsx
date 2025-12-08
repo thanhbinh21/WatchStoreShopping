@@ -56,9 +56,13 @@ export const ProductTable = ({
                     <img
                       src={
                         product.imageUrl
-                          ? `/images/products/${product.imageUrl}`
+                          ? product.imageUrl.startsWith("http")
+                            ? product.imageUrl
+                            : `/images/products/${product.imageUrl}`
                           : product.primaryImageUrl
-                          ? `/images/products/${product.primaryImageUrl}`
+                          ? product.primaryImageUrl.startsWith("http")
+                            ? product.primaryImageUrl
+                            : `/images/products/${product.primaryImageUrl}`
                           : productImg
                       }
                       alt={product.name}
@@ -105,8 +109,27 @@ export const ProductTable = ({
                       variant={
                         product.status === "ACTIVE" ? "default" : "secondary"
                       }
+                      className={
+                        product.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : product.status === "INACTIVE"
+                          ? "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                          : product.status === "DISCONTINUED"
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                          : product.status === "OUT_OF_STOCK"
+                          ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                          : ""
+                      }
                     >
-                      {product.status || "N/A"}
+                      {product.status === "ACTIVE"
+                        ? "Hoạt động"
+                        : product.status === "INACTIVE"
+                        ? "Tạm ngưng"
+                        : product.status === "DISCONTINUED"
+                        ? "Ngừng bán"
+                        : product.status === "OUT_OF_STOCK"
+                        ? "Hết hàng"
+                        : "Không xác định"}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">

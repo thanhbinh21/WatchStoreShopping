@@ -63,6 +63,13 @@ export const PostDetailPanel = ({ postDetail, onClose }) => {
                         ? "secondary"
                         : "outline"
                     }
+                    className={`inline-flex px-3 py-1.5 text-xs font-semibold rounded-full ${
+                      postDetail.status === "PUBLISHED"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                        : postDetail.status === "DRAFT"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+                    }`}
                   >
                     {postDetail.status === "PUBLISHED"
                       ? "Xuất bản"

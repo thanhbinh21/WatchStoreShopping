@@ -2,7 +2,7 @@ package iuh.fit.se.backend.service;
 
 import iuh.fit.se.backend.dto.response.CategoryResponse;
 import iuh.fit.se.backend.entity.Category;
-import iuh.fit.se.backend.entity.Product;
+import iuh.fit.se.backend.entity.enums.Status;
 import iuh.fit.se.backend.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,10 @@ public class CategoryService {
     }
 
     public void deleteCategory(Long id) {
-        categoryRepository.deleteById(id);
+        Category category = categoryRepository.findById(id)
+            .orElseThrow(null);
+        category.setStatus(Status.INACTIVE);
+        categoryRepository.save(category);
     }
     
     private CategoryResponse convertToCategoryResponse(Category category, boolean includeProducts) {
@@ -47,6 +50,7 @@ public class CategoryService {
             .id(category.getId())
             .name(category.getName())
             .description(category.getDescription())
+            .status(category.getStatus() != null ? category.getStatus().name() : "ACTIVE")
             .productCount(category.getProducts() != null ? category.getProducts().size() : 0);
         
         if (includeProducts && category.getProducts() != null) {
