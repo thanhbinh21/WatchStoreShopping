@@ -98,9 +98,15 @@ export default function ProductList() {
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      const categoriesArray = Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : [];
+      const categoriesArray = Array.isArray(data)
+        ? data
+        : Array.isArray(data.data)
+        ? data.data
+        : [];
       // Chỉ lấy categories có status ACTIVE
-      const activeCategories = categoriesArray.filter(cat => cat.status === "ACTIVE");
+      const activeCategories = categoriesArray.filter(
+        (cat) => cat.status === "ACTIVE"
+      );
       setCategories(activeCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
@@ -182,7 +188,9 @@ export default function ProductList() {
     }
     try {
       const cart = await getCart(user.id);
-      const existing = (cart.items || []).find((i) => i.productId === product.id || i.id === product.id);
+      const existing = (cart.items || []).find(
+        (i) => i.productId === product.id || i.id === product.id
+      );
       const currentQty = existing ? existing.quantity : 0;
       if (currentQty + 1 > maxStock) {
         toast.error("Không thể thêm vượt quá tồn kho");

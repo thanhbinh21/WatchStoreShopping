@@ -71,7 +71,9 @@ export const ProductFormDialog = ({
           console.log("Normalized suppliers:", normalizedSuppliers);
 
           // Chỉ lấy categories có status ACTIVE
-          const activeCategories = normalizedCategories.filter(cat => cat.status === "ACTIVE");
+          const activeCategories = normalizedCategories.filter(
+            (cat) => cat.status === "ACTIVE"
+          );
 
           setBrands(normalizedBrands);
           setCategories(activeCategories);

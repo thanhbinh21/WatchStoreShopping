@@ -172,7 +172,9 @@ export const AdminProduct = () => {
         setBrands(normalize(bRes));
         const categoriesArray = normalize(cRes);
         // Chỉ lấy categories có status ACTIVE
-        const activeCategories = categoriesArray.filter(cat => cat.status === "ACTIVE");
+        const activeCategories = categoriesArray.filter(
+          (cat) => cat.status === "ACTIVE"
+        );
         setCategories(activeCategories);
       } catch (e) {
         console.error("Error loading brands/categories", e);
