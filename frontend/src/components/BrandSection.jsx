@@ -17,19 +17,14 @@ export default function BrandSection() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getBrands();
-      let brandsList = [];
-
-      if (Array.isArray(data)) {
-        brandsList = data;
-      } else if (data && typeof data === "object") {
-        if (Array.isArray(data.data)) {
-          brandsList = data.data;
-        } else if (Array.isArray(data.content)) {
-          brandsList = data.content;
-        }
-      }
-      setBrands(brandsList);
+      const brandsData = await getBrands();
+      const brandsArray = Array.isArray(brandsData)
+        ? brandsData
+        : Array.isArray(brandsData.data)
+        ? brandsData.data
+        : [];
+      const activeBrands = brandsArray.filter((b) => b.status === "ACTIVE");
+      setBrands(activeBrands);
     } catch (error) {
       console.error("BrandSection: Error fetching brands:", error);
       setError(error.message || "Không thể tải thương hiệu");

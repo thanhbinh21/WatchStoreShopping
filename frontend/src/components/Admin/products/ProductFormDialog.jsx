@@ -62,22 +62,25 @@ export const ProductFormDialog = ({
               ? res.content
               : [];
 
-          console.log("Raw suppliers response:", suppliersRes);
-
           const normalizedBrands = normalize(brandsRes);
           const normalizedCategories = normalize(categoriesRes);
           const normalizedSuppliers = normalize(suppliersRes);
 
-          console.log("Normalized suppliers:", normalizedSuppliers);
+          const activeBrands = normalizedBrands.filter(
+            (b) => b.status === "ACTIVE"
+          );
 
-          // Chỉ lấy categories có status ACTIVE
           const activeCategories = normalizedCategories.filter(
             (cat) => cat.status === "ACTIVE"
           );
 
-          setBrands(normalizedBrands);
+          const activeSuppliers = normalizedSuppliers.filter(
+            (sup) => sup.status === "ACTIVE"
+          );
+
+          setBrands(activeBrands);
           setCategories(activeCategories);
-          setSuppliers(normalizedSuppliers);
+          setSuppliers(activeSuppliers);
         } catch (error) {
           console.error("Error fetching dropdown data:", error);
         } finally {
