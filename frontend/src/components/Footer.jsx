@@ -118,13 +118,27 @@ export default function Footer() {
             {settings.hotline && (
               <p className="text-sm mb-3 flex items-center gap-2">
                 <Phone size={20} />
-                <strong>{settings.hotline}</strong>
+                <a
+                  href={`tel:${(settings.hotline || "").replace(/\s+/g, "")}`}
+                  aria-label={`Gọi ${settings.hotline}`}
+                  title={`Gọi ${settings.hotline}`}
+                  className="font-semibold hover:underline"
+                >
+                  {settings.hotline}
+                </a>
               </p>
             )}
             {settings.email && (
               <p className="text-sm flex items-center gap-2">
                 <Mail size={20} />
-                <span>{settings.email}</span>
+                <a
+                  href={`mailto:${settings.email}`}
+                  aria-label={`Gửi email tới ${settings.email}`}
+                  title={`Gửi email tới ${settings.email}`}
+                  className="hover:underline"
+                >
+                  {settings.email}
+                </a>
               </p>
             )}
           </div>
