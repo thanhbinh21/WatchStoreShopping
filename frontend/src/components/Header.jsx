@@ -15,6 +15,10 @@ import {
   X, // Thêm icon X đóng menu
   ChevronRight,
   Package,
+  Clock, // Icon cho Danh mục
+  Hash, // Icon cho Thương hiệu
+  Gift, // Icon cho Khuyến mãi
+  FileText, // Icon cho Bài viết
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
@@ -32,8 +36,11 @@ import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
 import { searchProducts, getProducts } from "@/api/productAPI";
+import { MdTrendingUp } from "react-icons/md";
 import { getGeneralSettings } from "@/api/settingsAPI";
 import MegaMenu from "./MegaMenu";
+
+
 export default function Header() {
   const navigate = useNavigate();
   // State quản lý UI
@@ -582,7 +589,8 @@ const getPrimaryImage = (product) => {
           </div>
 
           {/* --- DESKTOP: Search Bar --- */}
-          <div className="flex-1 max-w-2xl hidden lg:block">
+{/* Search Bar */}
+          <div className="flex-1 max-w-2xl relative" ref={searchDropdownRef}>
             <div className="relative">
               <input
                 ref={searchInputRef}
@@ -667,7 +675,7 @@ const getPrimaryImage = (product) => {
                     {/* Xu hướng tìm kiếm */}
                     <div>
                       <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <TrendingUp size={16} />
+                        <MdTrendingUp className="text-xl text-blue-500" />
                         Xu hướng tìm kiếm
                       </h3>
                       <div className="grid grid-cols-1 gap-2">
@@ -712,7 +720,7 @@ const getPrimaryImage = (product) => {
                   <div className="mb-2 text-xs text-gray-400">
                     Tìm thấy {searchSuggestions.exactMatches?.length + searchSuggestions.suggestedProducts?.length} kết quả
                   </div>
-
+                  
                   {/* Có phải bạn muốn tìm */}
                   {(searchSuggestions.exactMatches?.length > 0) && (
                     <div className="mb-6">
@@ -791,7 +799,7 @@ const getPrimaryImage = (product) => {
                   )}
 
                   {/* Không tìm thấy kết quả */}
-                  {searchSuggestions.exactMatches?.length === 0 &&
+                  {searchSuggestions.exactMatches?.length === 0 && 
                   searchSuggestions.suggestedProducts?.length === 0 && (
                     <div className="text-center py-8">
                       <p className="text-gray-500">Không tìm thấy sản phẩm phù hợp</p>
@@ -809,6 +817,7 @@ const getPrimaryImage = (product) => {
               </div>
             )}
           </div>
+
 
           {/* --- ACTION ICONS GROUP --- */}
           <div className="flex items-center gap-1 md:gap-2">

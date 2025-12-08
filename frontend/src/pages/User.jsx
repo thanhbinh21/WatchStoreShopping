@@ -24,6 +24,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+
 export const User = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,19 +91,14 @@ export const User = () => {
         const res = await getCurrentUser();
         const data = res?.data?.data || res?.data || res;
         if (data) {
-          // try to split address into street, ward, district, province
           const addr = data.address || "";
           const parts = addr
             .split(",")
             .map((s) => s.trim())
             .filter(Boolean);
-          // street is first segment if present
           const streetPart = parts.length > 0 ? parts[0] : "";
-          // province name is last part if present else fallback to data.city
           const provinceName =
             parts.length > 0 ? parts[parts.length - 1] : data.city || "";
-
-          // find province by name (case-insensitive)
           const prov = provs.find(
             (p) =>
               p.name &&
@@ -114,7 +110,6 @@ export const User = () => {
             setSelectedProvinceCode(prov.code);
             cityName = prov.name;
             const dists = await fetchDistricts(prov.code);
-            // district name assumed second-last part
             const districtName =
               parts.length > 1 ? parts[parts.length - 2] : "";
             const dist = dists.find(
@@ -160,7 +155,6 @@ export const User = () => {
     };
     init();
     return () => {
-      // cleanup object URL when component unmounts
       try {
         if (prevObjectUrlRef.current) {
           URL.revokeObjectURL(prevObjectUrlRef.current);
