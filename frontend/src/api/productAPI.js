@@ -9,6 +9,7 @@ export const getProducts = async (params = {}) => {
       page = 0,
       size = 10,
       name = "",
+      search = "",
       category = "",
       brand = "",
       supplier = "",
@@ -22,7 +23,9 @@ export const getProducts = async (params = {}) => {
     const queryParams = new URLSearchParams();
     queryParams.append("page", page);
     queryParams.append("size", size);
+    // Support both `name` and `search` query params (some callers use `search`).
     if (name) queryParams.append("name", name);
+    if (search) queryParams.append("search", search);
     if (category) queryParams.append("category", category);
     if (brand) queryParams.append("brand", brand);
     if (supplier) queryParams.append("supplier", supplier);
@@ -54,16 +57,43 @@ export const getProductById = async (id) => {
 
 // Tìm kiếm sản phẩm theo tên
 export const searchProducts = async (name) => {
+  const term = name?.trim();
+  if (!term) return [];
+
   try {
-    const products = await axiosInstance.get(`${PRODUCT_URL}/search`, {
-      params: { name },
+    // thử search endpoint riêng
+    const resSearch = await axiosInstance.get(`${PRODUCT_URL}/search`, {
+      params: { name: term },
     });
-    return products?.data || [];
+
+    const listSearch = resSearch?.data;
+    if (Array.isArray(listSearch) && listSearch.length > 0) {
+      return listSearch;
+    }
   } catch (err) {
-    console.error("Error searching products:", err);
-    return [];
+    console.warn("Search endpoint failed, fallback to getProducts", err);
   }
+
+  // fallback sang getProducts
+  try {
+    const res = await getProducts({
+      page: 0,
+      size: 50,
+      name: term,
+      sortBy: "createdAt",
+      order: "desc",
+    });
+
+    if (!res) return [];
+    if (Array.isArray(res)) return res;
+    if (res.content && Array.isArray(res.content)) return res.content;
+  } catch (err) {
+    console.error("Error searching products via fallback:", err);
+  }
+
+  return [];
 };
+
 
 // Tạo sản phẩm mới
 export const createProduct = async (productData) => {
