@@ -106,7 +106,14 @@ public class OrderService {
                 item.setOrder(order);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getCurrentPrice()); //  chốt giá tại thời điểm đặt hàng
+
+                // If frontend provided a final unit price (e.g., discounted price), use it.
+                if (itemReq.getPrice() != null) {
+                    item.setPrice(itemReq.getPrice());
+                } else {
+                    item.setPrice(product.getCurrentPrice()); // chốt giá tại thời điểm đặt hàng
+                }
+
                 item.setProductName(product.getName()); // snapshot tên sản phẩm
                 item.setProductImageUrl(product.getPrimaryImageUrl()); // snapshot ảnh sản phẩm
 
@@ -147,7 +154,12 @@ public class OrderService {
                 item.setOrder(existing);
                 item.setProduct(product);
                 item.setQuantity(itemReq.getQuantity());
-                item.setPrice(product.getCurrentPrice()); // giữ giá tại thời điểm cập nhật
+                // Preserve provided price (e.g., discounted unit price) when updating, otherwise use current price
+                if (itemReq.getPrice() != null) {
+                    item.setPrice(itemReq.getPrice());
+                } else {
+                    item.setPrice(product.getCurrentPrice()); // giữ giá tại thời điểm cập nhật
+                }
 
                 existing.getOrderItems().add(item);
             }

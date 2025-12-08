@@ -167,14 +167,59 @@ export default function Checkout() {
 
       const orderRequest = {
         userId: user.id,
-        orderItems: selectedItems.map((item) => {
-          const productId = item.productId;
-          if (!productId) throw new Error("Sản phẩm không hợp lệ");
-          return {
-            productId: productId,
-            quantity: item.quantity || 1,
-          };
-        }),
+        // Build order items and include final unit price (apply totalDiscount proportionally)
+        orderItems: (() => {
+          const items = [];
+          const totalItems = selectedItems.length;
+          let runningSubtotal = 0;
+
+          selectedItems.forEach((item, idx) => {
+            const productId = item.productId;
+            if (!productId) throw new Error("Sản phẩm không hợp lệ");
+            const qty = item.quantity || 1;
+
+            // base price (original product price shown in cart)
+            const base = Number(item.price || 0);
+
+            // If the item already has a discountedPrice field use it
+            if (
+              item.discountedPrice !== undefined &&
+              item.discountedPrice !== null
+            ) {
+              const unitPrice = Math.round(Number(item.discountedPrice));
+              runningSubtotal += unitPrice * qty;
+              items.push({ productId, quantity: qty, price: unitPrice });
+              return;
+            }
+
+            // If there is a totalDiscount, distribute it proportionally
+            let unitPrice;
+            if (totalDiscount > 0 && originalTotal > 0) {
+              const itemTotal = base * qty;
+              const proportion = itemTotal / originalTotal;
+              const itemTotalAfter = itemTotal - proportion * totalDiscount;
+              unitPrice = Math.round(itemTotalAfter / qty);
+
+              // If this is the last item, fix rounding diff so totals match exactly
+              if (idx === totalItems - 1) {
+                const expectedTotal = Math.round(totalPrice);
+                const currentTotal = runningSubtotal + unitPrice * qty;
+                const diff = expectedTotal - currentTotal;
+                if (diff !== 0) {
+                  // adjust unitPrice to absorb the remaining diff
+                  unitPrice = unitPrice + Math.round(diff / qty);
+                }
+              }
+            } else {
+              unitPrice = Math.round(base);
+            }
+
+            runningSubtotal += unitPrice * qty;
+            items.push({ productId, quantity: qty, price: unitPrice });
+          });
+
+          return items;
+        })(),
         fullName: formData.fullName,
         phone: formData.phone,
         address: formData.address,

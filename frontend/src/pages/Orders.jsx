@@ -217,7 +217,7 @@ export default function Orders() {
           <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
             <button
               onClick={() => setFilterStatus("ALL")}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 filterStatus === "ALL"
                   ? "bg-gray-900 text-white shadow-md"
                   : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
@@ -231,7 +231,7 @@ export default function Orders() {
                 <button
                   key={status}
                   onClick={() => setFilterStatus(status)}
-                  className={`flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                  className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
                     filterStatus === status
                       ? "bg-brand-primary text-white shadow-md"
                       : "bg-white text-gray-600 border border-gray-200 hover:bg-gray-50"
@@ -282,6 +282,7 @@ export default function Orders() {
                 (order) =>
                   filterStatus === "ALL" || order.status === filterStatus
               )
+              .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
               .map((order) => {
                 const statusInfo =
                   orderStatusLabels[order.status] || orderStatusLabels.PENDING;
@@ -289,7 +290,7 @@ export default function Orders() {
                 return (
                   <div
                     key={order.id}
-                    className={`bg-white rounded-2xl border transition-all hover:shadow-md ${
+                    className={`bg-white rounded-2xl border transition-all hover:shadow-md overflow-hidden ${
                       orderId === order.id
                         ? "border-brand-primary ring-1 ring-brand-primary"
                         : "border-gray-200 shadow-sm"
