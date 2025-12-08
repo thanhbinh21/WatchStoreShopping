@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { adminBannerAPI } from "@/api/cmsAPI";
 import { uploadBannerImages, deleteBannerImage } from "@/api/uploadAPI";
 import { toast } from "sonner";
-import { Link as LinkIcon, PencilIcon, TrashIcon, X } from "lucide-react";
+import {
+  Link as LinkIcon,
+  PencilIcon,
+  TrashIcon,
+  X,
+  SearchIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { AdminPagination } from "@/components/Pagination";
 import {
@@ -16,6 +23,8 @@ import {
 
 export const AdminBanner = () => {
   const [banners, setBanners] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -175,10 +184,30 @@ export const AdminBanner = () => {
     e.target.value = "";
   };
 
+  // Filter banners based on search and status
+  const filteredBanners = banners.filter((banner) => {
+    const matchesSearch = banner.title
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus =
+      statusFilter === "" ||
+      (statusFilter === "ACTIVE" && banner.active) ||
+      (statusFilter === "INACTIVE" && !banner.active);
+    return matchesSearch && matchesStatus;
+  });
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   // Pagination logic
-  const totalPages = Math.ceil(banners.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredBanners.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBanners = banners.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedBanners = filteredBanners.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
     <div className="p-6">
@@ -190,6 +219,33 @@ export const AdminBanner = () => {
         >
           + Tạo banner
         </button>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+          <Input
+            type="text"
+            placeholder="Tìm kiếm banner..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="min-w-[180px]">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Kích hoạt</option>
+            <option value="INACTIVE">Tắt</option>
+          </select>
+        </div>
       </div>
 
       {/* Modal Form */}
