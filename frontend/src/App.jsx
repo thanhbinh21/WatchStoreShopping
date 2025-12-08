@@ -22,6 +22,8 @@ import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import Cart from "@/pages/Cart.jsx";
 import { AdminCategories } from "./pages/Admin/AdminCategories";
+import { AdminBrands } from "./pages/Admin/AdminBrands";
+import { AdminSuppliers } from "./pages/Admin/AdminSuppliers";
 import ProductDetail from "./pages/ProductDetail";
 import { Home } from "./pages/Home";
 import Checkout from "./pages/Checkout";
@@ -101,6 +103,8 @@ function App() {
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="products" element={<AdminProduct />} />
             <Route path="categories" element={<AdminCategories />} />
+            <Route path="brands" element={<AdminBrands />} />
+            <Route path="suppliers" element={<AdminSuppliers />} />
             <Route path="banners" element={<AdminBanner />} />
             <Route path="post-categories" element={<AdminPostCategory />} />
             <Route path="posts" element={<AdminPosts />} />

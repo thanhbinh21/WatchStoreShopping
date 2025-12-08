@@ -2,7 +2,7 @@ package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import iuh.fit.se.backend.entity.enums.CategoryStatus;
+import iuh.fit.se.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,7 +30,7 @@ public class Category {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CategoryStatus status = CategoryStatus.ACTIVE;
+    private Status status = Status.ACTIVE;
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference(value = "category-products")

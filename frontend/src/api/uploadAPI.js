@@ -306,3 +306,44 @@ export const deleteSocialMediaImage = async (imageUrl) => {
     throw err;
   }
 };
+
+// Upload brand logo images
+export const uploadBrandLogos = async (files) => {
+  try {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
+
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.post(`${UPLOAD_URL}/brand-logos`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: token ? `Bearer ${token}` : "",
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    console.error("Error uploading brand logo images:", err);
+    throw err;
+  }
+};
+
+// Delete brand logo image
+export const deleteBrandLogo = async (imageUrl) => {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await axios.delete(`${UPLOAD_URL}/brand-logos`, {
+      headers: {
+        Authorization: token ? `Bearer ${token}` : "",
+        "Content-Type": "application/json",
+      },
+      data: { url: imageUrl },
+    });
+    return response.data;
+  } catch (err) {
+    console.error("Error deleting brand logo image:", err);
+    throw err;
+  }
+};

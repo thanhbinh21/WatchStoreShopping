@@ -3,6 +3,7 @@ package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import iuh.fit.se.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,6 +29,11 @@ public class Brand {
     private String description;
 
     private String logoUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, name = "status")
+    @Builder.Default
+    private Status status = Status.ACTIVE;
 
     @OneToMany(mappedBy = "brand")
     @JsonManagedReference(value = "brand-products")
