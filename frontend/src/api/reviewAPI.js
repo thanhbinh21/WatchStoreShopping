@@ -19,10 +19,22 @@ export const updateReview = async (id, reviewData) => {
 
 export const getReviewByUserAndProduct = async (userId, productId) => {
     try {
-        const response = await axiosInstance.get(`${REVIEW_URL}/user/${userId}/product/${productId}`);
+        const response = await axiosInstance.get(
+            `${REVIEW_URL}/user/${userId}/product/${productId}`,
+            { 
+                suppressError404: true,
+                // Accept 404 as valid response (user simply hasn't reviewed yet)
+                validateStatus: (status) => (status >= 200 && status < 300) || status === 404
+            }
+        );
+        // If 404, response.data will be undefined/null
+        if (response.status === 404) {
+            return null;
+        }
         return response.data;
     } catch (error) {
-        // 404 means no review exists - return null instead of throwing
+        // Should not reach here for 404 due to validateStatus
+        // But keep as fallback
         if (error.response?.status === 404) {
             return null;
         }

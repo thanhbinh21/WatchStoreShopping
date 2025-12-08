@@ -16,15 +16,21 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
+import { getBrands } from "../api/brandAPI.js";
 import {
   getNotificationsByUser,
-  markAllNotificationsAsRead,
+  markNotificationAsRead,
 } from "@/api/notificationAPI";
+import { 
+  connectNotificationWebSocket, 
+  disconnectNotificationWebSocket 
+} from "@/api/notificationWebSocket";
 import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
 import { getGeneralSettings } from "@/api/settingsAPI";
+import MegaMenu from "./MegaMenu";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -32,6 +38,7 @@ export default function Header() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [cartCount, _setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -40,6 +47,7 @@ export default function Header() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [cartAnimation, setCartAnimation] = useState(false);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
+  const [notificationAnimation, setNotificationAnimation] = useState(false);
   const [settings, setSettings] = useState({
     siteName: "WATCH STORE",
     logo: "",
@@ -54,6 +62,62 @@ export default function Header() {
 
   const formatNotificationDate = (value) =>
     value ? new Date(value).toLocaleString("vi-VN") : "--";
+
+  // Hàm phân loại thông báo dựa vào title và message
+  const getNotificationType = (notification) => {
+    const title = notification.title?.toLowerCase() || "";
+    const message = notification.message?.toLowerCase() || "";
+    
+    if (title.includes("khuyến mãi") || title.includes("🎉")) {
+      return "promotion";
+    }
+    if (title.includes("đơn hàng") || message.includes("đơn hàng")) {
+      return "order";
+    }
+    if (title.includes("đánh giá")) {
+      return "review";
+    }
+    return "general";
+  };
+
+  // Hàm xử lý click vào thông báo
+  const handleNotificationClick = async (notification) => {
+    const type = getNotificationType(notification);
+    
+    // Đánh dấu thông báo là đã đọc
+    if (!notification.read) {
+      try {
+        await markNotificationAsRead(notification.id, userState.id);
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.id === notification.id ? { ...item, read: true } : item
+          )
+        );
+        setUnreadNotifications((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
+      }
+    }
+
+    // Đóng dropdown
+    setIsNotificationDropdownOpen(false);
+
+    // Điều hướng đến trang tương ứng
+    switch (type) {
+      case "promotion":
+        navigate("/promotional-products");
+        break;
+      case "order":
+        navigate("/orders");
+        break;
+      case "review":
+        navigate("/profile");
+        break;
+      default:
+        // Không điều hướng nếu là thông báo general
+        break;
+    }
+  };
 
   const loadNotifications = useCallback(async () => {
     if (!userState?.id || !token) {
@@ -77,7 +141,7 @@ export default function Header() {
     }
   }, [userState?.id, token]);
 
-  // Fetch categories and settings
+  // Fetch categories, brands and settings
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -87,12 +151,19 @@ export default function Header() {
           Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
         );
 
+        // Fetch brands
+        const brandsData = await getBrands();
+        setBrands(
+          Array.isArray(brandsData) ? brandsData : Array.isArray(brandsData.data) ? brandsData.data : []
+        );
+
         // Fetch settings
         const settingsData = await getGeneralSettings();
         setSettings(settingsData);
       } catch (error) {
         console.error("Lỗi khi fetch data:", error);
         setCategories([]);
+        setBrands([]);
       }
     };
     fetchData();
@@ -101,6 +172,51 @@ export default function Header() {
   useEffect(() => {
     loadNotifications();
   }, [loadNotifications]);
+
+  // WebSocket connection for real-time notifications
+  useEffect(() => {
+    if (!userState?.id || !token) {
+      return;
+    }
+
+    console.log("🔌 Setting up WebSocket for user:", userState.id);
+
+    const handleNewNotification = (notification) => {
+      console.log("📬 New notification received via WebSocket:", notification);
+      
+      // Add new notification to the list
+      setNotifications((prev) => [notification, ...prev]);
+      setUnreadNotifications((prev) => prev + 1);
+      
+      // Trigger animation
+      setNotificationAnimation(true);
+      setTimeout(() => setNotificationAnimation(false), 600);
+      
+      // Show toast notification
+      toast.success(notification.title, {
+        description: notification.message,
+        duration: 5000,
+      });
+      
+      // Play notification sound (optional)
+      try {
+        const audio = new Audio("/notification.mp3");
+        audio.volume = 0.3;
+        audio.play().catch(() => {
+          // Ignore if audio fails to play
+        });
+      } catch (error) {
+        // Ignore audio errors
+      }
+    };
+
+    const ws = connectNotificationWebSocket(userState.id, handleNewNotification);
+
+    return () => {
+      console.log("🔌 Cleaning up WebSocket connection");
+      disconnectNotificationWebSocket();
+    };
+  }, [userState?.id, token]);
 
   // Load wishlist count
   useEffect(() => {
@@ -246,25 +362,11 @@ export default function Header() {
       return;
     }
 
-    let unreadCount = unreadNotifications;
     if (!isNotificationDropdownOpen) {
-      unreadCount = await loadNotifications();
+      await loadNotifications();
     }
 
-    const nextState = !isNotificationDropdownOpen;
-    setIsNotificationDropdownOpen(nextState);
-
-    if (!isNotificationDropdownOpen && unreadCount > 0) {
-      try {
-        await markAllNotificationsAsRead(userState.id);
-        setNotifications((prev) =>
-          prev.map((item) => ({ ...item, read: true }))
-        );
-        setUnreadNotifications(0);
-      } catch (error) {
-        console.error("Lỗi khi cập nhật trạng thái thông báo:", error);
-      }
-    }
+    setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
   };
 
   return (
@@ -289,7 +391,7 @@ export default function Header() {
             )}
           </div>
 
-          {/* Category Dropdown */}
+          {/* Category Mega Menu Dropdown */}
           <div className="relative hidden lg:block" ref={categoryDropdownRef}>
             <button
               onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
@@ -305,25 +407,12 @@ export default function Header() {
               />
             </button>
 
-            {isCategoryDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-64 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border max-h-96 overflow-y-auto">
-                {categories.length > 0 ? (
-                  categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                      className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      {category.name}
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    Không có danh mục
-                  </div>
-                )}
-              </div>
-            )}
+            <MegaMenu
+              categories={categories}
+              brands={brands}
+              isOpen={isCategoryDropdownOpen}
+              onClose={() => setIsCategoryDropdownOpen(false)}
+            />
           </div>
 
           {/* Location Selector (Optional) */}
@@ -403,12 +492,21 @@ export default function Header() {
           <div className="relative" ref={notificationDropdownRef}>
             <button
               onClick={handleToggleNotifications}
-              className="cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+              className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+                notificationAnimation ? "animate-bounce scale-110" : ""
+              }`}
             >
-              <Bell size={20} />
+              <Bell 
+                size={20}
+                className={`transition-all ${
+                  notificationAnimation ? "scale-125 text-yellow-400" : ""
+                }`}
+              />
               <span className="hidden md:inline font-medium">Thông báo</span>
               {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <span className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
+                  notificationAnimation ? "animate-ping" : ""
+                }`}>
                   {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
@@ -435,7 +533,8 @@ export default function Header() {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`px-4 py-3 text-sm text-foreground transition-colors ${
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`px-4 py-3 text-sm text-foreground transition-colors cursor-pointer hover:bg-brand-accent-soft/50 ${
                           notification.read ? "bg-card" : "bg-brand-accent-soft"
                         }`}
                       >

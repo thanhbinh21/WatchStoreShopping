@@ -44,9 +44,8 @@ public class ReviewController {
             @PathVariable Long productId
     ) {
         ReviewResponse review = reviewService.getByUserAndProduct(userId, productId);
-        if (review == null) {
-            return ResponseEntity.notFound().build();
-        }
+        // Trả về 200 OK với null thay vì 404 - không có review là trường hợp bình thường
+        // Điều này giúp frontend không bị log errors trong console
         return ResponseEntity.ok(review);
     }
 

@@ -6,6 +6,7 @@ import iuh.fit.se.backend.service.NotificationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.Map;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final SimpMessagingTemplate messagingTemplate;
 
     @GetMapping("/user/{userId}")
     public List<NotificationResponse> getByUser(@PathVariable Long userId) {
