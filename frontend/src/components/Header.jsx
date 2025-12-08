@@ -8,10 +8,12 @@ import {
   Search,
   ChevronDown,
   Grid3x3,
-  MapPin,
   Bell,
   Heart,
   LifeBuoy,
+  Menu, // Thêm icon Menu
+  X, // Thêm icon X đóng menu
+  ChevronRight,
   Package,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -34,8 +36,13 @@ import MegaMenu from "./MegaMenu";
 
 export default function Header() {
   const navigate = useNavigate();
+  // State quản lý UI
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false); // State cho mobile menu
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // State cho thanh search mobile
+
+  // Data State
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
@@ -45,17 +52,22 @@ export default function Header() {
   const [isNotificationDropdownOpen, setIsNotificationDropdownOpen] =
     useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [cartAnimation, setCartAnimation] = useState(false);
-  const [wishlistAnimation, setWishlistAnimation] = useState(false);
-  const [notificationAnimation, setNotificationAnimation] = useState(false);
   const [settings, setSettings] = useState({
     siteName: "WATCH STORE",
     logo: "",
   });
+
+  // Animation State
+  const [cartAnimation, setCartAnimation] = useState(false);
+  const [wishlistAnimation, setWishlistAnimation] = useState(false);
+  const [notificationAnimation, setNotificationAnimation] = useState(false);
+
+  // Refs
   const userDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
 
+  // User info
   const token = localStorage.getItem("accessToken");
   const role = localStorage.getItem("role");
   const [userState, setUserState] = useState(parseStoredUser() || {});
@@ -63,28 +75,21 @@ export default function Header() {
   const formatNotificationDate = (value) =>
     value ? new Date(value).toLocaleString("vi-VN") : "--";
 
-  // Hàm phân loại thông báo dựa vào title và message
+  // --- Logic cũ giữ nguyên ---
   const getNotificationType = (notification) => {
     const title = notification.title?.toLowerCase() || "";
     const message = notification.message?.toLowerCase() || "";
 
-    if (title.includes("khuyến mãi") || title.includes("🎉")) {
+    if (title.includes("khuyến mãi") || title.includes("🎉"))
       return "promotion";
-    }
-    if (title.includes("đơn hàng") || message.includes("đơn hàng")) {
+    if (title.includes("đơn hàng") || message.includes("đơn hàng"))
       return "order";
-    }
-    if (title.includes("đánh giá")) {
-      return "review";
-    }
+    if (title.includes("đánh giá")) return "review";
     return "general";
   };
 
-  // Hàm xử lý click vào thông báo
   const handleNotificationClick = async (notification) => {
     const type = getNotificationType(notification);
-
-    // Đánh dấu thông báo là đã đọc
     if (!notification.read) {
       try {
         await markNotificationAsRead(notification.id, userState.id);
@@ -98,11 +103,7 @@ export default function Header() {
         console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
       }
     }
-
-    // Đóng dropdown
     setIsNotificationDropdownOpen(false);
-
-    // Điều hướng đến trang tương ứng
     switch (type) {
       case "promotion":
         navigate("/promotional-products");
@@ -114,7 +115,6 @@ export default function Header() {
         navigate("/profile");
         break;
       default:
-        // Không điều hướng nếu là thông báo general
         break;
     }
   };
@@ -125,7 +125,6 @@ export default function Header() {
       setUnreadNotifications(0);
       return 0;
     }
-
     try {
       const data = await getNotificationsByUser(userState.id);
       const list = Array.isArray(data) ? data : [];
@@ -141,7 +140,6 @@ export default function Header() {
     }
   }, [userState?.id, token]);
 
-  // Fetch categories, brands and settings
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -167,8 +165,6 @@ export default function Header() {
             ? brandsData.data
             : []
         );
-
-        // Fetch settings
         const settingsData = await getGeneralSettings();
         setSettings(settingsData);
       } catch (error) {
@@ -184,14 +180,8 @@ export default function Header() {
     loadNotifications();
   }, [loadNotifications]);
 
-  // WebSocket connection for real-time notifications
   useEffect(() => {
-    if (!userState?.id || !token) {
-      return;
-    }
-
-    console.log("🔌 Setting up WebSocket for user:", userState.id);
-
+    if (!userState?.id || !token) return;
     const handleNewNotification = (notification) => {
       console.log("📬 New notification received via WebSocket:", notification);
 
@@ -213,12 +203,8 @@ export default function Header() {
       try {
         const audio = new Audio("/notification.mp3");
         audio.volume = 0.3;
-        audio.play().catch(() => {
-          // Ignore if audio fails to play
-        });
-      } catch (error) {
-        // Ignore audio errors
-      }
+        audio.play().catch(() => {});
+      } catch (error) {}
     };
 
     const ws = connectNotificationWebSocket(
@@ -232,41 +218,31 @@ export default function Header() {
     };
   }, [userState?.id, token]);
 
-  // Load wishlist count
   useEffect(() => {
     const updateWishlistCount = () => {
       const newCount = getWishlistCount();
-      const oldCount = wishlistCount;
-      setWishlistCount(newCount);
-
-      // Trigger animation if count increased
-      if (newCount > oldCount) {
+      if (newCount > wishlistCount) {
         setWishlistAnimation(true);
         setTimeout(() => setWishlistAnimation(false), 600);
       }
+      setWishlistCount(newCount);
     };
-
     updateWishlistCount();
-
-    // Listen for storage changes to update count
     window.addEventListener("storage", updateWishlistCount);
     window.addEventListener("wishlistUpdated", updateWishlistCount);
-
     return () => {
       window.removeEventListener("storage", updateWishlistCount);
       window.removeEventListener("wishlistUpdated", updateWishlistCount);
     };
   }, [wishlistCount]);
-  // cart count
+
   useEffect(() => {
     const updateCartCount = () => {
       const token = localStorage.getItem("accessToken");
       const user = parseStoredUser();
-
       if (!token || !user?.id) {
         _setCartCount(getGuestCartCount());
       } else {
-        // Nếu user đã login thì gọi API
         getCart(user.id)
           .then((res) => {
             const totalQuantity = Array.isArray(res?.items)
@@ -280,19 +256,15 @@ export default function Header() {
           .catch(() => _setCartCount(0));
       }
     };
-
     updateCartCount();
-
     window.addEventListener("cartUpdated", updateCartCount);
     window.addEventListener("storage", updateCartCount);
-
     return () => {
       window.removeEventListener("cartUpdated", updateCartCount);
       window.removeEventListener("storage", updateCartCount);
     };
   }, []);
 
-  // Update user state when profile changes elsewhere in the app
   useEffect(() => {
     const onUserUpdated = () => setUserState(parseStoredUser() || {});
     const onStorage = (e) => {
@@ -305,17 +277,14 @@ export default function Header() {
         setUserState(parseStoredUser() || {});
       }
     };
-
     window.addEventListener("userUpdated", onUserUpdated);
     window.addEventListener("storage", onStorage);
-
     return () => {
       window.removeEventListener("userUpdated", onUserUpdated);
       window.removeEventListener("storage", onStorage);
     };
   }, []);
 
-  // Đóng dropdown khi click ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -346,16 +315,15 @@ export default function Header() {
     localStorage.removeItem("role");
     localStorage.removeItem("user");
     localStorage.removeItem("refreshToken");
-
-    // Dispatch event để các component khác biết user đã thay đổi
     window.dispatchEvent(new Event("userUpdated"));
-
+    setIsMobileMenuOpen(false); // Close mobile menu on logout
     navigate("/login");
   };
 
   const handleSearch = () => {
     if (searchTerm.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
+      setIsMobileSearchOpen(false); // Close mobile search
     }
   };
 
@@ -367,6 +335,7 @@ export default function Header() {
 
   const handleCategoryClick = (categoryId) => {
     setIsCategoryDropdownOpen(false);
+    setIsMobileMenuOpen(false); // Close mobile menu
     navigate(`/products?category=${categoryId}`);
   };
 
@@ -375,37 +344,43 @@ export default function Header() {
       navigate("/login");
       return;
     }
-
     if (!isNotificationDropdownOpen) {
       await loadNotifications();
     }
-
     setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
   };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-brand-primary text-brand-primary-foreground shadow-lg">
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 gap-4">
-          {/* Logo */}
+        <div className="flex items-center justify-between h-16 gap-2 lg:gap-4">
+          {/* --- MOBILE: Hamburger Menu --- */}
+          <button
+            className="lg:hidden p-2 -ml-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/10 rounded-lg"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu size={24} />
+          </button>
+
+          {/* --- Logo --- */}
           <div
             onClick={() => navigate("/home")}
-            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0"
+            className="cursor-pointer hover:opacity-90 transition-opacity shrink-0 mr-auto lg:mr-0"
           >
             {settings.logo ? (
               <img
                 src={settings.logo}
                 alt={settings.siteName}
-                className="h-12 w-auto object-contain"
+                className="h-10 md:h-12 w-auto object-contain"
               />
             ) : (
-              <div className="text-brand-primary-foreground text-xl md:text-2xl font-bold whitespace-nowrap">
+              <div className="text-brand-primary-foreground text-lg md:text-2xl font-bold whitespace-nowrap">
                 {settings.siteName}
               </div>
             )}
           </div>
 
-          {/* Category Mega Menu Dropdown */}
+          {/* --- DESKTOP: Category Mega Menu --- */}
           <div className="relative hidden lg:block" ref={categoryDropdownRef}>
             <button
               onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
@@ -429,15 +404,8 @@ export default function Header() {
             />
           </div>
 
-          {/* Location Selector (Optional) */}
-          {/* <button className="cursor-pointer hidden md:flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors">
-            <MapPin size={18} />
-            <span className="text-sm font-medium">Hồ Chí Minh</span>
-            <ChevronDown size={14} />
-          </button> */}
-
-          {/* Search Bar */}
-          <div className="flex-1 max-w-2xl">
+          {/* --- DESKTOP: Search Bar --- */}
+          <div className="flex-1 max-w-2xl hidden lg:block">
             <div className="relative">
               <input
                 type="text"
@@ -456,253 +424,385 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Wishlist */}
-          <button
-            onClick={() => navigate("/wishlist")}
-            className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
-              wishlistAnimation ? "animate-bounce scale-110" : ""
-            }`}
-          >
-            <Heart
-              size={20}
-              className={`transition-all ${
-                wishlistAnimation ? "scale-125 text-red-400" : ""
-              }`}
-            />
-            <span className="hidden md:inline font-medium">Yêu thích</span>
-            {wishlistCount > 0 && (
-              <span
-                className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
-                  wishlistAnimation ? "animate-ping" : ""
-                }`}
-              >
-                {wishlistCount > 9 ? "9+" : wishlistCount}
-              </span>
-            )}
-          </button>
-
-          {/* Cart */}
-          <button
-            onClick={() => navigate("/cart")}
-            className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
-              cartAnimation ? "animate-bounce scale-110" : ""
-            }`}
-          >
-            <ShoppingCart
-              size={20}
-              className={`transition-all ${
-                cartAnimation ? "scale-125 text-green-400" : ""
-              }`}
-            />
-            <span className="hidden md:inline font-medium">Giỏ hàng</span>
-            {cartCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
-                {cartCount > 9 ? "9+" : cartCount}
-              </span>
-            )}
-          </button>
-
-          {/* Notifications */}
-          <div className="relative" ref={notificationDropdownRef}>
+          {/* --- ACTION ICONS GROUP --- */}
+          <div className="flex items-center gap-1 md:gap-2">
+            {/* MOBILE ONLY: Search Toggle Icon */}
             <button
-              onClick={handleToggleNotifications}
-              className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
-                notificationAnimation ? "animate-bounce scale-110" : ""
+              onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+              className="lg:hidden cursor-pointer p-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg"
+            >
+              <Search size={20} />
+            </button>
+
+            {/* Wishlist */}
+            <button
+              onClick={() => navigate("/wishlist")}
+              className={`cursor-pointer relative flex items-center gap-2 p-2 md:px-3 md:py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+                wishlistAnimation ? "animate-bounce scale-110" : ""
               }`}
             >
-              <Bell
+              <Heart
                 size={20}
                 className={`transition-all ${
-                  notificationAnimation ? "scale-125 text-yellow-400" : ""
+                  wishlistAnimation ? "scale-125 text-red-400" : ""
                 }`}
               />
-              <span className="hidden md:inline font-medium">Thông báo</span>
-              {unreadNotifications > 0 && (
+              <span className="hidden xl:inline font-medium">Yêu thích</span>
+              {wishlistCount > 0 && (
                 <span
-                  className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
-                    notificationAnimation ? "animate-ping" : ""
+                  className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1 transition-all ${
+                    wishlistAnimation ? "animate-ping" : ""
                   }`}
                 >
-                  {unreadNotifications > 9 ? "9+" : unreadNotifications}
+                  {wishlistCount > 9 ? "9+" : wishlistCount}
                 </span>
               )}
             </button>
 
-            {isNotificationDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-brand-primary-foreground rounded-lg shadow-xl border border-border overflow-hidden z-50">
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                  <span className="text-sm font-semibold text-foreground">
-                    Thông báo
+            {/* Cart */}
+            <button
+              onClick={() => navigate("/cart")}
+              className={`cursor-pointer relative flex items-center gap-2 p-2 md:px-3 md:py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+                cartAnimation ? "animate-bounce scale-110" : ""
+              }`}
+            >
+              <ShoppingCart
+                size={20}
+                className={`transition-all ${
+                  cartAnimation ? "scale-125 text-green-400" : ""
+                }`}
+              />
+              <span className="hidden xl:inline font-medium">Giỏ hàng</span>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1">
+                  {cartCount > 9 ? "9+" : cartCount}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications */}
+            <div className="relative" ref={notificationDropdownRef}>
+              <button
+                onClick={handleToggleNotifications}
+                className={`cursor-pointer relative flex items-center gap-2 p-2 md:px-3 md:py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+                  notificationAnimation ? "animate-bounce scale-110" : ""
+                }`}
+              >
+                <Bell
+                  size={20}
+                  className={`transition-all ${
+                    notificationAnimation ? "scale-125 text-yellow-400" : ""
+                  }`}
+                />
+                <span className="hidden xl:inline font-medium">Thông báo</span>
+                {unreadNotifications > 0 && (
+                  <span
+                    className={`absolute top-0 right-0 md:-top-1 md:-right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-4 h-4 md:min-w-[18px] md:h-[18px] flex items-center justify-center px-1 transition-all ${
+                      notificationAnimation ? "animate-ping" : ""
+                    }`}
+                  >
+                    {unreadNotifications > 9 ? "9+" : unreadNotifications}
                   </span>
-                  <span className="text-xs text-muted-foreground">
-                    {unreadNotifications > 0
-                      ? `${unreadNotifications} chưa đọc`
-                      : "Đã đọc tất cả"}
-                  </span>
+                )}
+              </button>
+
+              {isNotificationDropdownOpen && (
+                <div className="fixed inset-x-4 top-16 md:absolute md:inset-auto md:right-0 md:top-full md:mt-2 md:w-80 bg-brand-primary-foreground rounded-lg shadow-xl border border-border overflow-hidden z-50">
+                  <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                    <span className="text-sm font-semibold text-foreground">
+                      Thông báo
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {unreadNotifications > 0
+                        ? `${unreadNotifications} chưa đọc`
+                        : "Đã đọc tất cả"}
+                    </span>
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+                        Chưa có thông báo nào
+                      </div>
+                    ) : (
+                      notifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          onClick={() => handleNotificationClick(notification)}
+                          className={`px-4 py-3 text-sm text-foreground transition-colors cursor-pointer hover:bg-brand-accent-soft/50 ${
+                            notification.read
+                              ? "bg-card"
+                              : "bg-brand-accent-soft"
+                          }`}
+                        >
+                          <p className="font-medium">{notification.title}</p>
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            {notification.message}
+                          </p>
+                          <p className="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
+                            {formatNotificationDate(notification.createdAt)}
+                          </p>
+                        </div>
+                      ))
+                    )}
+                  </div>
                 </div>
-                <div className="max-h-80 overflow-y-auto">
-                  {notifications.length === 0 ? (
-                    <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-                      Chưa có thông báo nào
-                    </div>
-                  ) : (
-                    notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        onClick={() => handleNotificationClick(notification)}
-                        className={`px-4 py-3 text-sm text-foreground transition-colors cursor-pointer hover:bg-brand-accent-soft/50 ${
-                          notification.read ? "bg-card" : "bg-brand-accent-soft"
-                        }`}
-                      >
-                        <p className="font-medium">{notification.title}</p>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                          {notification.message}
+              )}
+            </div>
+
+            {/* User Menu (Hidden on Mobile - Moved to Sidebar) */}
+            <div className="relative hidden md:block" ref={userDropdownRef}>
+              {token ? (
+                <>
+                  <button
+                    onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                    className="cursor-pointer flex items-center gap-2 px-2 py-2 md:px-3 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+                  >
+                    {userState.avatarUrl ? (
+                      <img
+                        src={userState.avatarUrl}
+                        alt="avatar"
+                        className="w-8 h-8 md:w-10 md:h-10 rounded-full object-cover border"
+                      />
+                    ) : (
+                      <User size={20} />
+                    )}
+                    <span className="hidden xl:inline font-medium max-w-[100px] truncate">
+                      {userState.fullName || userState.username || "User"}
+                    </span>
+                  </button>
+
+                  {isUserDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-52 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border z-50">
+                      <div className="px-4 py-3 border-b border-border">
+                        <p className="text-sm font-semibold text-foreground truncate">
+                          {userState.fullName || userState.username}
                         </p>
-                        <p className="mt-2 text-[11px] uppercase tracking-wide text-muted-foreground">
-                          {formatNotificationDate(notification.createdAt)}
+                        <p className="text-xs text-muted-foreground truncate">
+                          {userState.email || ""}
                         </p>
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* User Menu */}
-          <div className="relative" ref={userDropdownRef}>
-            {token ? (
-              <>
-                <button
-                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                  className="cursor-pointer flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
-                >
-                  {userState.avatarUrl ? (
-                    <img
-                      src={userState.avatarUrl}
-                      alt="avatar"
-                      className="w-10 h-10 rounded-full object-cover border"
-                    />
-                  ) : (
-                    <User size={20} />
-                  )}
-
-                  <span className="hidden md:inline font-medium">
-                    {userState.fullName || userState.username || "User"}
-                  </span>
-                </button>
-
-                {isUserDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border">
-                    <div className="px-4 py-3 border-b border-border">
-                      <p className="text-sm font-semibold text-foreground">
-                        {userState.fullName || userState.username}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {userState.email || ""}
-                      </p>
-                    </div>
-
-                    {role === "ADMIN" && (
+                      {role === "ADMIN" && (
+                        <button
+                          onClick={() => {
+                            navigate("/admin");
+                            setIsUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
+                        >
+                          <LayoutDashboard size={16} />
+                          <span>Quản trị</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => {
-                          navigate("/admin");
+                          navigate("/profile");
                           setIsUserDropdownOpen(false);
                         }}
                         className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
                       >
-                        <LayoutDashboard size={16} />
-                        <span>Quản trị</span>
+                        <User size={16} />
+                        <span>Hồ sơ</span>
                       </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        navigate("/profile");
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      <User size={16} />
-                      <span>Hồ sơ</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        navigate("/wishlist");
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      <Heart size={16} />
-                      <span>Yêu thích</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        navigate("/cart");
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      <ShoppingCart size={16} />
-                      <span>Giỏ hàng</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        navigate("/support");
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      <LifeBuoy size={16} />
-                      <span>Hỗ trợ khách hàng</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        navigate("/orders");
-                        setIsUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <button
+                        onClick={() => {
+                          navigate("/orders");
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
                       >
-                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                        <path d="M3 6h18" />
-                        <path d="M16 10a4 4 0 0 1-8 0" />
-                      </svg>
-                      <span>Đơn hàng</span>
-                    </button>
+                        <Package size={16} />
+                        <span>Đơn hàng</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          navigate("/support");
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
+                      >
+                        <LifeBuoy size={16} />
+                        <span>Hỗ trợ</span>
+                      </button>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-sm text-brand-accent hover:bg-brand-accent-soft transition-colors border-t border-border mt-1"
+                      >
+                        <LogOut size={16} />
+                        <span>Đăng xuất</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <button
+                  onClick={() => navigate("/login")}
+                  className="flex items-center gap-2 px-3 py-2 bg-brand-foreground rounded-lg font-semibold bg-brand-primary-foreground/10 hover:bg-brand-primary-foreground/20 text-brand-primary-foreground transition-colors"
+                >
+                  <User size={18} />
+                  <span className="hidden xl:inline">Đăng nhập</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
 
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-brand-accent hover:bg-brand-accent-soft transition-colors border-t border-border mt-1"
-                    >
-                      <LogOut size={16} />
-                      <span>Đăng xuất</span>
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
+        {/* --- MOBILE: Search Bar Expand --- */}
+        {isMobileSearchOpen && (
+          <div className="pb-3 lg:hidden">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
+                autoFocus
+                placeholder="Bạn muốn mua gì?"
+                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink placeholder-text-muted text-sm shadow-inner"
+              />
               <button
-                onClick={() => navigate("/login")}
-                className="flex items-center gap-2 px-4 py-2 bg-brand-foreground rounded-lg font-semibold bg-brand-primary-foreground/10 hover:bg-brand-primary-foreground/20 text-brand-primary-foreground transition-colors"
+                onClick={handleSearch}
+                className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-2 text-brand-primary"
               >
-                <User size={18} />
-                <span className="hidden sm:inline">Đăng nhập</span>
+                <Search size={18} />
               </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* --- MOBILE MENU SIDEBAR (Drawer) --- */}
+      {/* Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-60 lg:hidden transition-opacity"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Content */}
+      <div
+        className={`fixed top-0 left-0 bottom-0 w-[80%] max-w-sm bg-white z-70 transform transition-transform duration-300 ease-in-out lg:hidden overflow-y-auto ${
+          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="p-4 flex flex-col h-full">
+          {/* Header Sidebar */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="font-bold text-xl text-brand-primary">Menu</div>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-1 hover:bg-gray-100 rounded"
+            >
+              <X size={24} className="text-gray-600" />
+            </button>
+          </div>
+
+          {/* User Info Section Mobile */}
+          {token ? (
+            <div className="mb-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3">
+              {userState.avatarUrl ? (
+                <img
+                  src={userState.avatarUrl}
+                  alt="avatar"
+                  className="w-12 h-12 rounded-full object-cover border"
+                />
+              ) : (
+                <div className="w-12 h-12 rounded-full bg-brand-primary/10 flex items-center justify-center text-brand-primary">
+                  <User size={24} />
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-gray-900 truncate">
+                  {userState.fullName || userState.username}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {userState.email}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                navigate("/login");
+                setIsMobileMenuOpen(false);
+              }}
+              className="w-full mb-6 py-3 bg-brand-primary text-white rounded-lg font-medium hover:bg-brand-primary-soft transition-colors"
+            >
+              Đăng nhập / Đăng ký
+            </button>
+          )}
+
+          {/* Navigation Links */}
+          <div className="flex-1 space-y-1">
+            <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 mt-2 px-2">
+              Danh mục
+            </div>
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => handleCategoryClick(cat.id)}
+                className="w-full flex items-center justify-between px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+              >
+                <span>{cat.name}</span>
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            ))}
+
+            <div className="border-t border-gray-100 my-4"></div>
+
+            {token && (
+              <>
+                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
+                  Tài khoản
+                </div>
+                {role === "ADMIN" && (
+                  <button
+                    onClick={() => {
+                      navigate("/admin");
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                  >
+                    <LayoutDashboard size={18} /> Quản trị
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    navigate("/profile");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                >
+                  <User size={18} /> Hồ sơ cá nhân
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/orders");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                >
+                  <Package size={18} /> Đơn hàng của tôi
+                </button>
+                <button
+                  onClick={() => {
+                    navigate("/wishlist");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                >
+                  <Heart size={18} /> Sản phẩm yêu thích
+                </button>
+
+                <div className="border-t border-gray-100 my-4"></div>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-sm text-red-600 hover:bg-red-50 rounded-lg font-medium"
+                >
+                  <LogOut size={18} /> Đăng xuất
+                </button>
+              </>
             )}
           </div>
         </div>
