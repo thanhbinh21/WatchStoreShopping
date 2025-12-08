@@ -1,6 +1,6 @@
 package iuh.fit.se.backend.entity.enums;
 
-public enum CategoryStatus {
+public enum Status {
     ACTIVE,
     INACTIVE
 }
