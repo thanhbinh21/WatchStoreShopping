@@ -33,11 +33,6 @@ export const CategoryFormDialog = ({
               ? "Cập nhật thông tin danh mục"
               : "Nhập thông tin để tạo danh mục sản phẩm mới"}
           </DialogDescription>
-          <DialogDescription>
-            {isEditMode
-              ? "Cập nhật thông tin danh mục"
-              : "Điền thông tin để thêm danh mục mới"}
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Tên danh mục */}

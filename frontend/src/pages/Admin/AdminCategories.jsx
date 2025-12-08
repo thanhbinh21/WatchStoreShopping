@@ -269,7 +269,7 @@ export const AdminCategories = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
-        onClose={setIsDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
         itemName={selectedCategory?.name}
         onConfirm={confirmDelete}
         title="Xác nhận xóa danh mục"

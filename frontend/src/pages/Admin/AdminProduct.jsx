@@ -18,7 +18,6 @@ import { toast } from "sonner";
 import { PlusIcon, SearchIcon, Loader2 } from "lucide-react";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
-import { deleteProductImage } from "@/api/uploadAPI";
 
 export const AdminProduct = () => {
   const [products, setProducts] = useState([]);
@@ -378,30 +377,14 @@ export const AdminProduct = () => {
 
   const confirmDelete = async () => {
     try {
-      // Xóa tất cả ảnh của sản phẩm trên Cloudinary
-      if (
-        selectedProduct.productImages &&
-        selectedProduct.productImages.length > 0
-      ) {
-        for (const image of selectedProduct.productImages) {
-          try {
-            await deleteProductImage(image.imageUrl);
-          } catch (err) {
-            console.error("Error deleting image:", err);
-            // Tiếp tục xóa các ảnh khác
-          }
-        }
-      } else {
-        console.log("No images found in product");
-      }
-
+      // Xóa mềm: chỉ đổi status sang INACTIVE, không xóa ảnh
       await deleteProduct(selectedProduct.id);
-      toast.success("Xóa sản phẩm thành công");
+      toast.success("Đã ẩn sản phẩm thành công");
       setIsDeleteOpen(false);
       fetchProducts();
     } catch (err) {
-      console.error("Lỗi khi xóa sản phẩm:", err);
-      toast.error("Không thể xóa sản phẩm");
+      console.error("Lỗi khi ẩn sản phẩm:", err);
+      toast.error("Không thể ẩn sản phẩm");
     }
   };
 
@@ -611,7 +594,7 @@ export const AdminProduct = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
-        onClose={setIsDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
         itemName={selectedProduct?.name}
         onConfirm={confirmDelete}
         title="Xác nhận xóa sản phẩm"
