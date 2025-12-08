@@ -27,6 +27,9 @@ export const ProductTable = ({
                 Thương hiệu
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                Nhà cung cấp
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                 Giá
               </th>
               <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -80,6 +83,14 @@ export const ProductTable = ({
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-white">
                       {product.brand?.name || product.brand || "N/A"}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      {product.supplier?.name ||
+                        product.supplierName ||
+                        product.supplier ||
+                        "N/A"}
                     </div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">

@@ -183,7 +183,7 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
             )}
 
             {/* Category */}
-            {productDetail.category && (
+            {(productDetail.category || productDetail.categoryName) && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <TagIcon className="size-4 text-gray-500" />
@@ -193,19 +193,23 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                 </div>
                 <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {productDetail.category.name}
+                    {typeof productDetail.category === "string"
+                      ? productDetail.category
+                      : productDetail.category?.name ||
+                        productDetail.categoryName}
                   </p>
-                  {productDetail.category.description && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {productDetail.category.description}
-                    </p>
-                  )}
+                  {typeof productDetail.category === "object" &&
+                    productDetail.category?.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {productDetail.category.description}
+                      </p>
+                    )}
                 </div>
               </div>
             )}
 
             {/* Supplier */}
-            {productDetail.supplier && (
+            {(productDetail.supplier || productDetail.supplierName) && (
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <TruckIcon className="size-4 text-gray-500" />
@@ -215,13 +219,23 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                 </div>
                 <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md">
                   <p className="text-sm font-medium text-gray-900 dark:text-white">
-                    {productDetail.supplier.name}
+                    {typeof productDetail.supplier === "string"
+                      ? productDetail.supplier
+                      : productDetail.supplier?.name ||
+                        productDetail.supplierName}
                   </p>
-                  {productDetail.supplier.contact && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {productDetail.supplier.contact}
-                    </p>
-                  )}
+                  {typeof productDetail.supplier === "object" &&
+                    productDetail.supplier.description && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {productDetail.supplier.description}
+                      </p>
+                    )}
+                  {typeof productDetail.supplier === "object" &&
+                    productDetail.supplier.contactInfo && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Liên hệ: {productDetail.supplier.contactInfo}
+                      </p>
+                    )}
                 </div>
               </div>
             )}

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { PlusIcon, SearchIcon, Loader2 } from "lucide-react";
 import { getBrands } from "@/api/brandAPI";
 import { getCategories } from "@/api/categoryAPI";
+import { getSuppliers } from "@/api/supplierAPI";
 
 export const AdminProduct = () => {
   const [products, setProducts] = useState([]);
@@ -27,6 +28,7 @@ export const AdminProduct = () => {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [brands, setBrands] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
   // price & status filters
   const PRICE_MAX = 10000000;
   // applied filters used when fetching
@@ -41,6 +43,7 @@ export const AdminProduct = () => {
   // filters
   const [brandFilter, setBrandFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productDetail, setProductDetail] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -78,6 +81,7 @@ export const AdminProduct = () => {
       if (debouncedSearch) params.name = debouncedSearch;
       if (brandFilter) params.brand = brandFilter;
       if (categoryFilter) params.category = categoryFilter;
+      if (supplierFilter) params.supplier = supplierFilter;
       // price filters: only send if user narrowed the range
       if (appliedMinPrice > 0) params.minPrice = appliedMinPrice;
       if (appliedMaxPrice < priceMaxLimit) params.maxPrice = appliedMaxPrice;
@@ -109,6 +113,7 @@ export const AdminProduct = () => {
     debouncedSearch,
     brandFilter,
     categoryFilter,
+    supplierFilter,
     appliedMinPrice,
     appliedMaxPrice,
     priceMaxLimit,
@@ -159,7 +164,11 @@ export const AdminProduct = () => {
     let mounted = true;
     const loadMeta = async () => {
       try {
-        const [bRes, cRes] = await Promise.all([getBrands(), getCategories()]);
+        const [bRes, cRes, sRes] = await Promise.all([
+          getBrands(),
+          getCategories(),
+          getSuppliers(),
+        ]);
         if (!mounted) return;
         const normalize = (v) =>
           Array.isArray(v)
@@ -179,8 +188,14 @@ export const AdminProduct = () => {
           (cat) => cat.status === "ACTIVE"
         );
         setCategories(activeCategories);
+        const suppliersArray = normalize(sRes);
+        // Chỉ lấy suppliers có status ACTIVE
+        const activeSuppliers = suppliersArray.filter(
+          (s) => s.status === "ACTIVE"
+        );
+        setSuppliers(activeSuppliers);
       } catch (e) {
-        console.error("Error loading brands/categories", e);
+        console.error("Error loading brands/categories/suppliers", e);
       }
     };
     loadMeta();
@@ -232,6 +247,9 @@ export const AdminProduct = () => {
   const fetchProductDetail = useCallback(async (productId) => {
     try {
       const res = await getProductById(productId);
+      console.log("[AdminProduct] Product detail response:", res);
+      console.log("[AdminProduct] Category:", res.category);
+      console.log("[AdminProduct] Supplier:", res.supplier);
       setProductDetail(res);
       setSelectedProduct(res);
     } catch (err) {
@@ -475,6 +493,28 @@ export const AdminProduct = () => {
           </select>
         </div>
 
+        <div className="min-w-40">
+          <label className="block text-xs text-gray-500 mb-1">
+            Nhà cung cấp
+          </label>
+          <select
+            value={supplierFilter}
+            onChange={(e) => {
+              console.log("[AdminProduct] supplier selected", e.target.value);
+              setSupplierFilter(e.target.value);
+              setPage(1);
+            }}
+            className="w-full rounded border border-border px-3 py-2 bg-white"
+          >
+            <option value="">Tất cả</option>
+            {suppliers.map((s) => (
+              <option key={s.id} value={s.name}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
         {/* Status filter */}
         <div className="min-w-40">
           <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
@@ -533,6 +573,7 @@ export const AdminProduct = () => {
             onClick={() => {
               setBrandFilter("");
               setCategoryFilter("");
+              setSupplierFilter("");
               setAppliedMinPrice(0);
               setAppliedMaxPrice(priceMaxLimit);
               setMinPriceInput("");
