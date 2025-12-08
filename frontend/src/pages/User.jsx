@@ -257,11 +257,11 @@ export const User = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
       <Breadcrumb items={[{ label: "Hồ sơ", isCurrent: true }]} />
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mt-4 bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-6 border-b border-gray-100 flex items-center justify-between">
             <div>
               <h1 className="text-xl font-semibold">Hồ sơ của tôi</h1>
@@ -271,49 +271,52 @@ export const User = () => {
             </div>
           </div>
 
-          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Left column: avatar & quick actions */}
-            <div className="col-span-1 flex flex-col items-center">
+            <div className="col-span-1 flex flex-col items-center border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-6">
               {localPreview || profile.avatarUrl ? (
                 <img
                   src={localPreview || profile.avatarUrl}
                   alt="avatar"
-                  className="w-32 h-32 rounded-full object-cover border"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-sm"
                 />
               ) : (
-                <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-500 border">
+                <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center text-3xl font-bold text-gray-500 border-4 border-white shadow-sm">
                   {profile.fullName
                     ? profile.fullName.charAt(0).toUpperCase()
                     : profile.username?.charAt(0)?.toUpperCase() || "U"}
                 </div>
               )}
-              <h3 className="mt-4 font-medium">
+              <h3 className="mt-4 font-medium text-lg text-gray-900">
                 {profile.fullName || profile.username}
               </h3>
               <p className="text-sm text-muted-foreground">{profile.email}</p>
 
               {profile.phone && (
-                <p className="text-sm text-muted-foreground">
-                  SĐT: {profile.phone}
+                <p className="text-sm text-muted-foreground mt-1">
+                  {profile.phone}
                 </p>
               )}
               {(profile.address || profile.city || profile.country) && (
-                <p className="text-sm text-muted-foreground">
-                  {profile.address ? profile.address + ", " : ""}
-                  {/* {profile.city ? profile.city + ", " : ""} */}
-                  {profile.country || ""}
+                <p className="text-sm text-muted-foreground text-center mt-1 px-4">
+                  {[profile.address, profile.country]
+                    .filter(Boolean)
+                    .join(", ")}
                 </p>
               )}
 
-              <div className="mt-6 w-full flex gap-2 justify-center">
+              {/* Responsive Buttons: Stack on mobile, Row on tablet/desktop if space permits */}
+              <div className="mt-6 w-full flex flex-col sm:flex-row md:flex-col lg:flex-row gap-2 justify-center">
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => (window.location.href = "/change-password")}
                 >
                   Đổi mật khẩu
                 </Button>
                 <Button
                   variant="outline"
+                  className="w-full sm:w-auto"
                   onClick={() => {
                     if (confirm("Bạn có chắc muốn đăng xuất?")) {
                       localStorage.removeItem("accessToken");
@@ -327,7 +330,7 @@ export const User = () => {
               </div>
 
               {/* Styled file chooser for avatar */}
-              <div className="mt-4">
+              <div className="mt-4 w-full flex justify-center">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -336,7 +339,6 @@ export const User = () => {
                   onChange={async (e) => {
                     const f = e.target.files && e.target.files[0];
                     if (!f) return;
-                    // revoke previous preview URL if any
                     try {
                       if (prevObjectUrlRef.current) {
                         URL.revokeObjectURL(prevObjectUrlRef.current);
@@ -346,7 +348,6 @@ export const User = () => {
                       /* ignore */
                     }
 
-                    // show local preview immediately
                     let objectUrl = null;
                     try {
                       objectUrl = URL.createObjectURL(f);
@@ -356,7 +357,6 @@ export const User = () => {
                       console.warn("preview error", err);
                     }
 
-                    // upload in background
                     try {
                       const resp = await uploadAvatar(f);
                       const url =
@@ -376,27 +376,29 @@ export const User = () => {
                   }}
                 />
 
-                <div className="flex gap-2 items-center">
+                <div className="flex flex-col items-center gap-2">
                   <button
                     type="button"
                     onClick={() =>
                       fileInputRef.current && fileInputRef.current.click()
                     }
-                    className="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
-                    Chọn ảnh đại diện
+                    Thay đổi ảnh đại diện
                   </button>
-                  <span className="text-sm text-muted-foreground">
-                    Kích thước tối đa 5MB. Định dạng: JPG/PNG/WEBP
+                  <span className="text-xs text-muted-foreground text-center">
+                    Tối đa 5MB. Định dạng: JPG/PNG/WEBP
                   </span>
                 </div>
               </div>
             </div>
 
             {/* Right column: editable form */}
-            <div className="col-span-2">
+            <div className="col-span-1 md:col-span-2">
               {loading ? (
-                <div>Đang tải...</div>
+                <div className="flex justify-center items-center h-64">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                </div>
               ) : (
                 <form
                   className="space-y-4"
@@ -405,64 +407,113 @@ export const User = () => {
                     handleSave();
                   }}
                 >
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Tên đăng nhập
-                    </label>
-                    <Input
-                      name="username"
-                      value={profile.username}
-                      onChange={handleChange}
-                      disabled
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Email
-                    </label>
-                    <Input
-                      name="email"
-                      type="email"
-                      value={profile.email}
-                      onChange={handleChange}
-                      disabled
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Họ và tên
-                    </label>
-                    <Input
-                      name="fullName"
-                      value={profile.fullName}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Số điện thoại
-                    </label>
-                    <Input
-                      name="phone"
-                      value={profile.phone}
-                      onChange={handleChange}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    {/* <div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
                       <label className="block text-sm font-medium text-gray-700">
-                        Thành phố
+                        Tên đăng nhập
                       </label>
                       <Input
-                        name="city"
-                        value={profile.city}
+                        name="username"
+                        value={profile.username}
+                        onChange={handleChange}
+                        disabled
+                        className="bg-gray-50"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Email
+                      </label>
+                      <Input
+                        name="email"
+                        type="email"
+                        value={profile.email}
+                        onChange={handleChange}
+                        disabled
+                        className="bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Họ và tên
+                      </label>
+                      <Input
+                        name="fullName"
+                        value={profile.fullName}
                         onChange={handleChange}
                       />
-                    </div> */}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Số điện thoại
+                      </label>
+                      <Input
+                        name="phone"
+                        value={profile.phone}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Date Picker Component */}
+                    <div className="flex flex-col">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Ngày sinh
+                      </label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !profile.dateOfBirth && "text-muted-foreground"
+                            )}
+                          >
+                            {profile.dateOfBirth ? (
+                              format(
+                                new Date(profile.dateOfBirth),
+                                "dd/MM/yyyy"
+                              )
+                            ) : (
+                              <span>Chọn ngày sinh</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              profile.dateOfBirth
+                                ? new Date(profile.dateOfBirth)
+                                : undefined
+                            }
+                            onSelect={(date) => {
+                              setProfile((prev) => ({
+                                ...prev,
+                                dateOfBirth: date
+                                  ? format(date, "yyyy-MM-dd")
+                                  : "",
+                              }));
+                            }}
+                            disabled={(date) =>
+                              date > new Date() || date < new Date("1900-01-01")
+                            }
+                            initialFocus
+                            captionLayout="dropdown"
+                            fromYear={1900}
+                            toYear={new Date().getFullYear()}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700">
                         Quốc gia
@@ -473,24 +524,17 @@ export const User = () => {
                         onChange={handleChange}
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">
-                        Mã bưu chính
-                      </label>
-                      <Input
-                        name="postalCode"
-                        value={profile.postalCode}
-                        onChange={handleChange}
-                      />
-                    </div>
                   </div>
 
-                  <div>
-                    {/* Bắt đầu phần Select Tỉnh/Thành - Quận/Huyện - Phường/Xã */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-2">
+                  {/* Address Section */}
+                  <div className="border-t border-gray-100 pt-4 mt-4">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                      Địa chỉ
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                       {/* Tỉnh/Thành */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
                           Tỉnh/Thành
                         </label>
                         <Select
@@ -506,7 +550,6 @@ export const User = () => {
                             setSelectedWardCode("");
                             setDistricts([]);
                             setWards([]);
-
                             if (code) {
                               await fetchDistricts(code);
                               const prov = provinces.find(
@@ -518,21 +561,17 @@ export const User = () => {
                                 country: "Việt Nam",
                               }));
                             }
-
-                            // Recompute address logic
                             const provinceObj = provinces.find(
                               (p) => String(p.code) === String(code)
                             );
-                            // Khi đổi tỉnh, quận và phường sẽ reset nên không cần tìm
                             const composed = [street, provinceObj?.name]
                               .filter(Boolean)
                               .join(", ");
-
                             setProfile((p) => ({ ...p, address: composed }));
                           }}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Chọn tỉnh/thành" />
+                            <SelectValue placeholder="Chọn Tỉnh/Thành" />
                           </SelectTrigger>
                           <SelectContent>
                             {provinces.map((prov) => (
@@ -549,7 +588,7 @@ export const User = () => {
 
                       {/* Quận/Huyện */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
                           Quận/Huyện
                         </label>
                         <Select
@@ -564,14 +603,11 @@ export const User = () => {
                             setSelectedDistrictCode(code);
                             setSelectedWardCode("");
                             setWards([]);
-
                             if (code) {
                               await fetchWards(code);
                               const dist = districts.find(
                                 (d) => String(d.code) === String(code)
                               );
-
-                              // Recompute address logic
                               const provinceObj = provinces.find(
                                 (p) =>
                                   String(p.code) ===
@@ -584,13 +620,12 @@ export const User = () => {
                               ]
                                 .filter(Boolean)
                                 .join(", ");
-
                               setProfile((p) => ({ ...p, address: composed }));
                             }
                           }}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Chọn quận/huyện" />
+                            <SelectValue placeholder="Chọn Quận/Huyện" />
                           </SelectTrigger>
                           <SelectContent>
                             {districts.map((d) => (
@@ -604,7 +639,7 @@ export const User = () => {
 
                       {/* Phường/Xã */}
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-xs font-medium text-gray-500 mb-1">
                           Phường/Xã
                         </label>
                         <Select
@@ -615,8 +650,6 @@ export const User = () => {
                           onValueChange={(value) => {
                             const code = value;
                             setSelectedWardCode(code);
-
-                            // Recompute address logic
                             const wardObj = wards.find(
                               (w) => String(w.code) === String(code)
                             );
@@ -628,7 +661,6 @@ export const User = () => {
                               (p) =>
                                 String(p.code) === String(selectedProvinceCode)
                             );
-
                             const composed = [
                               street,
                               wardObj?.name,
@@ -637,12 +669,11 @@ export const User = () => {
                             ]
                               .filter(Boolean)
                               .join(", ");
-
                             setProfile((p) => ({ ...p, address: composed }));
                           }}
                         >
                           <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Chọn phường/xã" />
+                            <SelectValue placeholder="Chọn Phường/Xã" />
                           </SelectTrigger>
                           <SelectContent>
                             {wards.map((w) => (
@@ -655,106 +686,46 @@ export const User = () => {
                       </div>
                     </div>
 
-                    <label className="block text-sm font-medium text-gray-700 mt-3">
-                      Địa chỉ chi tiết
-                    </label>
-                    <Input
-                      name="street"
-                      placeholder="Số nhà, tên đường"
-                      value={street}
-                      onChange={(e) => {
-                        setStreet(e.target.value);
-                        // update composed address preview
-                        const wardObj = wards.find(
-                          (w) => String(w.code) === String(selectedWardCode)
-                        );
-                        const districtObj = districts.find(
-                          (d) => String(d.code) === String(selectedDistrictCode)
-                        );
-                        const provinceObj = provinces.find(
-                          (p) => String(p.code) === String(selectedProvinceCode)
-                        );
-                        const composed = [
-                          e.target.value,
-                          wardObj?.name,
-                          districtObj?.name,
-                          provinceObj?.name,
-                        ]
-                          .filter(Boolean)
-                          .join(", ");
-                        setProfile((p) => ({ ...p, address: composed }));
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Avatar (URL)
-                    </label>
-                    <div className="flex items-center gap-2">
+                    <div className="mt-3">
+                      <label className="block text-xs font-medium text-gray-500 mb-1">
+                        Số nhà, tên đường
+                      </label>
                       <Input
-                        name="avatarUrl"
-                        value={profile.avatarUrl}
-                        onChange={handleChange}
-                        disabled
+                        name="street"
+                        placeholder="Ví dụ: 12 Nguyễn Văn Bảo"
+                        value={street}
+                        onChange={(e) => {
+                          setStreet(e.target.value);
+                          const wardObj = wards.find(
+                            (w) => String(w.code) === String(selectedWardCode)
+                          );
+                          const districtObj = districts.find(
+                            (d) =>
+                              String(d.code) === String(selectedDistrictCode)
+                          );
+                          const provinceObj = provinces.find(
+                            (p) =>
+                              String(p.code) === String(selectedProvinceCode)
+                          );
+                          const composed = [
+                            e.target.value,
+                            wardObj?.name,
+                            districtObj?.name,
+                            provinceObj?.name,
+                          ]
+                            .filter(Boolean)
+                            .join(", ");
+                          setProfile((p) => ({ ...p, address: composed }));
+                        }}
                       />
                     </div>
                   </div>
 
-                  <div className="flex flex-col">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Ngày sinh
-                    </label>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant={"outline"}
-                          className={cn(
-                            "w-full pl-3 text-left font-normal",
-                            !profile.dateOfBirth && "text-muted-foreground"
-                          )}
-                        >
-                          {profile.dateOfBirth ? (
-                            format(new Date(profile.dateOfBirth), "dd/MM/yyyy")
-                          ) : (
-                            <span>Chọn ngày sinh</span>
-                          )}
-                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={
-                            profile.dateOfBirth
-                              ? new Date(profile.dateOfBirth)
-                              : undefined
-                          }
-                          onSelect={(date) => {
-                            // Cập nhật state khi chọn ngày
-                            // Format về yyyy-MM-dd để đồng bộ với Database
-                            setProfile((prev) => ({
-                              ...prev,
-                              dateOfBirth: date
-                                ? format(date, "yyyy-MM-dd")
-                                : "",
-                            }));
-                          }}
-                          disabled={(date) =>
-                            date > new Date() || date < new Date("1900-01-01")
-                          }
-                          initialFocus
-                          captionLayout="dropdown"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  <div className="flex items-center justify-end pt-4">
+                  <div className="flex items-center justify-end pt-6">
                     <Button
                       type="submit"
                       disabled={saving}
-                      className="bg-red-600 hover:bg-red-700"
+                      className="bg-red-600 hover:bg-red-700 w-full sm:w-auto"
                     >
                       {saving ? "Đang lưu..." : "Lưu thay đổi"}
                     </Button>

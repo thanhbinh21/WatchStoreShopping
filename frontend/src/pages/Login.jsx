@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "@/api/axiosConfig";
-import { User, Lock, Mail, Loader2, Gift, ShieldCheck } from "lucide-react";
+import { Loader2, Gift, ShieldCheck } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -192,10 +192,11 @@ export default function LoginRegister() {
           });
 
           // Render nút Google thật vào ref, nhưng chúng ta sẽ ẩn nó bằng CSS
+          // Tăng width lên 400 để đảm bảo cover được nút trên mobile khi nó giãn ra
           window.google.accounts.id.renderButton(googleButtonRef.current, {
             theme: "outline",
             size: "large",
-            width: "240", // Kích thước đủ lớn để che nút custom
+            width: "400",
             height: "50",
           });
         } catch (err) {
@@ -240,25 +241,21 @@ export default function LoginRegister() {
       }
     };
 
-    // Ensure fb-root exists
     if (!document.getElementById("fb-root")) {
       const fbRoot = document.createElement("div");
       fbRoot.id = "fb-root";
       document.body.appendChild(fbRoot);
     }
 
-    // If FB already loaded, init immediately
     if (window.FB) {
       initFB();
       return;
     }
 
-    // Otherwise dynamically load the SDK and init when ready
     const existingScript = document.querySelector(
       'script[src^="https://connect.facebook.net"]'
     );
     if (existingScript) {
-      // script may not have fired load event yet
       existingScript.addEventListener("load", initFB);
       return () => existingScript.removeEventListener("load", initFB);
     }
@@ -329,17 +326,14 @@ export default function LoginRegister() {
         }, 300);
       });
 
-    // mark loading immediately when user clicks Facebook
     setFbLoading(true);
 
     waitForFB()
       .then((FB) => {
-        // SỬA LỖI: Bỏ từ khóa 'async' ở đây
         FB.login(
           (resp) => {
             if (resp.status === "connected") {
               const token = resp.authResponse.accessToken;
-              // Gọi hàm xử lý riêng
               processFacebookToken(token);
             } else {
               console.log("User cancelled login");
@@ -407,8 +401,8 @@ export default function LoginRegister() {
         {/* Giao diện chính */}
         <div className="flex items-center justify-center min-h-screen min-w-screen p-4 absolute z-10">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col md:flex-row overflow-hidden">
-            {/* Cột trái: Quảng cáo */}
-            <div className="w-full md:w-1/2 p-8 md:p-12 relative bg-white">
+            {/* Cột trái: Quảng cáo - Ẩn trên Mobile (hidden), Hiện trên Desktop (md:block) */}
+            <div className="hidden md:block w-1/2 p-12 relative bg-white">
               <div className="border-2 border-red-600 rounded-lg p-6 h-full">
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   Nhập hội khách hàng thành viên{" "}
@@ -436,8 +430,8 @@ export default function LoginRegister() {
               </div>
             </div>
 
-            {/* Cột phải: Form */}
-            <div className="w-full md:w-1/2 p-8 md:p-12">
+            {/* Cột phải: Form - Full width trên Mobile */}
+            <div className="w-full md:w-1/2 p-6 md:p-12">
               <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">
                 {isLogin ? "Đăng nhập SMEMBER" : "Đăng ký thành viên"}
               </h2>
@@ -584,7 +578,7 @@ export default function LoginRegister() {
 
               {forgotOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                  <div className="bg-white p-6 rounded-lg w-full max-w-md">
+                  <div className="bg-white p-6 rounded-lg w-full max-w-md m-4">
                     <h3 className="text-lg font-semibold mb-2">
                       Đặt lại mật khẩu
                     </h3>
@@ -648,53 +642,44 @@ export default function LoginRegister() {
                     <hr className="grow border-gray-300" />
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    {/* BẮT ĐẦU: Sửa phần nút Google ở đây */}
-                    <div className="relative inline-block w-30">
-                      {/* Lớp phủ vô hình: Nút Google thật nằm ở đây, opacity 0, đè lên trên */}
+                  {/* Social Buttons Container: Mobile (dọc), Desktop (ngang) */}
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    {/* Nút Google */}
+                    <div className="relative w-full sm:w-auto min-w-[130px]">
+                      {/* Lớp phủ Google (ẩn) */}
                       <div
                         ref={googleButtonRef}
-                        className="absolute top-0 left-0 w-full h-full opacity-0 z-20 overflow-hidden"
+                        className="absolute inset-0 z-20 opacity-0 overflow-hidden"
                         style={{ transform: "scale(1.05)" }}
                       />
 
-                      {/* Nút Custom của bạn: Chỉ để hiển thị giao diện */}
+                      {/* Nút Google Giao diện */}
                       <Button
                         variant="outline"
                         className="flex items-center justify-center w-full relative z-10"
                         disabled={googleLoading}
+                        type="button"
                       >
-                        <GoogleIcon />
+                        <GoogleIcon className="mr-2 h-5 w-5" />
                         Google
                       </Button>
                     </div>
-                    {/* Facebook button (custom) */}
+
+                    {/* Nút Facebook */}
                     <Button
                       variant="outline"
-                      className="flex items-center justify-center w-30  hover:bg-primary/0"
+                      className="flex items-center justify-center w-full sm:w-auto min-w-[130px] hover:bg-gray-100"
                       onClick={handleFacebookLogin}
                       disabled={fbLoading}
+                      type="button"
                     >
-                      {/* simple text icon; replace with a proper SVG/icon as desired */}
                       {fbLoading ? (
                         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                       ) : (
-                        <FacebookIcon />
+                        <FacebookIcon className="mr-2 h-5 w-5" />
                       )}
-                      <>{/* Đang xử lý... */}</>
-                      {/*  */}
                       Facebook
                     </Button>
-                    {/* KẾT THÚC: Sửa phần nút Google */}
-
-                    {/* <Button
-                      variant="outline"
-                      className="flex items-center justify-center w-30 hover:bg-primary/0"
-                      onClick={() => toast.info("Sắp ra mắt")}
-                    >
-                      <ZaloIcon />
-                      Zalo
-                    </Button> */}
                   </div>
                 </>
               )}

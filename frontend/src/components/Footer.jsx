@@ -86,28 +86,65 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-100 text-gray-800 mt-16 w-full">
-      <div className="w-full max-w-[1280px] mx-auto px-4 py-10">
+    <footer className="bg-gray-100 text-gray-800 mt-16 w-full border-t border-gray-200">
+      <div className="container mx-auto px-4 md:px-8 py-10">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8 border-b border-gray-300 mb-8">
           {/* Logo & Company */}
-          <div>
+          <div className="flex flex-col items-start">
             {settings.logo ? (
               <img
                 src={settings.logo}
                 alt={settings.siteName}
-                className="h-14 w-auto mb-4 object-contain"
+                className="h-12 md:h-14 w-auto mb-4 object-contain"
               />
             ) : (
-              <h3 className="text-2xl font-bold mb-4">{settings.siteName}</h3>
+              <h3 className="text-2xl font-bold mb-4 text-brand-primary">
+                {settings.siteName}
+              </h3>
             )}
             {settings.slogan && (
-              <p className="text-sm italic text-gray-600">{settings.slogan}</p>
+              <p className="text-sm italic text-gray-600 leading-relaxed max-w-xs">
+                {settings.slogan}
+              </p>
             )}
           </div>
 
           {/* Contact */}
           <div>
+            {/* <h3 className="font-bold text-gray-900 mb-4 text-base uppercase tracking-wide">
+              Liên hệ
+            </h3>
+            <div className="space-y-3">
+              {settings.address && (
+                <div className="flex items-start gap-3 text-sm text-gray-600">
+                  <span className="shrink-0 mt-0.5">📍</span>
+                  <span>{settings.address}</span>
+                </div>
+              )}
+              {settings.hotline && (
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="shrink-0">📞</span>
+                  <a
+                    href={`tel:${settings.hotline}`}
+                    className="font-bold text-gray-800 hover:text-blue-600 transition-colors"
+                  >
+                    {settings.hotline}
+                  </a>
+                </div>
+              )}
+              {settings.email && (
+                <div className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="shrink-0">✉️</span>
+                  <a
+                    href={`mailto:${settings.email}`}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    {settings.email}
+                  </a>
+                </div>
+              )}
+            </div> */}
             <h3 className="font-semibold mb-4">Liên hệ</h3>
             {settings.address && (
               <p className="text-sm mb-3 flex items-center gap-2">
@@ -131,25 +168,30 @@ export default function Footer() {
 
           {/* Newsletter */}
           <div>
-            <h3 className="font-semibold mb-3">Đăng ký nhận tin</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Nhận thông tin khuyến mãi và sản phẩm mới
+            <h3 className="font-bold text-gray-900 mb-3 text-base uppercase tracking-wide">
+              Đăng ký nhận tin
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+              Nhận thông tin khuyến mãi và sản phẩm mới nhất từ chúng tôi.
             </p>
-            <form onSubmit={handleSubscribe} className="flex gap-2">
+            <form
+              onSubmit={handleSubscribe}
+              className="flex gap-2 w-full max-w-sm"
+            >
               <input
                 type="email"
                 value={subscribeEmail}
                 onChange={(e) => setSubscribeEmail(e.target.value)}
                 placeholder="Email của bạn"
-                className="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                className="flex-1 px-4 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white shadow-sm transition-all"
                 disabled={isSubmitting}
               />
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2.5 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-soft transition disabled:bg-gray-400"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed shadow-sm"
               >
-                <Send className="size-4" />
+                <Send className="w-4 h-4" />
               </button>
             </form>
           </div>
@@ -159,71 +201,84 @@ export default function Footer() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
           {/* Policy */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase">Chính sách</h3>
-            <ul className="space-y-2.5 text-sm">
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Hướng dẫn mua hàng
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Phương thức thanh toán
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Chính sách giao hàng
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Chính sách đổi trả
-              </li>
+            <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">
+              Chính sách
+            </h3>
+            <ul className="space-y-2.5 text-sm text-gray-600">
+              {[
+                "Hướng dẫn mua hàng",
+                "Phương thức thanh toán",
+                "Chính sách giao hàng",
+                "Chính sách đổi trả",
+              ].map((item, idx) => (
+                <li key={idx}>
+                  <a
+                    href="#"
+                    className="hover:text-blue-600 hover:translate-x-1 inline-block transition-all duration-200"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* About */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase">
+            <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">
               Về chúng tôi
             </h3>
-            <ul className="space-y-2.5 text-sm">
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Giới thiệu công ty
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Tin tức & Sự kiện
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Hệ thống cửa hàng
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Liên hệ hợp tác
-              </li>
+            <ul className="space-y-2.5 text-sm text-gray-600">
+              {[
+                "Giới thiệu công ty",
+                "Tin tức & Sự kiện",
+                "Hệ thống cửa hàng",
+                "Liên hệ hợp tác",
+              ].map((item, idx) => (
+                <li key={idx}>
+                  <a
+                    href="#"
+                    className="hover:text-blue-600 hover:translate-x-1 inline-block transition-all duration-200"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4 text-sm uppercase">Hỗ trợ</h3>
-            <ul className="space-y-2.5 text-sm">
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Chính sách bảo hành
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Kiểm tra bảo hành
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Chính sách bảo mật
-              </li>
-              <li className="hover:text-blue-600 cursor-pointer transition">
-                Điều khoản sử dụng
-              </li>
+            <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">
+              Hỗ trợ
+            </h3>
+            <ul className="space-y-2.5 text-sm text-gray-600">
+              {[
+                "Chính sách bảo hành",
+                "Kiểm tra bảo hành",
+                "Chính sách bảo mật",
+                "Điều khoản sử dụng",
+              ].map((item, idx) => (
+                <li key={idx}>
+                  <a
+                    href="#"
+                    className="hover:text-blue-600 hover:translate-x-1 inline-block transition-all duration-200"
+                  >
+                    {item}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           {/* Connect & Payment */}
-          <div>
+          <div className="col-span-2 md:col-span-1">
             {socialMedia.length > 0 && (
-              <>
-                <h3 className="font-semibold mb-4 text-sm uppercase">
+              <div className="mb-6">
+                <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">
                   Kết nối
                 </h3>
-                <div className="flex flex-wrap gap-2 mb-6">
+                <div className="flex flex-wrap gap-3">
                   {socialMedia.map((social, index) => (
                     <a
                       key={index}
@@ -231,47 +286,55 @@ export default function Footer() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title={social.name}
-                      className="hover:opacity-80 transition"
+                      className="hover:opacity-80 hover:scale-110 transition-transform duration-200"
                     >
                       <img
                         src={social.imageUrl}
                         alt={social.name}
-                        className="h-10 w-10 object-contain rounded-lg"
+                        className="h-8 w-8 object-contain rounded-md"
                       />
                     </a>
                   ))}
                 </div>
-              </>
+              </div>
             )}
 
             {paymentMethods.length > 0 && (
-              <>
-                <h3 className="font-semibold mb-3 text-sm uppercase">
+              <div>
+                <h3 className="font-bold text-gray-900 mb-4 text-sm uppercase tracking-wider">
                   Thanh toán
                 </h3>
                 <div className="flex flex-wrap gap-2">
                   {paymentMethods.map((method, index) => (
-                    <img
+                    <div
                       key={index}
-                      src={method.imageUrl}
-                      alt={method.name}
-                      title={method.name}
-                      className="h-7 object-contain bg-white p-1 rounded border"
-                    />
+                      className="bg-white p-1.5 rounded border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      <img
+                        src={method.imageUrl}
+                        alt={method.name}
+                        title={method.name}
+                        className="h-6 object-contain"
+                      />
+                    </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
       </div>
 
       {/* Copyright */}
-      <div className="bg-gray-200 text-gray-600 text-sm text-center py-4 w-full mt-8">
-        {settings.copyright ||
-          `© ${new Date().getFullYear()} ${
-            settings.siteName
-          }. All rights reserved.`}
+      <div className="bg-gray-200 border-t border-gray-300 py-4">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-600 text-xs md:text-sm font-medium">
+            {settings.copyright ||
+              `© ${new Date().getFullYear()} ${
+                settings.siteName
+              }. All rights reserved.`}
+          </p>
+        </div>
       </div>
     </footer>
   );
