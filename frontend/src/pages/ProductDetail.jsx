@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getProductById } from "@/api/productAPI";
+import axiosInstance from "@/api/axiosConfig";
 import { addToCart, getCart } from "@/api/cartAPI";
 import {
   getReviewsByProduct,
@@ -72,6 +73,53 @@ export default function ProductDetail() {
       setLoading(true);
       const res = await getProductById(id);
       setProduct(res);
+
+      // Fetch promotions grouped by product and compute discounted price if any active promotion
+      try {
+        const promoRes = await axiosInstance.get(`/promotions`);
+        const promos = promoRes?.data?.data || [];
+        const prodPromo = promos.find((p) => p.productId === res.id);
+        if (
+          prodPromo &&
+          Array.isArray(prodPromo.promotions) &&
+          prodPromo.promotions.length > 0
+        ) {
+          const now = new Date();
+          // Find active promotions (by date) and pick the largest discount
+          const active = prodPromo.promotions
+            .map((p) => ({ ...p }))
+            .filter((p) => {
+              try {
+                const start = p.startDate ? new Date(p.startDate) : null;
+                const end = p.endDate ? new Date(p.endDate) : null;
+                if (start && end) return now >= start && now <= end;
+                return false;
+              } catch (e) {
+                return false;
+              }
+            });
+
+          if (active.length > 0) {
+            const maxDiscount = Math.max(
+              ...active.map((a) => Number(a.discount || 0))
+            );
+            if (maxDiscount > 0 && res?.price) {
+              const original = Number(res.price || 0);
+              const discounted = Math.round(
+                (original * (100 - maxDiscount)) / 100
+              );
+              setProduct((prev) => ({
+                ...prev,
+                discountedPrice: discounted,
+                originalPrice: original,
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        // ignore promotion errors
+        console.debug("Promotions fetch failed", err);
+      }
 
       if (res?.productImages?.length > 0) {
         const primary = res.productImages.find((img) => img.isPrimary);
@@ -419,7 +467,6 @@ export default function ProductDetail() {
             </div>
 
             {/* BLOCK 2: PURCHASE INFO (Chiếm 4 cột trên Desktop - Sticky) */}
-            {/* Trên mobile, block này sẽ tự động nằm DƯỚI hình ảnh nhờ thứ tự DOM */}
             <div className="lg:col-span-4 lg:row-span-2">
               <Card className="border-none shadow-md lg:sticky lg:top-24 h-fit">
                 <CardContent className="p-5 md:p-6 space-y-6">
@@ -447,16 +494,51 @@ export default function ProductDetail() {
 
                   {/* Price */}
                   <div className="pb-4 border-b border-gray-100">
-                    <p className="text-3xl font-bold text-red-600">
-                      {product.price
-                        ? `${Number(product.price).toLocaleString("vi-VN")}₫`
-                        : "Liên hệ"}
-                    </p>
-                    {product.originalPrice > product.price && (
-                      <p className="text-sm text-gray-400 line-through mt-1">
-                        {Number(product.originalPrice).toLocaleString("vi-VN")}₫
-                      </p>
-                    )}
+                    {(() => {
+                      const displayPrice =
+                        product.discountedPrice ?? product.price;
+                      const original = product.originalPrice ?? product.price;
+
+                      // Check if there is an actual discount
+                      const hasDiscount =
+                        product.discountedPrice &&
+                        Number(product.discountedPrice) < Number(original);
+
+                      const discountPercent = hasDiscount
+                        ? Math.round(
+                            ((Number(original) - Number(displayPrice)) /
+                              Number(original)) *
+                              100
+                          )
+                        : 0;
+
+                      return (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-3">
+                            <p className="text-3xl font-bold text-red-600">
+                              {displayPrice
+                                ? `${Number(displayPrice).toLocaleString(
+                                    "vi-VN"
+                                  )}₫`
+                                : "Liên hệ"}
+                            </p>
+                            {hasDiscount && (
+                              <Badge
+                                variant="destructive"
+                                className="px-2 py-0.5 text-xs font-bold bg-red-100 text-red-600 hover:bg-red-200 border-none"
+                              >
+                                -{discountPercent}%
+                              </Badge>
+                            )}
+                          </div>
+                          {hasDiscount && (
+                            <p className="text-sm text-gray-500 font-medium line-through">
+                              {Number(original).toLocaleString("vi-VN")}₫
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Quantity */}
