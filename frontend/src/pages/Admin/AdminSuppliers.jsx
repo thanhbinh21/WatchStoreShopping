@@ -55,17 +55,17 @@ export const AdminSuppliers = () => {
     const matchesSearch = supplier.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    
+
     if (!statusFilter) {
       // Show all when no filter
       return matchesSearch;
     }
-    
+
     // When filtering by ACTIVE: show ACTIVE or null (backward compatibility)
     // When filtering by INACTIVE: only show INACTIVE
     const supplierStatus = supplier.status || "ACTIVE"; // Treat null as ACTIVE for backward compatibility
     const matchesStatus = supplierStatus === statusFilter;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -151,7 +151,9 @@ export const AdminSuppliers = () => {
     } catch (err) {
       console.error("Lỗi khi thêm nhà cung cấp:", err);
       const errorMsg =
-        err.response?.data?.message || err.message || "Không thể thêm nhà cung cấp";
+        err.response?.data?.message ||
+        err.message ||
+        "Không thể thêm nhà cung cấp";
 
       if (err.response?.status === 403) {
         toast.error(

@@ -19,7 +19,8 @@ export const SupplierFormDialog = ({
   onChange,
   onSubmit,
 }) => {
-  const title = mode === "add" ? "Thêm nhà cung cấp mới" : "Chỉnh sửa nhà cung cấp";
+  const title =
+    mode === "add" ? "Thêm nhà cung cấp mới" : "Chỉnh sửa nhà cung cấp";
   const description =
     mode === "add"
       ? "Điền thông tin nhà cung cấp mới"
@@ -92,7 +93,10 @@ export const SupplierFormDialog = ({
             >
               Hủy
             </Button>
-            <Button type="submit" className="bg-brand-primary text-white hover:bg-brand-primary-soft">
+            <Button
+              type="submit"
+              className="bg-brand-primary text-white hover:bg-brand-primary-soft"
+            >
               {mode === "add" ? "Thêm" : "Cập nhật"}
             </Button>
           </DialogFooter>
