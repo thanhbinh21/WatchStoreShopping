@@ -170,7 +170,12 @@ export const AdminProduct = () => {
             ? v.content
             : [];
         setBrands(normalize(bRes));
-        setCategories(normalize(cRes));
+        const categoriesArray = normalize(cRes);
+        // Chỉ lấy categories có status ACTIVE
+        const activeCategories = categoriesArray.filter(
+          (cat) => cat.status === "ACTIVE"
+        );
+        setCategories(activeCategories);
       } catch (e) {
         console.error("Error loading brands/categories", e);
       }

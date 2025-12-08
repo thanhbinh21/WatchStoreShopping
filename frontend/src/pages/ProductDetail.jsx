@@ -22,7 +22,6 @@ import { parseStoredUser } from "@/utils/storage";
 import Header from "@/components/Header";
 import { addToGuestCart } from "@/api/guestCart.js";
 
-
 import Footer from "@/components/Footer";
 import {
   ShoppingCart,
@@ -66,7 +65,7 @@ export default function ProductDetail() {
   useEffect(() => {
     // Scroll to top when page opens
     window.scrollTo(0, 0);
-    
+
     fetchProductDetail();
     fetchReviews();
     checkIfCanReview();
@@ -78,12 +77,14 @@ export default function ProductDetail() {
       setLoading(true);
       const res = await getProductById(id);
       setProduct(res);
-      // Set ảnh chính hoặc ảnh đầu tiên từ productImages hoặc imageUrl
+
+      // Set ảnh chính: ưu tiên productImages, fallback sang primaryImageUrl hoặc imageUrl
       if (res?.productImages?.length > 0) {
         const primary = res.productImages.find((img) => img.isPrimary);
         setSelectedImage(primary || res.productImages[0]);
+      } else if (res?.primaryImageUrl) {
+        setSelectedImage({ imageUrl: res.primaryImageUrl, isPrimary: true });
       } else if (res?.imageUrl) {
-        // Nếu không có productImages, dùng imageUrl
         setSelectedImage({ imageUrl: res.imageUrl, isPrimary: true });
       }
     } catch (err) {
@@ -264,10 +265,10 @@ export default function ProductDetail() {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-  
+
     const token = localStorage.getItem("accessToken");
     const user = parseStoredUser();
-  
+
     // 🚨 FIX: Nếu chưa login → lưu vào guest cart
     if (!token || !user?.id) {
       // guest cart flow
@@ -276,19 +277,19 @@ export default function ProductDetail() {
       window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
-  
+
     // Nếu đăng nhập → xử lý như cũ
     const maxStock = Number.isFinite(product?.stockQuantity)
       ? product.stockQuantity
       : Number.isFinite(product?.stock)
       ? product.stock
       : Infinity;
-  
+
     if (maxStock <= 0) {
       toast.error("Sản phẩm hết hàng");
       return;
     }
-  
+
     setAddingToCart(true);
     try {
       const cart = await getCart(user.id);
@@ -296,12 +297,16 @@ export default function ProductDetail() {
         (i) => i.productId === product.id || i.id === product.id
       );
       const currentQty = existingItem ? existingItem.quantity : 0;
-  
+
       if (currentQty + quantity > maxStock) {
-        toast.error(`Không thể thêm vượt quá tồn kho. Còn lại ${maxStock - currentQty} sản phẩm`);
+        toast.error(
+          `Không thể thêm vượt quá tồn kho. Còn lại ${
+            maxStock - currentQty
+          } sản phẩm`
+        );
         return;
       }
-  
+
       await addToCart(user.id, product.id, quantity);
       toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ hàng`);
       window.dispatchEvent(new Event("cartUpdated"));
@@ -385,6 +390,8 @@ export default function ProductDetail() {
 
   const displayImage = selectedImage
     ? getImageUrl(selectedImage.imageUrl)
+    : product.primaryImageUrl
+    ? getImageUrl(product.primaryImageUrl)
     : product.imageUrl
     ? getImageUrl(product.imageUrl)
     : null;
@@ -450,29 +457,29 @@ export default function ProductDetail() {
 
               {/* Thumbnail Images */}
               {(() => {
-                // If only 1 image, duplicate it to show 3 times
                 let imagesToDisplay = product.productImages || [];
-                
-                if (imagesToDisplay.length === 1) {
-                  const singleImage = imagesToDisplay[0];
-                  imagesToDisplay = [
-                    { ...singleImage, id: `${singleImage.id}-1`, displayId: singleImage.id },
-                    { ...singleImage, id: `${singleImage.id}-2`, displayId: singleImage.id, isPrimary: false },
-                    { ...singleImage, id: `${singleImage.id}-3`, displayId: singleImage.id, isPrimary: false }
-                  ];
-                }
-                
-                return imagesToDisplay.length > 0 ? (
+
+                // Sắp xếp: ảnh chính (isPrimary) lên đầu
+                imagesToDisplay = [...imagesToDisplay].sort((a, b) => {
+                  if (a.isPrimary) return -1;
+                  if (b.isPrimary) return 1;
+                  return 0;
+                });
+
+                // Chỉ hiển thị khi có nhiều hơn 1 ảnh
+                return imagesToDisplay.length > 1 ? (
                   <div className="grid grid-cols-4 gap-4">
-                    {imagesToDisplay.map((img, index) => {
+                    {imagesToDisplay.map((img) => {
                       const thumbUrl = getImageUrl(img.imageUrl);
+                      const isSelected = selectedImage?.id === img.id;
+
                       return (
                         <div
-                          key={`${img.id}-${index}`}
+                          key={img.id}
                           onClick={() => setSelectedImage(img)}
                           className={`relative bg-white rounded-xl p-3 cursor-pointer transition-all hover:shadow-md ${
-                            selectedImage?.id === img.id || selectedImage?.displayId === img.displayId
-                              ? "ring-2 ring-brand-primary/50 shadow-md"
+                            isSelected
+                              ? "ring-2 ring-brand-primary shadow-md"
                               : "ring-1 ring-gray-200"
                           }`}
                         >
@@ -854,7 +861,11 @@ export default function ProductDetail() {
                     <Button
                       onClick={handleAddToCart}
                       disabled={
-                        addingToCart || product.status !== "ACTIVE" || (Number.isFinite(product?.stockQuantity) ? product.stockQuantity <= 0 : product.stock <= 0)
+                        addingToCart ||
+                        product.status !== "ACTIVE" ||
+                        (Number.isFinite(product?.stockQuantity)
+                          ? product.stockQuantity <= 0
+                          : product.stock <= 0)
                       }
                       className="cursor-pointer w-full bg-brand-primary hover:bg-brand-primary-soft text-white py-6 text-base font-semibold"
                     >

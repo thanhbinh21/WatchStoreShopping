@@ -11,16 +11,96 @@ import {
 } from "@/api/wishlistAPI";
 import { addToGuestCart } from "@/api/guestCart.js";
 import { getCart } from "@/api/cartAPI";
+import { getPromotions, getProductsWithPromotions } from "@/api/promotionAPI";
 
 export default function ProductCard({ product, onAddToCart }) {
   const navigate = useNavigate();
   const [favorite, setFavorite] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [promotions, setPromotions] = useState([]);
+  const [productsWithPromotions, setProductsWithPromotions] = useState([]);
 
   // Kiểm tra sản phẩm có trong wishlist không
   useEffect(() => {
     setFavorite(isInWishlist(product.id));
   }, [product.id]);
+
+  // Load promotions data
+  useEffect(() => {
+    const loadPromotionsData = async () => {
+      try {
+        const [promosData, productsWithPromosData] = await Promise.all([
+          getPromotions(),
+          getProductsWithPromotions(),
+        ]);
+        setPromotions(promosData || []);
+        setProductsWithPromotions(productsWithPromosData || []);
+      } catch (err) {
+        console.error("Lỗi load promotions:", err);
+      }
+    };
+    loadPromotionsData();
+  }, []);
+
+  // Kiểm tra khuyến mãi hợp lệ
+  const isValidPromotion = (promotion) => {
+    if (!promotion.startDate || !promotion.endDate) return false;
+    const now = new Date();
+    const startDate = new Date(promotion.startDate);
+    const endDate = new Date(promotion.endDate);
+    return now >= startDate && now <= endDate;
+  };
+
+  // Lấy khuyến mãi cho sản phẩm
+  const getProductPromotions = () => {
+    const allPromotions = [];
+    const productId = product.id;
+
+    // Từ promotions summaries
+    if (promotions && promotions.length > 0) {
+      const promoFromSummaries = promotions.filter((promo) => {
+        if (!isValidPromotion(promo)) return false;
+        if (promo.productIds && Array.isArray(promo.productIds)) {
+          return promo.productIds.includes(productId);
+        }
+        return false;
+      });
+      allPromotions.push(...promoFromSummaries);
+    }
+
+    // Từ productsWithPromotions
+    if (productsWithPromotions && productsWithPromotions.length > 0) {
+      const productWithPromo = productsWithPromotions.find((p) => {
+        const promoProductId = p.productId || p.id;
+        return promoProductId === productId;
+      });
+
+      if (productWithPromo && Array.isArray(productWithPromo.promotions)) {
+        const validPromos = productWithPromo.promotions.filter((p) =>
+          isValidPromotion(p)
+        );
+        allPromotions.push(...validPromos);
+      }
+    }
+
+    // Loại bỏ trùng lặp
+    const uniquePromotions = Array.from(
+      new Map(allPromotions.map((p) => [p.id, p])).values()
+    );
+
+    return uniquePromotions;
+  };
+
+  const productPromotions = getProductPromotions();
+  const hasPromotion = productPromotions.length > 0;
+  const maxDiscount = hasPromotion
+    ? Math.max(...productPromotions.map((p) => parseFloat(p.discount || 0)))
+    : 0;
+
+  const originalPrice = product.currentPrice || product.price || 0;
+  const discountedPrice = hasPromotion
+    ? Math.round(originalPrice * (1 - maxDiscount / 100))
+    : originalPrice;
 
   const handleFavoriteClick = (e) => {
     e.stopPropagation();
@@ -55,56 +135,55 @@ export default function ProductCard({ product, onAddToCart }) {
 
   // ❌ CHƯA LOGIN → lưu “guest cart”
   const handleAddToCart = async (e) => {
-  e.stopPropagation();
+    e.stopPropagation();
 
-  const token = localStorage.getItem("accessToken");
-  const user = parseStoredUser();
+    const token = localStorage.getItem("accessToken");
+    const user = parseStoredUser();
 
-  // 🚨 FIX: Nếu chưa login → lưu vào guest cart
-  if (!token || !user?.id) {
-    // guest cart flow
-    addToGuestCart(product, 1);
-    toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
-    window.dispatchEvent(new Event("cartUpdated"));
-    return;
-  }
-
-  // Nếu đăng nhập → xử lý như cũ
-  const maxStock = Number.isFinite(product?.stockQuantity)
-    ? product.stockQuantity
-    : Number.isFinite(product?.stock)
-    ? product.stock
-    : Infinity;
-
-  if (maxStock <= 0) {
-    toast.error("Sản phẩm hết hàng");
-    return;
-  }
-
-  setIsAdding(true);
-  try {
-    const cart = await getCart(user.id);
-    const existingItem = (cart.items || []).find(
-      (i) => i.productId === product.id || i.id === product.id
-    );
-    const currentQty = existingItem ? existingItem.quantity : 0;
-
-    if (currentQty + 1 > maxStock) {
-      toast.error("Không thể thêm vượt quá tồn kho");
+    // 🚨 FIX: Nếu chưa login → lưu vào guest cart
+    if (!token || !user?.id) {
+      // guest cart flow
+      addToGuestCart(product, 1);
+      toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
+      window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
 
-    await addToCart(user.id, product.id, 1);
-    toast.success("Đã thêm vào giỏ hàng");
-    window.dispatchEvent(new Event("cartUpdated"));
-  } catch (err) {
-    console.error(err);
-    toast.error("Thêm vào giỏ hàng thất bại 😢");
-  } finally {
-    setIsAdding(false);
-  }
-};
+    // Nếu đăng nhập → xử lý như cũ
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
 
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const cart = await getCart(user.id);
+      const existingItem = (cart.items || []).find(
+        (i) => i.productId === product.id || i.id === product.id
+      );
+      const currentQty = existingItem ? existingItem.quantity : 0;
+
+      if (currentQty + 1 > maxStock) {
+        toast.error("Không thể thêm vượt quá tồn kho");
+        return;
+      }
+
+      await addToCart(user.id, product.id, 1);
+      toast.success("Đã thêm vào giỏ hàng");
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (err) {
+      console.error(err);
+      toast.error("Thêm vào giỏ hàng thất bại 😢");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   // const handleAddToCart = async (e) => {
   //     e.stopPropagation();
@@ -231,13 +310,27 @@ export default function ProductCard({ product, onAddToCart }) {
         </h3>
 
         {/* Price */}
-        <p className="text-gray-900 font-bold text-lg lg:text-xl mb-2">
-          {product.currentPrice
-            ? `${product.currentPrice.toLocaleString("vi-VN")}₫`
-            : product.price
-            ? `${Number(product.price).toLocaleString("vi-VN")}₫`
-            : "Liên hệ"}
-        </p>
+        <div className="mb-2">
+          {hasPromotion ? (
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-red-600 font-bold text-lg lg:text-xl">
+                {discountedPrice.toLocaleString("vi-VN")}₫
+              </p>
+              <p className="text-gray-500 line-through text-sm">
+                {originalPrice.toLocaleString("vi-VN")}₫
+              </p>
+              <span className="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-bold">
+                -{Math.round(maxDiscount)}%
+              </span>
+            </div>
+          ) : (
+            <p className="text-gray-900 font-bold text-lg lg:text-xl">
+              {originalPrice > 0
+                ? `${originalPrice.toLocaleString("vi-VN")}₫`
+                : "Liên hệ"}
+            </p>
+          )}
+        </div>
 
         {/* Rating */}
         {product.rating && (
@@ -259,7 +352,12 @@ export default function ProductCard({ product, onAddToCart }) {
           <button
             onClick={handleAddToCart}
             disabled={
-              isAdding || (Number.isFinite(product?.stockQuantity) ? product.stockQuantity <= 0 : Number.isFinite(product?.stock) ? product.stock <= 0 : false)
+              isAdding ||
+              (Number.isFinite(product?.stockQuantity)
+                ? product.stockQuantity <= 0
+                : Number.isFinite(product?.stock)
+                ? product.stock <= 0
+                : false)
             }
             className="flex-1 flex items-center justify-center gap-2 bg-brand-primary/90 text-brand-primary-foreground rounded-lg py-2.5 hover:bg-brand-primary-soft transition-colors disabled:opacity-70 disabled:cursor-not-allowed font-medium text-sm lg:text-base"
           >

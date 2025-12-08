@@ -70,8 +70,13 @@ export const ProductFormDialog = ({
 
           console.log("Normalized suppliers:", normalizedSuppliers);
 
+          // Chỉ lấy categories có status ACTIVE
+          const activeCategories = normalizedCategories.filter(
+            (cat) => cat.status === "ACTIVE"
+          );
+
           setBrands(normalizedBrands);
-          setCategories(normalizedCategories);
+          setCategories(activeCategories);
           setSuppliers(normalizedSuppliers);
         } catch (error) {
           console.error("Error fetching dropdown data:", error);
