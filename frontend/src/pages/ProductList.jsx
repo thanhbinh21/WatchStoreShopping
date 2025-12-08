@@ -98,9 +98,10 @@ export default function ProductList() {
   const fetchCategories = async () => {
     try {
       const data = await getCategories();
-      setCategories(
-        Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
-      );
+      const categoriesArray = Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : [];
+      // Chỉ lấy categories có status ACTIVE
+      const activeCategories = categoriesArray.filter(cat => cat.status === "ACTIVE");
+      setCategories(activeCategories);
     } catch (error) {
       console.error("Error fetching categories:", error);
     }

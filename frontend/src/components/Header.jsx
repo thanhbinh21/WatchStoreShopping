@@ -21,9 +21,9 @@ import {
   getNotificationsByUser,
   markNotificationAsRead,
 } from "@/api/notificationAPI";
-import { 
-  connectNotificationWebSocket, 
-  disconnectNotificationWebSocket 
+import {
+  connectNotificationWebSocket,
+  disconnectNotificationWebSocket,
 } from "@/api/notificationWebSocket";
 import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
@@ -67,7 +67,7 @@ export default function Header() {
   const getNotificationType = (notification) => {
     const title = notification.title?.toLowerCase() || "";
     const message = notification.message?.toLowerCase() || "";
-    
+
     if (title.includes("khuyến mãi") || title.includes("🎉")) {
       return "promotion";
     }
@@ -83,7 +83,7 @@ export default function Header() {
   // Hàm xử lý click vào thông báo
   const handleNotificationClick = async (notification) => {
     const type = getNotificationType(notification);
-    
+
     // Đánh dấu thông báo là đã đọc
     if (!notification.read) {
       try {
@@ -146,15 +146,26 @@ export default function Header() {
     const fetchData = async () => {
       try {
         // Fetch categories
-        const data = await getCategories();
-        setCategories(
-          Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
+        const categoriesData = await getCategories();
+        const categoriesArray = Array.isArray(categoriesData)
+          ? categoriesData
+          : Array.isArray(categoriesData.data)
+          ? categoriesData.data
+          : [];
+        // Chỉ lấy categories có status ACTIVE
+        const activeCategories = categoriesArray.filter(
+          (cat) => cat.status === "ACTIVE"
         );
+        setCategories(activeCategories);
 
         // Fetch brands
         const brandsData = await getBrands();
         setBrands(
-          Array.isArray(brandsData) ? brandsData : Array.isArray(brandsData.data) ? brandsData.data : []
+          Array.isArray(brandsData)
+            ? brandsData
+            : Array.isArray(brandsData.data)
+            ? brandsData.data
+            : []
         );
 
         // Fetch settings
@@ -183,21 +194,21 @@ export default function Header() {
 
     const handleNewNotification = (notification) => {
       console.log("📬 New notification received via WebSocket:", notification);
-      
+
       // Add new notification to the list
       setNotifications((prev) => [notification, ...prev]);
       setUnreadNotifications((prev) => prev + 1);
-      
+
       // Trigger animation
       setNotificationAnimation(true);
       setTimeout(() => setNotificationAnimation(false), 600);
-      
+
       // Show toast notification
       toast.success(notification.title, {
         description: notification.message,
         duration: 5000,
       });
-      
+
       // Play notification sound (optional)
       try {
         const audio = new Audio("/notification.mp3");
@@ -210,7 +221,10 @@ export default function Header() {
       }
     };
 
-    const ws = connectNotificationWebSocket(userState.id, handleNewNotification);
+    const ws = connectNotificationWebSocket(
+      userState.id,
+      handleNewNotification
+    );
 
     return () => {
       console.log("🔌 Cleaning up WebSocket connection");
@@ -496,7 +510,7 @@ export default function Header() {
                 notificationAnimation ? "animate-bounce scale-110" : ""
               }`}
             >
-              <Bell 
+              <Bell
                 size={20}
                 className={`transition-all ${
                   notificationAnimation ? "scale-125 text-yellow-400" : ""
@@ -504,9 +518,11 @@ export default function Header() {
               />
               <span className="hidden md:inline font-medium">Thông báo</span>
               {unreadNotifications > 0 && (
-                <span className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
-                  notificationAnimation ? "animate-ping" : ""
-                }`}>
+                <span
+                  className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
+                    notificationAnimation ? "animate-ping" : ""
+                  }`}
+                >
                   {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}

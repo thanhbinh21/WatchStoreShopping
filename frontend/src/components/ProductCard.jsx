@@ -55,56 +55,55 @@ export default function ProductCard({ product, onAddToCart }) {
 
   // ❌ CHƯA LOGIN → lưu “guest cart”
   const handleAddToCart = async (e) => {
-  e.stopPropagation();
+    e.stopPropagation();
 
-  const token = localStorage.getItem("accessToken");
-  const user = parseStoredUser();
+    const token = localStorage.getItem("accessToken");
+    const user = parseStoredUser();
 
-  // 🚨 FIX: Nếu chưa login → lưu vào guest cart
-  if (!token || !user?.id) {
-    // guest cart flow
-    addToGuestCart(product, 1);
-    toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
-    window.dispatchEvent(new Event("cartUpdated"));
-    return;
-  }
-
-  // Nếu đăng nhập → xử lý như cũ
-  const maxStock = Number.isFinite(product?.stockQuantity)
-    ? product.stockQuantity
-    : Number.isFinite(product?.stock)
-    ? product.stock
-    : Infinity;
-
-  if (maxStock <= 0) {
-    toast.error("Sản phẩm hết hàng");
-    return;
-  }
-
-  setIsAdding(true);
-  try {
-    const cart = await getCart(user.id);
-    const existingItem = (cart.items || []).find(
-      (i) => i.productId === product.id || i.id === product.id
-    );
-    const currentQty = existingItem ? existingItem.quantity : 0;
-
-    if (currentQty + 1 > maxStock) {
-      toast.error("Không thể thêm vượt quá tồn kho");
+    // 🚨 FIX: Nếu chưa login → lưu vào guest cart
+    if (!token || !user?.id) {
+      // guest cart flow
+      addToGuestCart(product, 1);
+      toast.success("Đã thêm vào giỏ hàng (khách) 🛒");
+      window.dispatchEvent(new Event("cartUpdated"));
       return;
     }
 
-    await addToCart(user.id, product.id, 1);
-    toast.success("Đã thêm vào giỏ hàng");
-    window.dispatchEvent(new Event("cartUpdated"));
-  } catch (err) {
-    console.error(err);
-    toast.error("Thêm vào giỏ hàng thất bại 😢");
-  } finally {
-    setIsAdding(false);
-  }
-};
+    // Nếu đăng nhập → xử lý như cũ
+    const maxStock = Number.isFinite(product?.stockQuantity)
+      ? product.stockQuantity
+      : Number.isFinite(product?.stock)
+      ? product.stock
+      : Infinity;
 
+    if (maxStock <= 0) {
+      toast.error("Sản phẩm hết hàng");
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const cart = await getCart(user.id);
+      const existingItem = (cart.items || []).find(
+        (i) => i.productId === product.id || i.id === product.id
+      );
+      const currentQty = existingItem ? existingItem.quantity : 0;
+
+      if (currentQty + 1 > maxStock) {
+        toast.error("Không thể thêm vượt quá tồn kho");
+        return;
+      }
+
+      await addToCart(user.id, product.id, 1);
+      toast.success("Đã thêm vào giỏ hàng");
+      window.dispatchEvent(new Event("cartUpdated"));
+    } catch (err) {
+      console.error(err);
+      toast.error("Thêm vào giỏ hàng thất bại 😢");
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   // const handleAddToCart = async (e) => {
   //     e.stopPropagation();
@@ -259,7 +258,12 @@ export default function ProductCard({ product, onAddToCart }) {
           <button
             onClick={handleAddToCart}
             disabled={
-              isAdding || (Number.isFinite(product?.stockQuantity) ? product.stockQuantity <= 0 : Number.isFinite(product?.stock) ? product.stock <= 0 : false)
+              isAdding ||
+              (Number.isFinite(product?.stockQuantity)
+                ? product.stockQuantity <= 0
+                : Number.isFinite(product?.stock)
+                ? product.stock <= 0
+                : false)
             }
             className="flex-1 flex items-center justify-center gap-2 bg-brand-primary/90 text-brand-primary-foreground rounded-lg py-2.5 hover:bg-brand-primary-soft transition-colors disabled:opacity-70 disabled:cursor-not-allowed font-medium text-sm lg:text-base"
           >

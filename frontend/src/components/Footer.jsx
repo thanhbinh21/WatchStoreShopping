@@ -144,7 +144,7 @@ export default function Footer() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-gray-400"
+                className="px-5 py-2.5 bg-brand-primary text-white rounded-lg hover:bg-brand-primary-soft transition disabled:bg-gray-400"
               >
                 <Send className="size-4" />
               </button>
