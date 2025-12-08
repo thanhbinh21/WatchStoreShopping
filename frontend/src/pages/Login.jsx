@@ -359,7 +359,7 @@ export default function LoginRegister() {
   const benefits = [
     {
       icon: ShieldCheck,
-      text: "Chiết khấu đến 5% khi mua các sản phẩm tại CellphoneS",
+      text: "Chiết khấu đến 5% khi mua các sản phẩm tại WatchStore",
     },
     { icon: Gift, text: "Miễn phí giao hàng cho thành viên SMEM, SVIP" },
     { icon: Gift, text: "Tặng voucher sinh nhật đến 500.000đ" },
@@ -415,7 +415,7 @@ export default function LoginRegister() {
                   <span className="text-red-600">SMEMBER</span>
                 </h2>
                 <p className="text-gray-600 mb-6">
-                  Để không bỏ lỡ các ưu đãi hấp dẫn từ CellphoneS
+                  Để không bỏ lỡ các ưu đãi hấp dẫn từ WatchStore
                 </p>
 
                 <ul className="space-y-4">
