@@ -37,7 +37,9 @@ export const CategoryFormDialog = ({
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Tên danh mục */}
           <div className="space-y-2">
-            <Label htmlFor={`${mode}-name`}>Tên danh mục *</Label>
+            <Label htmlFor={`${mode}-name`}>
+              Tên danh mục<span className="text-red-500">*</span>
+            </Label>
             <Input
               id={`${mode}-name`}
               name="name"

@@ -289,7 +289,10 @@ export const ProductFormDialog = ({
           <form onSubmit={handleFormSubmit} className="space-y-4">
             {/* Tên sản phẩm */}
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-name`}>Tên sản phẩm *</Label>
+              <Label htmlFor={`${mode}-name`}>
+                Tên sản phẩm<span className="text-red-500">*</span>
+              </Label>
+
               <Input
                 id={`${mode}-name`}
                 name="name"
@@ -303,7 +306,9 @@ export const ProductFormDialog = ({
             {/* Brand, Category, Supplier */}
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-brandId`}>Thương hiệu *</Label>
+                <Label htmlFor={`${mode}-brandId`}>
+                  Thương hiệu<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-brandId`}
                   name="brandId"
@@ -322,7 +327,9 @@ export const ProductFormDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-categoryId`}>Danh mục *</Label>
+                <Label htmlFor={`${mode}-categoryId`}>
+                  Danh mục<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-categoryId`}
                   name="categoryId"
@@ -343,7 +350,9 @@ export const ProductFormDialog = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-supplierId`}>Nhà cung cấp *</Label>
+                <Label htmlFor={`${mode}-supplierId`}>
+                  Nhà cung cấp<span className="text-red-500">*</span>
+                </Label>
                 <select
                   id={`${mode}-supplierId`}
                   name="supplierId"
@@ -367,7 +376,9 @@ export const ProductFormDialog = ({
             {/* Giá và Tồn kho */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor={`${mode}-price`}>Giá sản phẩm (₫) *</Label>
+                <Label htmlFor={`${mode}-price`}>
+                  Giá sản phẩm (₫)<span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id={`${mode}-price`}
                   name="price"
@@ -382,7 +393,7 @@ export const ProductFormDialog = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor={`${mode}-stockQuantity`}>
-                  Số lượng tồn kho *
+                  Số lượng tồn kho<span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id={`${mode}-stockQuantity`}
@@ -562,7 +573,9 @@ export const ProductFormDialog = ({
 
             {/* Trạng thái */}
             <div className="space-y-2">
-              <Label htmlFor={`${mode}-status`}>Trạng thái *</Label>
+              <Label htmlFor={`${mode}-status`}>
+                Trạng thái <span className="text-red-500">*</span>
+              </Label>
               <select
                 id={`${mode}-status`}
                 name="status"
