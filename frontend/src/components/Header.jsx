@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
 import {
   getNotificationsByUser,
-  markAllNotificationsAsRead,
+  markNotificationAsRead,
 } from "@/api/notificationAPI";
 import { 
   connectNotificationWebSocket, 
@@ -44,6 +44,7 @@ export default function Header() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [cartAnimation, setCartAnimation] = useState(false);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
+  const [notificationAnimation, setNotificationAnimation] = useState(false);
   const [settings, setSettings] = useState({
     siteName: "WATCH STORE",
     logo: "",
@@ -58,6 +59,62 @@ export default function Header() {
 
   const formatNotificationDate = (value) =>
     value ? new Date(value).toLocaleString("vi-VN") : "--";
+
+  // Hàm phân loại thông báo dựa vào title và message
+  const getNotificationType = (notification) => {
+    const title = notification.title?.toLowerCase() || "";
+    const message = notification.message?.toLowerCase() || "";
+    
+    if (title.includes("khuyến mãi") || title.includes("🎉")) {
+      return "promotion";
+    }
+    if (title.includes("đơn hàng") || message.includes("đơn hàng")) {
+      return "order";
+    }
+    if (title.includes("đánh giá")) {
+      return "review";
+    }
+    return "general";
+  };
+
+  // Hàm xử lý click vào thông báo
+  const handleNotificationClick = async (notification) => {
+    const type = getNotificationType(notification);
+    
+    // Đánh dấu thông báo là đã đọc
+    if (!notification.read) {
+      try {
+        await markNotificationAsRead(notification.id, userState.id);
+        setNotifications((prev) =>
+          prev.map((item) =>
+            item.id === notification.id ? { ...item, read: true } : item
+          )
+        );
+        setUnreadNotifications((prev) => Math.max(0, prev - 1));
+      } catch (error) {
+        console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
+      }
+    }
+
+    // Đóng dropdown
+    setIsNotificationDropdownOpen(false);
+
+    // Điều hướng đến trang tương ứng
+    switch (type) {
+      case "promotion":
+        navigate("/promotional-products");
+        break;
+      case "order":
+        navigate("/orders");
+        break;
+      case "review":
+        navigate("/profile");
+        break;
+      default:
+        // Không điều hướng nếu là thông báo general
+        break;
+    }
+  };
 
   const loadNotifications = useCallback(async () => {
     if (!userState?.id || !token) {
@@ -120,6 +177,10 @@ export default function Header() {
       // Add new notification to the list
       setNotifications((prev) => [notification, ...prev]);
       setUnreadNotifications((prev) => prev + 1);
+      
+      // Trigger animation
+      setNotificationAnimation(true);
+      setTimeout(() => setNotificationAnimation(false), 600);
       
       // Show toast notification
       toast.success(notification.title, {
@@ -291,25 +352,11 @@ export default function Header() {
       return;
     }
 
-    let unreadCount = unreadNotifications;
     if (!isNotificationDropdownOpen) {
-      unreadCount = await loadNotifications();
+      await loadNotifications();
     }
 
-    const nextState = !isNotificationDropdownOpen;
-    setIsNotificationDropdownOpen(nextState);
-
-    if (!isNotificationDropdownOpen && unreadCount > 0) {
-      try {
-        await markAllNotificationsAsRead(userState.id);
-        setNotifications((prev) =>
-          prev.map((item) => ({ ...item, read: true }))
-        );
-        setUnreadNotifications(0);
-      } catch (error) {
-        console.error("Lỗi khi cập nhật trạng thái thông báo:", error);
-      }
-    }
+    setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
   };
 
   return (
@@ -448,12 +495,21 @@ export default function Header() {
           <div className="relative" ref={notificationDropdownRef}>
             <button
               onClick={handleToggleNotifications}
-              className="cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-colors"
+              className={`cursor-pointer relative flex items-center gap-2 px-3 py-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg transition-all ${
+                notificationAnimation ? "animate-bounce scale-110" : ""
+              }`}
             >
-              <Bell size={20} />
+              <Bell 
+                size={20}
+                className={`transition-all ${
+                  notificationAnimation ? "scale-125 text-yellow-400" : ""
+                }`}
+              />
               <span className="hidden md:inline font-medium">Thông báo</span>
               {unreadNotifications > 0 && (
-                <span className="absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                <span className={`absolute -top-1 -right-1 bg-brand-accent-soft text-brand-accent text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 transition-all ${
+                  notificationAnimation ? "animate-ping" : ""
+                }`}>
                   {unreadNotifications > 9 ? "9+" : unreadNotifications}
                 </span>
               )}
@@ -480,7 +536,8 @@ export default function Header() {
                     notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`px-4 py-3 text-sm text-foreground transition-colors ${
+                        onClick={() => handleNotificationClick(notification)}
+                        className={`px-4 py-3 text-sm text-foreground transition-colors cursor-pointer hover:bg-brand-accent-soft/50 ${
                           notification.read ? "bg-card" : "bg-brand-accent-soft"
                         }`}
                       >
