@@ -29,7 +29,7 @@ export default function ProductList() {
   const navigate = useNavigate();
   const categoryId = searchParams.get("category");
   const brandName = searchParams.get("brand");
-  const searchQuery = searchParams.get("search");
+  const searchQuery = searchParams.get("name");
 
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -147,7 +147,7 @@ export default function ProductList() {
       }
 
       if (brandName) params.brand = brandName;
-      if (searchQuery) params.search = searchQuery;
+      if (searchQuery) params.name = searchQuery;
 
       const response = await getProducts(params);
       const data = response.data || response;

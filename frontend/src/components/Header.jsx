@@ -35,6 +35,8 @@ import { parseStoredUser } from "@/utils/storage";
 import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
+import { searchProducts, getProducts } from "@/api/productAPI";
+import { MdTrendingUp } from "react-icons/md";
 import { getGeneralSettings } from "@/api/settingsAPI";
 import MegaMenu from "./MegaMenu";
 
@@ -67,65 +69,176 @@ export default function Header() {
   // Animation State
   const [cartAnimation, setCartAnimation] = useState(false);
   const [wishlistAnimation, setWishlistAnimation] = useState(false);
+  const [searchSuggestions, setSearchSuggestions] = useState(null);
+  const [searchHistory, setSearchHistory] = useState([]);
+  const [trendingProducts, setTrendingProducts] = useState([]);
+  const [isSearchDropdownOpen, setIsSearchDropdownOpen] = useState(false);
+  const [isSearchInputFocused, setIsSearchInputFocused] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [notificationAnimation, setNotificationAnimation] = useState(false);
 
-  // Refs
   const userDropdownRef = useRef(null);
   const categoryDropdownRef = useRef(null);
   const notificationDropdownRef = useRef(null);
+  const searchDropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // User info
   const token = localStorage.getItem("accessToken");
   const role = localStorage.getItem("role");
   const [userState, setUserState] = useState(parseStoredUser() || {});
 
-  const formatNotificationDate = (value) =>
-    value ? new Date(value).toLocaleString("vi-VN") : "--";
-
-  // --- Logic Notification ---
-  const getNotificationType = (notification) => {
-    const title = notification.title?.toLowerCase() || "";
-    const message = notification.message?.toLowerCase() || "";
-
-    if (title.includes("khuyến mãi") || title.includes("🎉"))
-      return "promotion";
-    if (title.includes("đơn hàng") || message.includes("đơn hàng"))
-      return "order";
-    if (title.includes("đánh giá")) return "review";
-    return "general";
-  };
-
-  const handleNotificationClick = async (notification) => {
-    const type = getNotificationType(notification);
-    if (!notification.read) {
+  // Load search history từ localStorage
+  useEffect(() => {
+    const savedHistory = localStorage.getItem("searchHistory");
+    if (savedHistory) {
       try {
-        await markNotificationAsRead(notification.id, userState.id);
-        setNotifications((prev) =>
-          prev.map((item) =>
-            item.id === notification.id ? { ...item, read: true } : item
-          )
-        );
-        setUnreadNotifications((prev) => Math.max(0, prev - 1));
+        setSearchHistory(JSON.parse(savedHistory));
       } catch (error) {
-        console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
+        console.error("Lỗi khi đọc lịch sử tìm kiếm:", error);
+        setSearchHistory([]);
       }
     }
-    setIsNotificationDropdownOpen(false);
-    switch (type) {
-      case "promotion":
-        navigate("/promotional-products");
-        break;
-      case "order":
-        navigate("/orders");
-        break;
-      case "review":
-        navigate("/profile");
-        break;
-      default:
-        break;
-    }
-  };
+  }, []);
 
+  // Load trending products (6 sản phẩm mới nhất)
+  useEffect(() => {
+    const fetchTrendingProducts = async () => {
+      try {
+        const data = await getProducts({
+          page: 0,
+          size: 6,
+          sortBy: "createdAt",
+          order: "desc",
+        });
+        setTrendingProducts(data.content || []);
+      } catch (error) {
+        console.error("Lỗi khi lấy sản phẩm trending:", error);
+        setTrendingProducts([]);
+      }
+    };
+    fetchTrendingProducts();
+  }, []);
+
+  // Lưu search history vào localStorage
+  useEffect(() => {
+    if (searchHistory.length > 0) {
+      localStorage.setItem("searchHistory", JSON.stringify(searchHistory));
+    }
+  }, [searchHistory]);
+
+  // Xử lý tìm kiếm realtime
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(async () => {
+      if (!isSearchInputFocused) {
+        return;
+      }
+      if (searchTerm.trim() === "") {
+        setSearchSuggestions(null);
+        if (isSearchInputFocused) {
+          setIsSearchDropdownOpen(true);
+        }
+        return;
+      }
+      if (searchTerm.trim().length < 1) {
+        setSearchSuggestions({
+          exactMatches: [],
+          suggestedProducts: [],
+        });
+        return;
+      }
+      setIsLoading(true);
+      try {
+        const searchResults = await searchProducts(searchTerm);
+        console.log("Header: raw searchResults:", searchResults);
+        // Đảm bảo là array
+        const results = Array.isArray(searchResults) ? searchResults : [];
+        console.log("Header: normalized results length:", results.length);
+        const suggestions = {
+          exactMatches: results.slice(0, 5),
+          suggestedProducts: results.slice(5, 10),
+        };
+        setSearchSuggestions(suggestions);
+
+        if (isSearchInputFocused) {
+          setIsSearchDropdownOpen(true);
+        }
+      } catch (error) {
+        setSearchSuggestions({
+          exactMatches: [],
+          suggestedProducts: [],
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    // --- Logic Notification ---
+    const getNotificationType = (notification) => {
+      const title = notification.title?.toLowerCase() || "";
+      const message = notification.message?.toLowerCase() || "";
+
+      if (title.includes("khuyến mãi") || title.includes("🎉"))
+        return "promotion";
+      if (title.includes("đơn hàng") || message.includes("đơn hàng"))
+        return "order";
+      if (title.includes("đánh giá")) return "review";
+      return "general";
+    };
+
+    const handleNotificationClick = async (notification) => {
+      const type = getNotificationType(notification);
+      if (!notification.read) {
+        try {
+          await markNotificationAsRead(notification.id, userState.id);
+          setNotifications((prev) =>
+            prev.map((item) =>
+              item.id === notification.id ? { ...item, read: true } : item
+            )
+          );
+          setUnreadNotifications((prev) => Math.max(0, prev - 1));
+        } catch (error) {
+          console.error("Lỗi khi đánh dấu thông báo đã đọc:", error);
+        }
+      }
+      setIsNotificationDropdownOpen(false);
+      switch (type) {
+        case "promotion":
+          navigate("/promotional-products");
+          break;
+        case "order":
+          navigate("/orders");
+          break;
+        case "review":
+          navigate("/profile");
+          break;
+        default:
+          break;
+      }
+    };
+
+    return () => {
+      clearTimeout(delayDebounceFn);
+    };
+  }, [searchTerm, isSearchInputFocused]);
+
+  // Fetch categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const data = await getCategories();
+        setCategories(
+          Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
+        );
+      } catch (error) {
+        console.error("Lỗi khi fetch categories:", error);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Load notifications
   const loadNotifications = useCallback(async () => {
     if (!userState?.id || !token) {
       setNotifications([]);
@@ -214,6 +327,7 @@ export default function Header() {
     };
   }, [wishlistCount]);
 
+  // Cart count
   useEffect(() => {
     const updateCartCount = () => {
       const token = localStorage.getItem("accessToken");
@@ -243,6 +357,7 @@ export default function Header() {
     };
   }, []);
 
+  // Update user state
   useEffect(() => {
     const onUserUpdated = () => setUserState(parseStoredUser() || {});
     const onStorage = (e) => {
@@ -268,18 +383,30 @@ export default function Header() {
       if (
         userDropdownRef.current &&
         !userDropdownRef.current.contains(event.target)
-      )
+      ) {
         setIsUserDropdownOpen(false);
+      }
       if (
         categoryDropdownRef.current &&
         !categoryDropdownRef.current.contains(event.target)
-      )
+      ) {
         setIsCategoryDropdownOpen(false);
+      }
       if (
         notificationDropdownRef.current &&
         !notificationDropdownRef.current.contains(event.target)
-      )
+      ) {
         setIsNotificationDropdownOpen(false);
+      }
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(event.target) &&
+        searchInputRef.current &&
+        !searchInputRef.current.contains(event.target)
+      ) {
+        setIsSearchDropdownOpen(false);
+        setIsSearchInputFocused(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -297,10 +424,23 @@ export default function Header() {
   };
 
   const handleSearch = () => {
-    if (searchTerm.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchTerm)}`);
-      setIsMobileSearchOpen(false);
-    }
+    const term = searchTerm.trim();
+    if (!term) return;
+
+    // Lưu vào lịch sử tìm kiếm
+    const newHistory = [
+      term,
+      ...searchHistory.filter((item) => item !== term),
+    ].slice(0, 10);
+    setSearchHistory(newHistory);
+    localStorage.setItem("searchHistory", JSON.stringify(newHistory));
+
+    // Đóng dropdown và điều hướng
+    setIsSearchDropdownOpen(false);
+
+    console.log("zzzz", term);
+    navigate(`/products?name=${encodeURIComponent(term)}`);
+    setIsMobileSearchOpen(false);
   };
 
   const handleKeyDown = (e) => {
@@ -325,6 +465,74 @@ export default function Header() {
     }
     if (!isNotificationDropdownOpen) await loadNotifications();
     setIsNotificationDropdownOpen(!isNotificationDropdownOpen);
+  };
+
+  const handleClearSearchHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem("searchHistory");
+  };
+
+  const handleRemoveSearchHistoryItem = (index) => {
+    const newHistory = [...searchHistory];
+    newHistory.splice(index, 1);
+    setSearchHistory(newHistory);
+    localStorage.setItem("searchHistory", JSON.stringify(newHistory));
+  };
+
+  const handleSuggestionClick = (product) => {
+    setIsSearchDropdownOpen(false);
+    setSearchTerm("");
+    navigate(`/product/${product.productId || product.id}`);
+  };
+
+  const formatPrice = (product) => {
+    // Nếu product có currentPrice
+    if (product.currentPrice) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(product.currentPrice);
+    }
+
+    // Nếu product có price
+    if (product.price) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(product.price);
+    }
+
+    // Nếu product có productPrices
+    if (product.productPrices && Array.isArray(product.productPrices)) {
+      const currentPrice = product.productPrices.find((p) => p.isCurrent);
+      if (currentPrice && currentPrice.price) {
+        return new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(currentPrice.price);
+      }
+    }
+
+    return "Liên hệ";
+  };
+
+  // Helper to get a product's primary image URL safely
+  const getPrimaryImage = (product) => {
+    if (!product) return "https://via.placeholder.com/80";
+    // Prefer common flattened fields
+    if (product.imageUrl) return product.imageUrl;
+    if (product.primaryImageUrl) return product.primaryImageUrl;
+    // Support nested productImages array
+    if (Array.isArray(product.productImages)) {
+      const primary = product.productImages.find((img) => img.isPrimary);
+      if (primary && primary.imageUrl) return primary.imageUrl;
+      if (product.productImages.length > 0 && product.productImages[0].imageUrl)
+        return product.productImages[0].imageUrl;
+    }
+    // Support method-style accessor
+    if (typeof product.getPrimaryImageUrl === "function")
+      return product.getPrimaryImageUrl();
+    return "https://via.placeholder.com/80";
   };
 
   // Helper toggle mobile submenu
@@ -387,12 +595,21 @@ export default function Header() {
           </div>
 
           {/* --- DESKTOP: Search Bar --- */}
-          <div className="flex-1 max-w-2xl hidden lg:block">
+          {/* Search Bar */}
+          <div className="flex-1 max-w-2xl relative" ref={searchDropdownRef}>
             <div className="relative">
               <input
+                ref={searchInputRef}
                 type="text"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  // Không tự động mở dropdown khi gõ, chỉ mở khi click/focus
+                }}
+                onFocus={() => {
+                  setIsSearchInputFocused(true); // Đánh dấu input đang được focus
+                  setIsSearchDropdownOpen(true); // Mở dropdown khi focus
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="Bạn muốn mua gì hôm nay?"
                 className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink placeholder-text-muted"
@@ -401,9 +618,241 @@ export default function Header() {
                 onClick={handleSearch}
                 className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-2 text-brand-primary hover:text-brand-primary-soft transition-colors"
               >
-                <Search size={20} />
+                {isLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-brand-primary"></div>
+                ) : (
+                  <Search size={20} />
+                )}
               </button>
             </div>
+
+            {/* Search Dropdown */}
+            {isSearchDropdownOpen && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-[70vh] overflow-y-auto z-50">
+                {/* Khi chưa nhập gì - Hiển thị lịch sử và trending */}
+                {!searchTerm.trim() && (
+                  <div className="p-4">
+                    {/* Lịch sử tìm kiếm - Chỉ hiển thị 5 cái gần nhất */}
+                    {searchHistory.length > 0 && (
+                      <div className="mb-6">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                            <Clock size={16} />
+                            Lịch sử tìm kiếm
+                          </h3>
+                          <button
+                            onClick={handleClearSearchHistory}
+                            className="text-sm text-gray-500 hover:text-red-500 transition-colors"
+                          >
+                            Xóa tất cả
+                          </button>
+                        </div>
+                        <div className="space-y-2">
+                          {searchHistory.slice(0, 5).map(
+                            (
+                              item,
+                              index // Chỉ lấy 5 cái đầu
+                            ) => (
+                              <div
+                                key={index}
+                                className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer group"
+                                onClick={() => {
+                                  setSearchTerm(item);
+                                  setIsSearchDropdownOpen(false);
+                                  setIsSearchInputFocused(false);
+                                  navigate(
+                                    `/products?name=${encodeURIComponent(item)}`
+                                  );
+                                }}
+                              >
+                                <div className="flex items-center gap-3">
+                                  <Clock size={16} className="text-gray-400" />
+                                  <span className="text-gray-700">{item}</span>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveSearchHistoryItem(index);
+                                  }}
+                                  className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                                >
+                                  <X size={16} />
+                                </button>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Xu hướng tìm kiếm */}
+                    <div>
+                      <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                        <MdTrendingUp className="text-xl text-blue-500" />
+                        Xu hướng tìm kiếm
+                      </h3>
+                      <div className="grid grid-cols-1 gap-2">
+                        {trendingProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                            onClick={() => {
+                              setIsSearchDropdownOpen(false);
+                              handleSuggestionClick(product);
+                            }}
+                          >
+                            <img
+                              src={
+                                product.imageUrl ||
+                                product.getPrimaryImageUrl?.() ||
+                                "https://via.placeholder.com/80"
+                              }
+                              alt={product.name}
+                              className="w-10 h-10 object-cover rounded"
+                            />
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-700 truncate">
+                                {product.name}
+                              </p>
+                              <p className="text-sm font-semibold text-brand-primary">
+                                {formatPrice(
+                                  product.price || product.currentPrice || 0
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Khi đã nhập - Hiển thị suggestions */}
+                {searchTerm.trim() && (
+                  <div className="p-4">
+                    {isLoading ? (
+                      <div className="flex justify-center items-center py-8">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+                        <span className="ml-3 text-gray-500">
+                          Đang tìm kiếm...
+                        </span>
+                      </div>
+                    ) : searchSuggestions ? (
+                      <>
+                        {/* Debug info */}
+                        <div className="mb-2 text-xs text-gray-400">
+                          Tìm thấy{" "}
+                          {searchSuggestions.exactMatches?.length +
+                            searchSuggestions.suggestedProducts?.length}{" "}
+                          kết quả
+                        </div>
+
+                        {/* Có phải bạn muốn tìm */}
+                        {searchSuggestions.exactMatches?.length > 0 && (
+                          <div className="mb-6">
+                            <h3 className="font-semibold text-gray-700 mb-3">
+                              Có phải bạn muốn tìm
+                            </h3>
+                            <div className="space-y-3">
+                              {searchSuggestions.exactMatches.map((product) => (
+                                <div
+                                  key={product.id}
+                                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                  onClick={() => {
+                                    setIsSearchDropdownOpen(false);
+                                    setIsSearchInputFocused(false);
+                                    handleSuggestionClick(product);
+                                  }}
+                                >
+                                  <img
+                                    src={getPrimaryImage(product)}
+                                    alt={product.name}
+                                    className="w-12 h-12 object-cover rounded"
+                                    onError={(e) => {
+                                      e.target.src =
+                                        "https://via.placeholder.com/80";
+                                    }}
+                                  />
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
+                                      {product.name}
+                                    </p>
+                                    <p className="text-sm font-semibold text-brand-primary mt-1">
+                                      {formatPrice(product)}
+                                    </p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Sản phẩm gợi ý */}
+                        {searchSuggestions.suggestedProducts?.length > 0 && (
+                          <div>
+                            <h3 className="font-semibold text-gray-700 mb-3">
+                              Sản phẩm gợi ý
+                            </h3>
+                            <div className="grid grid-cols-1 gap-3">
+                              {searchSuggestions.suggestedProducts.map(
+                                (product) => (
+                                  <div
+                                    key={product.id}
+                                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                                    onClick={() => {
+                                      setIsSearchDropdownOpen(false);
+                                      setIsSearchInputFocused(false);
+                                      handleSuggestionClick(product);
+                                    }}
+                                  >
+                                    <img
+                                      src={getPrimaryImage(product)}
+                                      alt={product.name}
+                                      className="w-10 h-10 object-cover rounded"
+                                      onError={(e) => {
+                                        e.target.src =
+                                          "https://via.placeholder.com/80";
+                                      }}
+                                    />
+                                    <div className="flex-1">
+                                      <p className="text-sm text-gray-700 truncate">
+                                        {product.name}
+                                      </p>
+                                      <p className="text-sm font-semibold text-brand-primary">
+                                        {formatPrice(product)}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Không tìm thấy kết quả */}
+                        {searchSuggestions.exactMatches?.length === 0 &&
+                          searchSuggestions.suggestedProducts?.length === 0 && (
+                            <div className="text-center py-8">
+                              <p className="text-gray-500">
+                                Không tìm thấy sản phẩm phù hợp
+                              </p>
+                              <p className="text-sm text-gray-400 mt-1">
+                                Từ khóa: "{searchTerm}"
+                              </p>
+                            </div>
+                          )}
+                      </>
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">
+                          Nhập từ khóa để tìm kiếm
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* --- ACTION ICONS --- */}
