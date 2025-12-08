@@ -39,11 +39,13 @@ import AIChatWidget from "./components/AIChat/AIChatWidget";
 import Support from "./pages/Support";
 import About from "./pages/About";
 import VNPayReturn from "./pages/VNPayReturn";
+import ScrollToTop from "./components/ScrollToTop";
 
 function App() {
   return (
     <ChatProvider>
       <Router>
+        <ScrollToTop />
         <Routes>
           {/* Public */}
           <Route

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getPromotions } from "@/api/promotionAPI";
 import { getProducts } from "@/api/productAPI";
 import { Loader2, Tag } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function SaleBanner({ onAddToCart }) {
   const [discountedProducts, setDiscountedProducts] = useState([]);
@@ -316,14 +316,13 @@ export default function SaleBanner({ onAddToCart }) {
 
         {/* View All Link */}
         <div className="text-center mt-8">
-          <button
-            onClick={() => {
-              navigate("/promotional-products");
-            }}
+          <Link
+            to={"/promotional-products"}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="px-8 py-3 bg-brand-primary-foreground text-brand-primary border-2 border-brand-primary rounded-lg font-semibold hover:bg-brand-primary hover:text-brand-primary-foreground transition-all duration-300 shadow-md"
           >
             Xem tất cả sản phẩm khuyến mãi
-          </button>
+          </Link>
         </div>
       </div>
     </section>

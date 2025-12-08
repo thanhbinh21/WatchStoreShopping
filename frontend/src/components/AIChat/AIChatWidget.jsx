@@ -356,7 +356,7 @@ export default function AIChatWidget() {
 
     return (
         <>
-            <div className="fixed left-6 bottom-6 md:bottom-10 z-60 flex flex-col items-start gap-4">
+            <div className="fixed left-6 bottom-6 z-40 flex flex-col items-start gap-3">
                 {/* Panel */}
                 {open && (
                     <div
@@ -557,10 +557,10 @@ export default function AIChatWidget() {
                 {/* Floating Button (AI) */}
                 <button
                     onClick={() => setOpen((prev) => !prev)}
-                    className="bg-red-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl hover:scale-105 transition-transform"
+                    className="bg-red-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-110 transition-all duration-300"
                     title="AI Assistant"
                 >
-                    <span className="font-bold">AI</span>
+                    <span className="font-bold text-sm">AI</span>
                 </button>
             </div>
         </>
