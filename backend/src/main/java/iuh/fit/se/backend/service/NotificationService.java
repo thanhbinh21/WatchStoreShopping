@@ -9,6 +9,7 @@ import iuh.fit.se.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -22,6 +23,7 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
+    private final SimpMessagingTemplate messagingTemplate;
 
     public NotificationResponse createNotification(User user, String title, String message) {
         if (user == null) {
@@ -37,7 +39,21 @@ public class NotificationService {
 
         Notification saved = notificationRepository.save(notification);
         log.debug("Created notification {} for user {}", saved.getId(), user.getId());
-        return toResponse(saved);
+        
+        // Broadcast notification via WebSocket to specific user
+        NotificationResponse response = toResponse(saved);
+        try {
+            messagingTemplate.convertAndSendToUser(
+                user.getId().toString(),
+                "/queue/notifications",
+                response
+            );
+            log.debug("Broadcasted notification {} to user {} via WebSocket", saved.getId(), user.getId());
+        } catch (Exception e) {
+            log.warn("Failed to broadcast notification via WebSocket: {}", e.getMessage());
+        }
+        
+        return response;
     }
 
     public NotificationResponse createReviewDeletedNotification(User user, Product product, String reason) {
@@ -49,6 +65,58 @@ public class NotificationService {
                 reason
         );
         return createNotification(user, title, message);
+    }
+
+    public NotificationResponse createOrderStatusChangedNotification(User user, Long orderId, String oldStatus, String newStatus) {
+        String title = "Cập nhật trạng thái đơn hàng";
+        String message = String.format(
+                "Đơn hàng #%d của bạn đã được cập nhật từ '%s' sang '%s'",
+                orderId,
+                translateStatus(oldStatus),
+                translateStatus(newStatus)
+        );
+        return createNotification(user, title, message);
+    }
+
+    public NotificationResponse createOrderCancelledNotification(User user, Long orderId) {
+        String title = "Đơn hàng đã bị hủy";
+        String message = String.format(
+                "Đơn hàng #%d của bạn đã bị hủy bởi quản trị viên",
+                orderId
+        );
+        return createNotification(user, title, message);
+    }
+
+    public NotificationResponse createPromotionNotification(User user, String promotionName, String promotionDetails) {
+        String title = "🎉 Khuyến mãi mới!";
+        String message = String.format(
+                "%s - %s",
+                promotionName,
+                promotionDetails
+        );
+        return createNotification(user, title, message);
+    }
+
+    public void notifyAllUsers(String title, String message) {
+        List<User> allUsers = userRepository.findAll();
+        for (User user : allUsers) {
+            createNotification(user, title, message);
+        }
+        log.info("Sent notification to {} users: {}", allUsers.size(), title);
+    }
+
+    private String translateStatus(String status) {
+        if (status == null) return "Không xác định";
+        return switch (status.toUpperCase()) {
+            case "PENDING" -> "Chờ xử lý";
+            case "PROCESSING" -> "Đang xử lý";
+            case "SHIPPED" -> "Đang giao hàng";
+            case "DELIVERED" -> "Đã giao hàng";
+            case "COMPLETED" -> "Hoàn thành";
+            case "CANCELLED" -> "Đã hủy";
+            case "PAID" -> "Đã thanh toán";
+            default -> status;
+        };
     }
 
     public List<NotificationResponse> getNotificationsByUser(Long userId) {

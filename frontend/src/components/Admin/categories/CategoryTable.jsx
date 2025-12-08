@@ -25,6 +25,9 @@ export const CategoryTable = ({
                 Mô tả
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Trạng thái
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Số sản phẩm
               </th>
               <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -36,7 +39,7 @@ export const CategoryTable = ({
             {categories.length === 0 ? (
               <tr>
                 <td
-                  colSpan="5"
+                  colSpan="6"
                   className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
                 >
                   Không có danh mục nào
@@ -65,6 +68,20 @@ export const CategoryTable = ({
                     <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
                       {category.description || "-"}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <Badge
+                      variant={
+                        category.status === "ACTIVE" ? "default" : "secondary"
+                      }
+                      className={
+                        category.status === "ACTIVE"
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                          : "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                      }
+                    >
+                      {category.status === "ACTIVE" ? "Hoạt động" : "Ẩn"}
+                    </Badge>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant="secondary">

@@ -2,6 +2,7 @@ package iuh.fit.se.backend.service;
 
 import iuh.fit.se.backend.dto.request.PostCategoryRequest;
 import iuh.fit.se.backend.entity.PostCategory;
+import iuh.fit.se.backend.entity.enums.PostCategoryStatus;
 import iuh.fit.se.backend.repository.PostCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -67,18 +68,24 @@ public class PostCategoryService {
     @Transactional
     public PostCategory updateCategory(Long id, PostCategoryRequest request) {
         PostCategory category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElse(null);
 
         category.setName(request.getName());
         category.setDescription(request.getDescription());
         category.setDisplayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0);
+        if (request.getStatus() != null) {
+            category.setStatus(PostCategoryStatus.valueOf(request.getStatus()));
+        }
 
         return categoryRepository.save(category);
     }
 
     @Transactional
     public void deleteCategory(Long id) {
-        categoryRepository.deleteById(id);
+        PostCategory category = categoryRepository.findById(id)
+            .orElse(null);
+        category.setStatus(PostCategoryStatus.INACTIVE);
+        categoryRepository.save(category);
     }
 
     public PostCategory getCategoryById(Long id) {
