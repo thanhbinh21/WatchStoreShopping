@@ -61,8 +61,14 @@ export const CategoryDetailPanel = ({ categoryDetail, onClose }) => {
                 Trạng thái
               </p>
               <Badge
-                variant={categoryDetail.status === "ACTIVE" ? "default" : "secondary"}
-                className={categoryDetail.status === "ACTIVE" ? "bg-green-600" : "bg-gray-500"}
+                variant={
+                  categoryDetail.status === "ACTIVE" ? "default" : "secondary"
+                }
+                className={
+                  categoryDetail.status === "ACTIVE"
+                    ? "bg-green-600"
+                    : "bg-gray-500"
+                }
               >
                 {categoryDetail.status === "ACTIVE" ? "Hoạt động" : "Ẩn"}
               </Badge>

@@ -50,7 +50,9 @@ export const AdminCategories = () => {
 
   // Filter categories based on search and status
   const filteredCategories = categories.filter((category) => {
-    const matchesSearch = category.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = category.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
     const matchesStatus = !statusFilter || category.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -220,7 +222,7 @@ export const AdminCategories = () => {
             className="pl-10"
           />
         </div>
-        
+
         {/* Status Filter */}
         <div className="min-w-[180px]">
           <select

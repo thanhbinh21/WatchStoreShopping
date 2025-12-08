@@ -377,14 +377,14 @@ export const AdminProduct = () => {
 
   const confirmDelete = async () => {
     try {
-      // Xóa mềm: chỉ đổi status sang INACTIVE, không xóa ảnh
+      // Xóa mềm: đổi status sang DISCONTINUED (ngừng bán vĩnh viễn), không xóa ảnh
       await deleteProduct(selectedProduct.id);
-      toast.success("Đã ẩn sản phẩm thành công");
+      toast.success("Đã ngừng bán sản phẩm");
       setIsDeleteOpen(false);
       fetchProducts();
     } catch (err) {
-      console.error("Lỗi khi ẩn sản phẩm:", err);
-      toast.error("Không thể ẩn sản phẩm");
+      console.error("Lỗi khi ngừng bán sản phẩm:", err);
+      toast.error("Không thể ngừng bán sản phẩm");
     }
   };
 

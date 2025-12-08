@@ -44,7 +44,7 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
             .orElse(null);
-        product.setStatus(ProductStatus.INACTIVE);
+        product.setStatus(ProductStatus.DISCONTINUED);
         productRepository.save(product);
     }
 
