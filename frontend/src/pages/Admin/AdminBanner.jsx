@@ -224,18 +224,22 @@ export const AdminBanner = () => {
       {/* Search and Filter */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="relative flex-1 max-w-md">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Tìm kiếm banner..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <label className="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+          <div className="relative flex-1 max-w-md">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm banner..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </div>
 
         {/* Status Filter */}
         <div className="min-w-[180px]">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}

@@ -106,8 +106,27 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                         ? "default"
                         : "secondary"
                     }
+                    className={
+                      productDetail.status === "ACTIVE"
+                        ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                        : productDetail.status === "INACTIVE"
+                        ? "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400"
+                        : productDetail.status === "DISCONTINUED"
+                        ? "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"
+                        : productDetail.status === "OUT_OF_STOCK"
+                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                        : ""
+                    }
                   >
-                    {productDetail.status}
+                    {productDetail.status === "ACTIVE"
+                      ? "Hoạt động"
+                      : productDetail.status === "INACTIVE"
+                      ? "Tạm ngưng"
+                      : productDetail.status === "DISCONTINUED"
+                      ? "Ngừng bán"
+                      : productDetail.status === "OUT_OF_STOCK"
+                      ? "Hết hàng"
+                      : "Không xác định"}
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between">
@@ -222,7 +241,10 @@ export const ProductDetailPanel = ({ productDetail, onClose }) => {
                             {price.price.toLocaleString("vi-VN")} ₫
                           </span>
                           {price.isCurrent && (
-                            <Badge variant="default" className="text-xs">
+                            <Badge
+                              variant="default"
+                              className="text-xs bg-brand-primary text-white"
+                            >
                               Hiện tại
                             </Badge>
                           )}
