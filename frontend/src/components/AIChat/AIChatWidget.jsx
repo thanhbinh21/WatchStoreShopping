@@ -77,6 +77,16 @@ export default function AIChatWidget() {
   const hideForAdmin =
     userRole === "ADMIN" || userRole === "STAFF" || userRole === "MANAGER";
 
+  // Hide on auth pages (login, register, reset password)
+  const currentPath = window.location.pathname;
+  const isAuthPage =
+    currentPath === "/login" ||
+    currentPath === "/register" ||
+    currentPath.startsWith("/reset-password") ||
+    currentPath === "/change-password";
+
+  const shouldHide = hideForAdmin || isAuthPage;
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (ENV_OPENAI_KEY && !localStorage.getItem("openai_api_key")) {
@@ -343,7 +353,7 @@ export default function AIChatWidget() {
     }
   };
 
-  if (hideForAdmin) return null;
+  if (shouldHide) return null;
 
   return (
     <>
