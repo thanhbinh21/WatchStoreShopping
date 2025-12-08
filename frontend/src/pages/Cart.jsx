@@ -47,6 +47,11 @@ export default function Cart() {
           );
         }
         setCartItems(items);
+
+        // Cập nhật selectedItems nếu selectAll đang được check
+        if (selectAll) {
+          setSelectedItems(items.map((item) => item.id));
+        }
         return;
       } catch (err) {
         console.error("Lỗi load giỏ hàng:", err);
@@ -69,6 +74,11 @@ export default function Cart() {
       );
     }
     setCartItems(guestCart);
+
+    // Cập nhật selectedItems nếu selectAll đang được check
+    if (selectAll) {
+      setSelectedItems(guestCart.map((item) => item.id));
+    }
   };
 
   const loadPromotionsData = async () => {
@@ -185,11 +195,24 @@ export default function Cart() {
     return Math.round(maxDiscount);
   };
 
+  // Đồng bộ selectAll state với selectedItems
+  useEffect(() => {
+    if (cartItems.length === 0) {
+      setSelectAll(false);
+    } else if (selectedItems.length === cartItems.length) {
+      setSelectAll(true);
+    } else {
+      setSelectAll(false);
+    }
+  }, [selectedItems, cartItems]);
+
   // Các hàm xử lý khác giữ nguyên
   const handleSelectAll = () => {
-    if (selectAll) setSelectedItems([]);
-    else setSelectedItems(cartItems.map((item) => item.id));
-    setSelectAll(!selectAll);
+    if (selectAll) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map((item) => item.id));
+    }
   };
 
   const handleSelectItem = (id) => {
@@ -426,7 +449,10 @@ export default function Cart() {
 
                   {/* Hiển thị khuyến mãi như hình - CHỈ HIỆN KHI CÓ KHUYẾN MÃI */}
                   {hasPromotion && (
-                    <div className="mt-2 text-sm bg-green-50 border border-green-200 p-3 rounded-lg">
+                    <div
+                      className="mt-2 text-sm bg-green-50 border border-green-200 p-3 rounded-lg cursor-pointer"
+                      onClick={() => navigate("/promotional-products")}
+                    >
                       <p className="font-semibold text-green-800 mb-1 flex items-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

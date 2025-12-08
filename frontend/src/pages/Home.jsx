@@ -157,6 +157,7 @@ export const Home = () => {
               sortBy={sortBy}
               order={order}
               pageSize={8}
+              status="ACTIVE"
               title={
                 selectedCategory ? selectedCategory.name : "Sản Phẩm Mới Nhất"
               }

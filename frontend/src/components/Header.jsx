@@ -143,10 +143,20 @@ export default function Header() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const data = await getCategories();
-        setCategories(
-          Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
+        // Fetch categories
+        const categoriesData = await getCategories();
+        const categoriesArray = Array.isArray(categoriesData)
+          ? categoriesData
+          : Array.isArray(categoriesData.data)
+          ? categoriesData.data
+          : [];
+        // Chỉ lấy categories có status ACTIVE
+        const activeCategories = categoriesArray.filter(
+          (cat) => cat.status === "ACTIVE"
         );
+        setCategories(activeCategories);
+
+        // Fetch brands
         const brandsData = await getBrands();
         setBrands(
           Array.isArray(brandsData)
@@ -173,25 +183,39 @@ export default function Header() {
   useEffect(() => {
     if (!userState?.id || !token) return;
     const handleNewNotification = (notification) => {
+      console.log("📬 New notification received via WebSocket:", notification);
+
+      // Add new notification to the list
       setNotifications((prev) => [notification, ...prev]);
       setUnreadNotifications((prev) => prev + 1);
+
+      // Trigger animation
       setNotificationAnimation(true);
       setTimeout(() => setNotificationAnimation(false), 600);
+
+      // Show toast notification
       toast.success(notification.title, {
         description: notification.message,
         duration: 5000,
       });
+
+      // Play notification sound (optional)
       try {
         const audio = new Audio("/notification.mp3");
         audio.volume = 0.3;
         audio.play().catch(() => {});
       } catch (error) {}
     };
+
     const ws = connectNotificationWebSocket(
       userState.id,
       handleNewNotification
     );
-    return () => disconnectNotificationWebSocket();
+
+    return () => {
+      console.log("🔌 Cleaning up WebSocket connection");
+      disconnectNotificationWebSocket();
+    };
   }, [userState?.id, token]);
 
   useEffect(() => {

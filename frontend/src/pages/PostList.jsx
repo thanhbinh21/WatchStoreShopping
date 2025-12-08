@@ -11,6 +11,7 @@ import { AdminPagination } from "@/components/Pagination";
 import { toast } from "sonner";
 
 export default function PostList() {
+  f;
   const { categorySlug, postSlug } = useParams();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);
@@ -123,7 +124,12 @@ export default function PostList() {
   const loadCategories = async () => {
     try {
       const response = await postCategoryAPI.getAll();
-      setCategories(Array.isArray(response) ? response : []);
+      const categoriesArray = Array.isArray(response) ? response : [];
+      // Chỉ lấy categories có status ACTIVE
+      const activeCategories = categoriesArray.filter(
+        (cat) => cat.status === "ACTIVE"
+      );
+      setCategories(activeCategories);
     } catch (error) {
       console.error("Error loading categories:", error);
     }

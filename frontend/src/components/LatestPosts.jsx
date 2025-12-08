@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { postAPI, postCategoryAPI } from "../api/cmsAPI";
 import { Calendar, Eye } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function LatestPosts() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadPosts();
@@ -149,9 +150,10 @@ export default function LatestPosts() {
         <div className="text-center mt-10 md:mt-12">
           <Link
             to="/posts"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="w-full sm:w-auto inline-block px-8 py-3 bg-white text-brand-primary border border-brand-primary font-semibold rounded-lg hover:bg-brand-primary hover:text-white transition-all duration-300 shadow-sm active:scale-95"
           >
-            Xem Tất Cả Bài Viết
+            Xem tất cả bài viết
           </Link>
         </div>
       </div>

@@ -13,6 +13,7 @@ export default function ProductList({
   title = "Sản Phẩm",
   description = "Khám phá bộ sưu tập đồng hồ cao cấp",
   onAddToCart,
+  status = "",
 }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,10 +22,10 @@ export default function ProductList({
   const [totalElements, setTotalElements] = useState(0);
   const listRef = useRef(null);
 
-  // Reset to page 0 when filters change
+  // Reset to page 0 when category, brand, sortBy, or order changes
   useEffect(() => {
     setCurrentPage(0);
-  }, [category, brand, sortBy, order]);
+  }, [category, brand, sortBy, order, status]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -42,6 +43,10 @@ export default function ProductList({
 
       if (brand?.name) {
         params.brand = brand.name;
+      }
+
+      if (status) {
+        params.status = status;
       }
 
       const response = await getProducts(params);
@@ -67,7 +72,7 @@ export default function ProductList({
     } finally {
       setLoading(false);
     }
-  }, [currentPage, category, brand, sortBy, order, pageSize]);
+  }, [currentPage, category, brand, sortBy, order, pageSize, status]);
 
   useEffect(() => {
     fetchProducts();

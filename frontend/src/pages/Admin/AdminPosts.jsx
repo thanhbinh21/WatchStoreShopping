@@ -124,7 +124,12 @@ export const AdminPosts = () => {
   const loadCategories = async () => {
     try {
       const response = await adminPostCategoryAPI.getAll();
-      setCategories(Array.isArray(response) ? response : []);
+      const categoriesArray = Array.isArray(response) ? response : [];
+      // Chỉ lấy categories có status ACTIVE
+      const activeCategories = categoriesArray.filter(
+        (cat) => cat.status === "ACTIVE"
+      );
+      setCategories(activeCategories);
     } catch (error) {
       console.error("Error loading categories:", error);
       setCategories([]);
