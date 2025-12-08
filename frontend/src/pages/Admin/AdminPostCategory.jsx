@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { adminPostCategoryAPI } from "../../api/cmsAPI";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { PencilIcon, TrashIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { PencilIcon, TrashIcon, SearchIcon } from "lucide-react";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { AdminPagination } from "@/components/Pagination";
 import {
@@ -15,6 +16,8 @@ import {
 
 export const AdminPostCategory = () => {
   const [categories, setCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [deletingCategory, setDeletingCategory] = useState(null);
@@ -26,6 +29,7 @@ export const AdminPostCategory = () => {
     slug: "",
     description: "",
     displayOrder: 0,
+    status: "ACTIVE",
   });
 
   useEffect(() => {
@@ -62,13 +66,20 @@ export const AdminPostCategory = () => {
       slug: cat.slug,
       description: cat.description || "",
       displayOrder: cat.displayOrder || 0,
+      status: cat.status || "ACTIVE",
     });
     setShowForm(true);
   };
 
   const handleNew = () => {
     setEditingId(null);
-    setForm({ name: "", slug: "", description: "", displayOrder: 0 });
+    setForm({
+      name: "",
+      slug: "",
+      description: "",
+      displayOrder: 0,
+      status: "ACTIVE",
+    });
     setShowForm(true);
   };
 
@@ -100,20 +111,34 @@ export const AdminPostCategory = () => {
 
     try {
       await adminPostCategoryAPI.delete(deletingCategory.id);
-      toast.success("Xóa danh mục thành công");
+      toast.success("Đã ẩn danh mục thành công");
       setIsDeleteOpen(false);
       setDeletingCategory(null);
       loadCategories();
     } catch (error) {
-      toast.error("Lỗi xóa danh mục");
+      toast.error("Không thể ẩn danh mục");
       console.error(error);
     }
   };
 
+  // Filter categories based on search and status
+  const filteredCategories = categories.filter((cat) => {
+    const matchesSearch = cat.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || cat.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
   // Pagination logic
-  const totalPages = Math.ceil(categories.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedCategories = categories.slice(
+  const paginatedCategories = filteredCategories.slice(
     startIndex,
     startIndex + itemsPerPage
   );
@@ -128,6 +153,37 @@ export const AdminPostCategory = () => {
         >
           + Tạo danh mục
         </button>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-md">
+          <label className="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+          <div className="relative flex-1 max-w-md">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Status Filter */}
+        <div className="min-w-[180px]">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="INACTIVE">Ẩn</option>
+          </select>
+        </div>
       </div>
 
       {/* Modal Form */}
@@ -194,6 +250,22 @@ export const AdminPostCategory = () => {
                 }
               />
             </div>
+            {editingId && (
+              <div>
+                <label className="block mb-1 text-sm font-medium">
+                  Trạng thái <span className="text-red-500">*</span>
+                </label>
+                <select
+                  className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={form.status}
+                  onChange={(e) => setForm({ ...form, status: e.target.value })}
+                  required
+                >
+                  <option value="ACTIVE">Hoạt động</option>
+                  <option value="INACTIVE">Ẩn</option>
+                </select>
+              </div>
+            )}
             <div className="flex gap-2 justify-end pt-4 border-t">
               <button
                 type="button"
@@ -224,6 +296,9 @@ export const AdminPostCategory = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   Slug
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  Trạng thái
+                </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-32">
                   Thứ tự
                 </th>
@@ -236,7 +311,7 @@ export const AdminPostCategory = () => {
               {paginatedCategories.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className="px-6 py-8 text-center text-gray-500 dark:text-gray-400"
                   >
                     Không có danh mục nào
@@ -261,6 +336,17 @@ export const AdminPostCategory = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-sm text-gray-500 dark:text-gray-400 font-mono">
                         {cat.slug}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          cat.status === "ACTIVE"
+                            ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                        }`}
+                      >
+                        {cat.status === "ACTIVE" ? "Hoạt động" : "Ẩn"}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">

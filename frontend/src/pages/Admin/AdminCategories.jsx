@@ -19,6 +19,7 @@ import { AdminPagination } from "@/components/Pagination";
 export const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -47,10 +48,14 @@ export const AdminCategories = () => {
     fetchCategories();
   }, [fetchCategories]);
 
-  // Filter categories based on search
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter categories based on search and status
+  const filteredCategories = categories.filter((category) => {
+    const matchesSearch = category.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+    const matchesStatus = !statusFilter || category.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   // Pagination logic
   const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
@@ -60,10 +65,10 @@ export const AdminCategories = () => {
     startIndex + itemsPerPage
   );
 
-  // Reset to page 1 when search changes
+  // Reset to page 1 when search or filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm]);
+  }, [searchTerm, statusFilter]);
 
   const fetchCategoryDetail = useCallback(async (categoryId) => {
     try {
@@ -92,6 +97,7 @@ export const AdminCategories = () => {
       setFormData({
         name: fullCategory.name,
         description: fullCategory.description || "",
+        status: fullCategory.status || "ACTIVE",
       });
       setIsEditOpen(true);
     } catch (err) {
@@ -168,7 +174,7 @@ export const AdminCategories = () => {
   const confirmDelete = async () => {
     try {
       await deleteCategory(selectedCategory.id);
-      toast.success("Xóa danh mục thành công");
+      toast.success("Đã ẩn danh mục thành công");
       setIsDeleteOpen(false);
 
       // Close detail panel if showing deleted category
@@ -178,8 +184,8 @@ export const AdminCategories = () => {
 
       fetchCategories();
     } catch (err) {
-      console.error("Lỗi khi xóa danh mục:", err);
-      toast.error("Không thể xóa danh mục. Có thể danh mục đang có sản phẩm.");
+      console.error("Lỗi khi ẩn danh mục:", err);
+      toast.error("Không thể ẩn danh mục.");
     }
   };
 
@@ -204,17 +210,34 @@ export const AdminCategories = () => {
         </Button>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-2">
+      {/* Search Bar and Filters */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <div className="relative flex-1 max-w-md">
-          <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
-          <Input
-            type="text"
-            placeholder="Tìm kiếm danh mục..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+          <label className="block text-xs text-gray-500 mb-1">Tìm kiếm</label>
+          <div className="relative flex-1 max-w-md">
+            <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Tìm kiếm danh mục..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </div>
+
+        {/* Status Filter */}
+        <div className="min-w-[180px]">
+          <label className="block text-xs text-gray-500 mb-1">Trạng thái</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="INACTIVE">Ẩn</option>
+          </select>
         </div>
       </div>
 
@@ -269,7 +292,7 @@ export const AdminCategories = () => {
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
-        onClose={setIsDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
         itemName={selectedCategory?.name}
         onConfirm={confirmDelete}
         title="Xác nhận xóa danh mục"
