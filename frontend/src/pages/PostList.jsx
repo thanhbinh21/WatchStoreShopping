@@ -11,7 +11,6 @@ import { AdminPagination } from "@/components/Pagination";
 import { toast } from "sonner";
 
 export default function PostList() {
-  f;
   const { categorySlug, postSlug } = useParams();
   const navigate = useNavigate();
   const [posts, setPosts] = useState([]);

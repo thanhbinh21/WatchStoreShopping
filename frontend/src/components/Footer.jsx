@@ -7,6 +7,9 @@ import {
   Instagram,
   MessageCircle,
   Send,
+  MapPin,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -109,7 +112,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h3 className="font-bold text-gray-900 mb-4 text-base uppercase tracking-wide">
+            {/* <h3 className="font-bold text-gray-900 mb-4 text-base uppercase tracking-wide">
               Liên hệ
             </h3>
             <div className="space-y-3">
@@ -141,7 +144,7 @@ export default function Footer() {
                   </a>
                 </div>
               )}
-            </div>
+            </div> */}
             <h3 className="font-semibold mb-4">Liên hệ</h3>
             {settings.address && (
               <p className="text-sm mb-3 flex items-center gap-2">
