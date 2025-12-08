@@ -47,6 +47,11 @@ public class FileUploadController {
         return uploadImages(files, "settings/social-media");
     }
 
+    @PostMapping("/brand-logos")
+    public ResponseEntity<?> uploadBrandLogos(@RequestParam("files") MultipartFile[] files) {
+        return uploadImages(files, "brands");
+    }
+
     @PostMapping("/avatar")
     public ResponseEntity<?> uploadAvatar(@RequestParam("file") MultipartFile file) {
         try {
@@ -142,6 +147,11 @@ public class FileUploadController {
 
     @DeleteMapping("/social-media")
     public ResponseEntity<?> deleteSocialMediaImage(@RequestBody Map<String, String> request) {
+        return deleteImage(request.get("url"));
+    }
+
+    @DeleteMapping("/brand-logos")
+    public ResponseEntity<?> deleteBrandLogo(@RequestBody Map<String, String> request) {
         return deleteImage(request.get("url"));
     }
 

@@ -33,8 +33,18 @@ public class BrandController {
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public Brand updateBrand(@PathVariable Long id, @RequestBody Brand brand) {
-        brand.setId(id);
-        return brandService.saveBrand(brand);
+        Brand existingBrand = brandService.getBrandById(id);
+        if (existingBrand == null) {
+            throw new RuntimeException("Brand not found with id: " + id);
+        }
+        
+        // Update only non-null fields
+        if (brand.getName() != null) existingBrand.setName(brand.getName());
+        if (brand.getDescription() != null) existingBrand.setDescription(brand.getDescription());
+        if (brand.getLogoUrl() != null) existingBrand.setLogoUrl(brand.getLogoUrl());
+        if (brand.getStatus() != null) existingBrand.setStatus(brand.getStatus());
+        
+        return brandService.saveBrand(existingBrand);
     }
 
     @PreAuthorize("hasRole('ADMIN')")
