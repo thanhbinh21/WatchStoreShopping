@@ -14,6 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 export const User = () => {
   const [loading, setLoading] = useState(true);
@@ -692,16 +701,53 @@ export const User = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
+                  <div className="flex flex-col">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       Ngày sinh
                     </label>
-                    <Input
-                      name="dateOfBirth"
-                      type="date"
-                      value={profile.dateOfBirth || ""}
-                      onChange={handleChange}
-                    />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !profile.dateOfBirth && "text-muted-foreground"
+                          )}
+                        >
+                          {profile.dateOfBirth ? (
+                            format(new Date(profile.dateOfBirth), "dd/MM/yyyy")
+                          ) : (
+                            <span>Chọn ngày sinh</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={
+                            profile.dateOfBirth
+                              ? new Date(profile.dateOfBirth)
+                              : undefined
+                          }
+                          onSelect={(date) => {
+                            // Cập nhật state khi chọn ngày
+                            // Format về yyyy-MM-dd để đồng bộ với Database
+                            setProfile((prev) => ({
+                              ...prev,
+                              dateOfBirth: date
+                                ? format(date, "yyyy-MM-dd")
+                                : "",
+                            }));
+                          }}
+                          disabled={(date) =>
+                            date > new Date() || date < new Date("1900-01-01")
+                          }
+                          initialFocus
+                          captionLayout="dropdown"
+                        />
+                      </PopoverContent>
+                    </Popover>
                   </div>
 
                   <div className="flex items-center justify-end pt-4">
