@@ -227,12 +227,12 @@ export default function SaleBanner({ onAddToCart }) {
               </div>
 
               {/* Modified Product Card */}
-              <div className="bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col">
+              <div
+                className="cursor-pointer bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full flex flex-col"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
                 {/* Image Container */}
-                <div
-                  className="relative w-full h-56 lg:h-64 overflow-hidden bg-gray-100 cursor-pointer"
-                  onClick={() => navigate(`/product/${product.id}`)}
-                >
+                <div className="relative w-full h-56 lg:h-64 overflow-hidden bg-gray-100 cursor-pointer">
                   <img
                     src={getImageUrl(
                       product.imageUrl || product.primaryImageUrl

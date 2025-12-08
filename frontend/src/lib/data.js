@@ -73,9 +73,9 @@
 
 export const sideBars = [
   { name: "Dashboard", icon: "la-tachometer-alt", path: "/admin/dashboard" },
-  { name: "Products", icon: "la-th-large", path: "/admin/products" },
-  { name: "Product Categories", icon: "la-tags", path: "/admin/categories" },
   { name: "Banners", icon: "la-image", path: "/admin/banners" },
+  { name: "Product Categories", icon: "la-tags", path: "/admin/categories" },
+  { name: "Products", icon: "la-th-large", path: "/admin/products" },
   {
     name: "Post Categories",
     icon: "la-folder",
