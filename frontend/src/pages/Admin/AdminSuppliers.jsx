@@ -1,81 +1,78 @@
 import {
-  getBrands,
-  getBrandById,
-  createBrand,
-  updateBrand,
-  deleteBrand,
-} from "@/api/brandAPI";
+  getSuppliers,
+  getSupplierById,
+  createSupplier,
+  updateSupplier,
+  deleteSupplier,
+} from "@/api/supplierAPI";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { BrandTable } from "@/components/Admin/brands/BrandTable";
-import { BrandDetailPanel } from "@/components/Admin/brands/BrandDetailPanel";
-import { BrandFormDialog } from "@/components/Admin/brands/BrandFormDialog";
+import { SupplierTable } from "@/components/Admin/suppliers/SupplierTable";
+import { SupplierDetailPanel } from "@/components/Admin/suppliers/SupplierDetailPanel";
+import { SupplierFormDialog } from "@/components/Admin/suppliers/SupplierFormDialog";
 import { DeleteConfirmDialog } from "@/components/Admin/DeleteConfirmDialog";
 import { useEffect, useState, useCallback } from "react";
 import { toast } from "sonner";
 import { PlusIcon, SearchIcon } from "lucide-react";
 import { AdminPagination } from "@/components/Pagination";
 
-export const AdminBrands = () => {
-  const [brands, setBrands] = useState([]);
+export const AdminSuppliers = () => {
+  const [suppliers, setSuppliers] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ACTIVE");
-  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-  const [brandDetail, setBrandDetail] = useState(null);
+  const [supplierDetail, setSupplierDetail] = useState(null);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
-    logoUrl: "",
+    contact: "",
+    address: "",
     status: "ACTIVE",
   });
 
-  const fetchBrands = useCallback(async () => {
+  const fetchSuppliers = useCallback(async () => {
     try {
-      const res = await getBrands();
-      console.log("Raw API response:", res);
+      const res = await getSuppliers();
       // Sort by ID descending (mới nhất lên đầu)
-      const sortedBrands = (res || []).sort((a, b) => b.id - a.id);
-      console.log(
-        "Brands with status:",
-        sortedBrands.map((b) => ({ id: b.id, name: b.name, status: b.status }))
-      );
-      setBrands(sortedBrands);
+      const sortedSuppliers = (res || []).sort((a, b) => b.id - a.id);
+      setSuppliers(sortedSuppliers);
     } catch (err) {
-      console.error("Lỗi khi lấy thương hiệu:", err);
-      toast.error("Không thể tải danh sách thương hiệu");
+      console.error("Lỗi khi lấy nhà cung cấp:", err);
+      toast.error("Không thể tải danh sách nhà cung cấp");
     }
   }, []);
 
   useEffect(() => {
-    fetchBrands();
-  }, [fetchBrands]);
+    fetchSuppliers();
+  }, [fetchSuppliers]);
 
-  // Filter brands based on search and status
-  const filteredBrands = brands.filter((brand) => {
-    const matchesSearch = brand.name
+  // Filter suppliers based on search and status
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const matchesSearch = supplier.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-
+    
     if (!statusFilter) {
       // Show all when no filter
       return matchesSearch;
     }
-
-    const brandStatus = brand.status || "ACTIVE";
-    const matchesStatus = brandStatus === statusFilter;
-
+    
+    // When filtering by ACTIVE: show ACTIVE or null (backward compatibility)
+    // When filtering by INACTIVE: only show INACTIVE
+    const supplierStatus = supplier.status || "ACTIVE"; // Treat null as ACTIVE for backward compatibility
+    const matchesStatus = supplierStatus === statusFilter;
+    
     return matchesSearch && matchesStatus;
   });
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredBrands.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredSuppliers.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedBrands = filteredBrands.slice(
+  const paginatedSuppliers = filteredSuppliers.slice(
     startIndex,
     startIndex + itemsPerPage
   );
@@ -85,53 +82,53 @@ export const AdminBrands = () => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  const fetchBrandDetail = useCallback(async (brandId) => {
+  const fetchSupplierDetail = useCallback(async (supplierId) => {
     try {
-      const res = await getBrandById(brandId);
-      setBrandDetail(res);
-      setSelectedBrand(res);
+      const res = await getSupplierById(supplierId);
+      setSupplierDetail(res);
+      setSelectedSupplier(res);
     } catch (err) {
-      console.error("Lỗi khi lấy chi tiết thương hiệu:", err);
-      toast.error("Không thể tải chi tiết thương hiệu");
+      console.error("Lỗi khi lấy chi tiết nhà cung cấp:", err);
+      toast.error("Không thể tải chi tiết nhà cung cấp");
     }
   }, []);
 
-  const handleRowClick = (brand) => {
-    fetchBrandDetail(brand.id);
+  const handleRowClick = (supplier) => {
+    fetchSupplierDetail(supplier.id);
   };
 
   const handleCloseDetail = () => {
-    setBrandDetail(null);
-    setSelectedBrand(null);
+    setSupplierDetail(null);
+    setSelectedSupplier(null);
   };
 
-  const handleEdit = async (brand) => {
+  const handleEdit = async (supplier) => {
     try {
-      const fullBrand = await getBrandById(brand.id);
-      setSelectedBrand(fullBrand);
+      const fullSupplier = await getSupplierById(supplier.id);
+      setSelectedSupplier(fullSupplier);
       setFormData({
-        name: fullBrand.name,
-        description: fullBrand.description || "",
-        logoUrl: fullBrand.logoUrl || "",
-        status: fullBrand.status || "ACTIVE",
+        name: fullSupplier.name,
+        contact: fullSupplier.contact || "",
+        address: fullSupplier.address || "",
+        status: fullSupplier.status || "ACTIVE",
       });
       setIsEditOpen(true);
     } catch (err) {
-      console.error("Lỗi khi lấy thông tin thương hiệu:", err);
-      toast.error("Không thể tải thông tin thương hiệu");
+      console.error("Lỗi khi lấy thông tin nhà cung cấp:", err);
+      toast.error("Không thể tải thông tin nhà cung cấp");
     }
   };
 
-  const handleDelete = (brand) => {
-    setSelectedBrand(brand);
+  const handleDelete = (supplier) => {
+    setSelectedSupplier(supplier);
     setIsDeleteOpen(true);
   };
 
   const handleAddNew = () => {
     setFormData({
       name: "",
-      description: "",
-      logoUrl: "",
+      contact: "",
+      address: "",
     });
     setIsAddOpen(true);
   };
@@ -144,30 +141,21 @@ export const AdminBrands = () => {
     }));
   };
 
-  const handleSubmitAdd = async (e, uploadedLogoUrl = null) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
+  const handleSubmitAdd = async (e) => {
+    e.preventDefault();
     try {
-      const dataToSubmit = uploadedLogoUrl
-        ? { ...formData, logoUrl: uploadedLogoUrl }
-        : formData;
-      console.log("Form data before create:", dataToSubmit);
-      const result = await createBrand(dataToSubmit);
-      console.log("Create brand result:", result);
-      toast.success("Thêm thương hiệu thành công");
+      await createSupplier(formData);
+      toast.success("Thêm nhà cung cấp thành công");
       setIsAddOpen(false);
-      fetchBrands();
+      fetchSuppliers();
     } catch (err) {
-      console.error("Lỗi khi thêm thương hiệu:", err);
+      console.error("Lỗi khi thêm nhà cung cấp:", err);
       const errorMsg =
-        err.response?.data?.message ||
-        err.message ||
-        "Không thể thêm thương hiệu";
+        err.response?.data?.message || err.message || "Không thể thêm nhà cung cấp";
 
       if (err.response?.status === 403) {
         toast.error(
-          "Bạn không có quyền thêm thương hiệu. Vui lòng đăng nhập với tài khoản ADMIN."
+          "Bạn không có quyền thêm nhà cung cấp. Vui lòng đăng nhập với tài khoản ADMIN."
         );
       } else {
         toast.error(errorMsg);
@@ -175,50 +163,43 @@ export const AdminBrands = () => {
     }
   };
 
-  const handleSubmitEdit = async (e, uploadedLogoUrl = null) => {
-    if (e && e.preventDefault) {
-      e.preventDefault();
-    }
+  const handleSubmitEdit = async (e) => {
+    e.preventDefault();
     try {
-      const dataToSubmit = uploadedLogoUrl
-        ? { ...formData, logoUrl: uploadedLogoUrl }
-        : formData;
-      console.log("Form data before update:", dataToSubmit);
-      const result = await updateBrand(selectedBrand.id, dataToSubmit);
-      console.log("Update brand result:", result);
-      toast.success("Cập nhật thương hiệu thành công");
+      await updateSupplier(selectedSupplier.id, formData);
+      toast.success("Cập nhật nhà cung cấp thành công");
       setIsEditOpen(false);
-      fetchBrands();
+      fetchSuppliers();
 
       // Update detail panel if open
-      if (brandDetail?.id === selectedBrand.id) {
-        fetchBrandDetail(selectedBrand.id);
+      if (supplierDetail?.id === selectedSupplier.id) {
+        fetchSupplierDetail(selectedSupplier.id);
       }
     } catch (err) {
-      console.error("Lỗi khi cập nhật thương hiệu:", err);
+      console.error("Lỗi khi cập nhật nhà cung cấp:", err);
       const errorMsg =
         err.response?.data?.message ||
         err.message ||
-        "Không thể cập nhật thương hiệu";
+        "Không thể cập nhật nhà cung cấp";
       toast.error(errorMsg);
     }
   };
 
   const confirmDelete = async () => {
     try {
-      await updateBrand(selectedBrand.id, { status: "INACTIVE" });
-      toast.success("Đã ẩn thương hiệu thành công");
+      await updateSupplier(selectedSupplier.id, { status: "INACTIVE" });
+      toast.success("Đã ẩn nhà cung cấp thành công");
       setIsDeleteOpen(false);
 
-      // Close detail panel if showing deleted brand
-      if (brandDetail?.id === selectedBrand.id) {
+      // Close detail panel if showing deleted supplier
+      if (supplierDetail?.id === selectedSupplier.id) {
         handleCloseDetail();
       }
 
-      fetchBrands();
+      fetchSuppliers();
     } catch (err) {
-      console.error("Lỗi khi ẩn thương hiệu:", err);
-      toast.error("Không thể ẩn thương hiệu.");
+      console.error("Lỗi khi ẩn nhà cung cấp:", err);
+      toast.error("Không thể ẩn nhà cung cấp.");
     }
   };
 
@@ -228,10 +209,10 @@ export const AdminBrands = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Quản lý Thương hiệu
+            Quản lý Nhà cung cấp
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            Quản lý thương hiệu sản phẩm trong cửa hàng
+            Quản lý nhà cung cấp sản phẩm trong cửa hàng
           </p>
         </div>
         <Button
@@ -239,7 +220,7 @@ export const AdminBrands = () => {
           className="cursor-pointer bg-brand-primary text-brand-primary-foreground px-4 py-2 rounded hover:bg-brand-primary-soft"
         >
           <PlusIcon className="size-4" />
-          Thêm thương hiệu
+          Thêm nhà cung cấp
         </Button>
       </div>
 
@@ -251,7 +232,7 @@ export const AdminBrands = () => {
             <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400" />
             <Input
               type="text"
-              placeholder="Tìm kiếm thương hiệu..."
+              placeholder="Tìm kiếm nhà cung cấp..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -274,11 +255,11 @@ export const AdminBrands = () => {
         </div>
       </div>
 
-      {/* Brand Table */}
+      {/* Supplier Table */}
       <div>
-        <BrandTable
-          brands={paginatedBrands}
-          selectedBrand={selectedBrand}
+        <SupplierTable
+          suppliers={paginatedSuppliers}
+          selectedSupplier={selectedSupplier}
           onRowClick={handleRowClick}
           onEdit={handleEdit}
           onDelete={handleDelete}
@@ -296,11 +277,14 @@ export const AdminBrands = () => {
         )}
       </div>
 
-      {/* Brand Detail Modal */}
-      <BrandDetailPanel brandDetail={brandDetail} onClose={handleCloseDetail} />
+      {/* Supplier Detail Modal */}
+      <SupplierDetailPanel
+        supplierDetail={supplierDetail}
+        onClose={handleCloseDetail}
+      />
 
       {/* Add Dialog */}
-      <BrandFormDialog
+      <SupplierFormDialog
         isOpen={isAddOpen}
         onClose={setIsAddOpen}
         mode="add"
@@ -310,7 +294,7 @@ export const AdminBrands = () => {
       />
 
       {/* Edit Dialog */}
-      <BrandFormDialog
+      <SupplierFormDialog
         isOpen={isEditOpen}
         onClose={setIsEditOpen}
         mode="edit"
@@ -323,12 +307,12 @@ export const AdminBrands = () => {
       <DeleteConfirmDialog
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
-        itemName={selectedBrand?.name}
+        itemName={selectedSupplier?.name}
         onConfirm={confirmDelete}
-        title="Xác nhận xóa thương hiệu"
+        title="Xác nhận xóa nhà cung cấp"
         description={
-          selectedBrand?.name
-            ? `Bạn có chắc chắn muốn xóa thương hiệu "${selectedBrand.name}"? Hành động này không thể hoàn tác và có thể ảnh hưởng đến các sản phẩm thuộc thương hiệu này.`
+          selectedSupplier?.name
+            ? `Bạn có chắc chắn muốn xóa nhà cung cấp "${selectedSupplier.name}"? Hành động này không thể hoàn tác và có thể ảnh hưởng đến các sản phẩm từ nhà cung cấp này.`
             : undefined
         }
       />
