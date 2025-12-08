@@ -3,6 +3,7 @@ package iuh.fit.se.backend.controller;
 import iuh.fit.se.backend.dto.request.CategoryRequest;
 import iuh.fit.se.backend.dto.response.CategoryResponse;
 import iuh.fit.se.backend.entity.Category;
+import iuh.fit.se.backend.entity.enums.CategoryStatus;
 import iuh.fit.se.backend.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +42,9 @@ public class CategoryController {
         Category category = categoryService.getCategoryById(id);
         category.setName(request.getName());
         category.setDescription(request.getDescription());
+        if (request.getStatus() != null) {
+            category.setStatus(CategoryStatus.valueOf(request.getStatus()));
+        }
         return categoryService.saveCategory(category);
     }
 

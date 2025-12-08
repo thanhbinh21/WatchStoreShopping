@@ -37,7 +37,7 @@ export const AdminProduct = () => {
   const [maxPriceInput, setMaxPriceInput] = useState(String(appliedMaxPrice));
   const [priceMaxLimit, setPriceMaxLimit] = useState(PRICE_MAX);
   const [isApplyingPrice, setIsApplyingPrice] = useState(false);
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("ACTIVE");
   // filters
   const [brandFilter, setBrandFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -529,7 +529,7 @@ export const AdminProduct = () => {
               setAppliedMaxPrice(priceMaxLimit);
               setMinPriceInput("");
               setMaxPriceInput(String(priceMaxLimit));
-              setStatusFilter("");
+              setStatusFilter("ACTIVE");
               setSearchTerm("");
               setPage(1);
             }}
