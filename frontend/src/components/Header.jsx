@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getCategories } from "../api/categoryAPI.js";
+import { getBrands } from "../api/brandAPI.js";
 import {
   getNotificationsByUser,
   markNotificationAsRead,
@@ -29,6 +30,7 @@ import { getWishlistCount } from "@/api/wishlistAPI";
 import { getCart, getCartCount } from "@/api/cartAPI";
 import { getGuestCartCount } from "@/api/guestCart";
 import { getGeneralSettings } from "@/api/settingsAPI";
+import MegaMenu from "./MegaMenu";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -36,6 +38,7 @@ export default function Header() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [cartCount, _setCartCount] = useState(0);
   const [wishlistCount, setWishlistCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
@@ -138,7 +141,7 @@ export default function Header() {
     }
   }, [userState?.id, token]);
 
-  // Fetch categories and settings
+  // Fetch categories, brands and settings
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -148,12 +151,19 @@ export default function Header() {
           Array.isArray(data) ? data : Array.isArray(data.data) ? data.data : []
         );
 
+        // Fetch brands
+        const brandsData = await getBrands();
+        setBrands(
+          Array.isArray(brandsData) ? brandsData : Array.isArray(brandsData.data) ? brandsData.data : []
+        );
+
         // Fetch settings
         const settingsData = await getGeneralSettings();
         setSettings(settingsData);
       } catch (error) {
         console.error("Lỗi khi fetch data:", error);
         setCategories([]);
+        setBrands([]);
       }
     };
     fetchData();
@@ -381,7 +391,7 @@ export default function Header() {
             )}
           </div>
 
-          {/* Category Dropdown */}
+          {/* Category Mega Menu Dropdown */}
           <div className="relative hidden lg:block" ref={categoryDropdownRef}>
             <button
               onClick={() => setIsCategoryDropdownOpen(!isCategoryDropdownOpen)}
@@ -397,25 +407,12 @@ export default function Header() {
               />
             </button>
 
-            {isCategoryDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-64 bg-card text-card-foreground rounded-lg shadow-xl py-2 border border-border max-h-96 overflow-y-auto">
-                {categories.length > 0 ? (
-                  categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
-                      className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-brand-accent-soft transition-colors"
-                    >
-                      {category.name}
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-sm text-muted-foreground">
-                    Không có danh mục
-                  </div>
-                )}
-              </div>
-            )}
+            <MegaMenu
+              categories={categories}
+              brands={brands}
+              isOpen={isCategoryDropdownOpen}
+              onClose={() => setIsCategoryDropdownOpen(false)}
+            />
           </div>
 
           {/* Location Selector (Optional) */}
