@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { getProductById, getProducts } from "@/api/productAPI";
 import axiosInstance from "@/api/axiosConfig";
 import { addToCart, getCart } from "@/api/cartAPI";
@@ -436,6 +437,16 @@ export default function ProductDetail() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
+      <Helmet>
+        <title>{product.name} | WATCH STORE</title>
+        <meta name="description" content={(product.description || '').substring(0, 160)} />
+        <meta name="keywords" content={`đồng hồ, ${product.name}, ${product.brand?.name || ''}`} />
+        <meta property="og:title" content={product.name} />
+        <meta property="og:description" content={(product.description || '').substring(0, 160)} />
+        <meta property="og:image" content={product.productImages?.find(img => img.isPrimary)?.imageUrl} />
+        <meta property="product:price:amount" content={product.price} />
+        <meta property="product:price:currency" content="VND" />
+      </Helmet>
       <Header />
       <Breadcrumb items={breadcrumbItems} />
 

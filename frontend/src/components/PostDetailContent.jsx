@@ -1,8 +1,18 @@
+import { Helmet } from "react-helmet-async";
 import { Calendar, Eye, Tag } from "lucide-react";
 
 export default function PostDetailContent({ post, formatDate }) {
   return (
     <div className="relative">
+      <Helmet>
+        <title>{post.seoTitle || post.title} | WATCH STORE</title>
+        <meta name="description" content={post.seoDescription || post.summary || ''} />
+        <meta name="keywords" content={post.seoKeywords || ''} />
+        <meta property="og:title" content={post.seoTitle || post.title} />
+        <meta property="og:description" content={post.seoDescription || post.summary || ''} />
+        <meta property="og:image" content={post.coverImageUrl} />
+        <meta property="og:type" content="article" />
+      </Helmet>
       {/* Cover Image */}
       {post.coverImageUrl && (
         <div className="w-full mb-8">

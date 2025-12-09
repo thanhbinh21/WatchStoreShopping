@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -108,6 +109,17 @@ export const Home = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
+      <Helmet>
+        <title>Đồng Hồ Chính Hãng Giá Tốt | WATCH STORE</title>
+        <meta
+          name="description"
+          content="Mua đồng hồ cao cấp chính hãng giá tốt. Rolex, Omega, Casio, G-Shock. Giao hàng toàn quốc, bảo hành chính hãng."
+        />
+        <meta
+          name="keywords"
+          content="đồng hồ, đồng hồ chính hãng, mua đồng hồ, rolex, omega, casio"
+        />
+      </Helmet>
       {/* Header */}
       <Header />
 
