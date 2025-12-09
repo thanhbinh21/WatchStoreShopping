@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getWishlist, removeFromWishlist } from "@/api/wishlistAPI";
+import { getProductById } from "@/api/productAPI";
 import { addToCart, getCart } from "@/api/cartAPI";
+import axiosInstance from "@/api/axiosConfig";
 import { addToGuestCart } from "@/api/guestCart";
 import { parseStoredUser } from "@/utils/storage";
 import Breadcrumb from "@/components/Breadcrumb";
@@ -17,14 +19,80 @@ export default function Wishlist() {
 
   // Load wishlist từ localStorage
   useEffect(() => {
-    loadWishlist();
+    (async () => {
+      await loadWishlist();
+    })();
   }, []);
 
-  const loadWishlist = () => {
+  const loadWishlist = async () => {
     setLoading(true);
-    const items = getWishlist();
-    setWishlist(items);
-    setLoading(false);
+    try {
+      const ids = getWishlist();
+      if (!ids || ids.length === 0) {
+        setWishlist([]);
+        return;
+      }
+
+      const promises = ids.map((id) => getProductById(id).catch(() => null));
+      const results = await Promise.all(promises);
+      const products = results.filter((p) => p != null);
+
+      try {
+        const promoRes = await axiosInstance.get(`/promotions`);
+        const promos = promoRes?.data?.data || [];
+        const now = new Date();
+        const productsWithDiscount = products.map((p) => {
+          try {
+            const prodPromo = promos.find((pr) => pr.productId === p.id);
+            if (
+              prodPromo &&
+              Array.isArray(prodPromo.promotions) &&
+              prodPromo.promotions.length > 0
+            ) {
+              const active = prodPromo.promotions
+                .map((x) => ({ ...x }))
+                .filter((x) => {
+                  try {
+                    const start = x.startDate ? new Date(x.startDate) : null;
+                    const end = x.endDate ? new Date(x.endDate) : null;
+                    if (start && end) return now >= start && now <= end;
+                    return false;
+                  } catch (e) {
+                    return false;
+                  }
+                });
+              if (active.length > 0) {
+                const maxDiscount = Math.max(
+                  ...active.map((a) => Number(a.discount || 0))
+                );
+                if (maxDiscount > 0) {
+                  const original = Number(p.price ?? p.currentPrice ?? 0);
+                  const discounted = Math.round(
+                    (original * (100 - maxDiscount)) / 100
+                  );
+                  return {
+                    ...p,
+                    discountedPrice: discounted,
+                    originalPrice: original,
+                  };
+                }
+              }
+            }
+          } catch (e) {
+            /* ignore */
+          }
+          return p;
+        });
+        setWishlist(productsWithDiscount);
+      } catch (e) {
+        setWishlist(products);
+      }
+    } catch (err) {
+      console.error("Error loading wishlist products:", err);
+      setWishlist([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRemove = (productId) => {
@@ -51,8 +119,6 @@ export default function Wishlist() {
 
     const maxStock = Number.isFinite(product?.stockQuantity)
       ? product.stockQuantity
-      : Number.isFinite(product?.stock)
-      ? product.stock
       : Infinity;
     if (maxStock <= 0) {
       toast.error("Sản phẩm hết hàng");
@@ -116,7 +182,6 @@ export default function Wishlist() {
 
       <main className="flex-1 py-6 md:py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          {/* Header */}
           <div className="flex items-center gap-3 mb-6 md:mb-8">
             <Heart className="text-red-500 fill-red-500 w-6 h-6 md:w-8 md:h-8" />
             <div>
@@ -129,7 +194,6 @@ export default function Wishlist() {
             </div>
           </div>
 
-          {/* Empty State */}
           {wishlist.length === 0 ? (
             <div className="bg-white rounded-xl shadow-sm p-8 md:p-12 text-center border border-gray-100">
               <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -149,14 +213,12 @@ export default function Wishlist() {
               </button>
             </div>
           ) : (
-            /* Product Grid: 2 cols mobile, 3 cols tablet, 4 cols desktop */
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {wishlist.map((product) => (
                 <div
                   key={product.id}
                   className="bg-white rounded-xl overflow-hidden shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 group flex flex-col h-full"
                 >
-                  {/* Image */}
                   <div
                     onClick={() => handleProductClick(product.id)}
                     className="relative w-full aspect-square bg-gray-50 overflow-hidden cursor-pointer"
@@ -167,7 +229,7 @@ export default function Wishlist() {
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         e.target.src =
-                          "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Crect width='300' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%239ca3af' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+                          "https://placehold.co/300x300?text=No+Image";
                       }}
                     />
                     <button
@@ -181,12 +243,10 @@ export default function Wishlist() {
                     </button>
                   </div>
 
-                  {/* Content */}
                   <div className="p-3 md:p-4 flex flex-col flex-1">
                     <p className="text-[10px] md:text-xs text-gray-500 uppercase tracking-wide mb-1 truncate">
                       {getBrandName(product)}
                     </p>
-
                     <h3
                       onClick={() => handleProductClick(product.id)}
                       className="text-sm md:text-base font-semibold text-gray-900 line-clamp-2 mb-2 cursor-pointer hover:text-brand-primary transition-colors min-h-10"
@@ -195,13 +255,51 @@ export default function Wishlist() {
                     </h3>
 
                     <div className="mt-auto pt-2">
-                      <p className="text-red-600 font-bold text-base md:text-lg mb-3">
-                        {product.currentPrice
-                          ? `${product.currentPrice.toLocaleString("vi-VN")}₫`
-                          : product.price
-                          ? `${Number(product.price).toLocaleString("vi-VN")}₫`
-                          : "Liên hệ"}
-                      </p>
+                      {(() => {
+                        const displayPrice =
+                          product.discountedPrice ??
+                          product.currentPrice ??
+                          product.price;
+                        const originalPrice =
+                          product.originalPrice ??
+                          product.price ??
+                          product.currentPrice;
+                        const hasDiscount =
+                          product.discountedPrice &&
+                          Number(product.discountedPrice) <
+                            Number(originalPrice);
+                        const discountPercent = hasDiscount
+                          ? Math.round(
+                              ((Number(originalPrice) - Number(displayPrice)) /
+                                Number(originalPrice)) *
+                                100
+                            )
+                          : 0;
+
+                        return (
+                          <div className="mb-3 min-h-12 flex flex-col justify-end">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-red-600 font-bold text-base md:text-lg">
+                                {displayPrice
+                                  ? `${Number(displayPrice).toLocaleString(
+                                      "vi-VN"
+                                    )}₫`
+                                  : "Liên hệ"}
+                              </span>
+                              {hasDiscount && (
+                                <span className="text-[10px] md:text-xs font-bold px-1.5 py-0.5 bg-red-100 text-red-600 rounded">
+                                  -{discountPercent}%
+                                </span>
+                              )}
+                            </div>
+                            {hasDiscount && (
+                              <span className="text-xs text-gray-400 line-through">
+                                {Number(originalPrice).toLocaleString("vi-VN")}₫
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       <button
                         onClick={() => handleAddToCart(product)}
