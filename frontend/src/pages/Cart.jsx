@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { getCart, updateCartItem, removeCartItem } from "@/api/cartAPI";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { getGuestCart } from "@/api/guestCart";
 import { getPromotions, getProductsWithPromotions } from "@/api/promotionAPI";
 import { parseStoredUser } from "@/utils/storage";
@@ -256,11 +257,10 @@ export default function Cart() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 relative mb-21">
       <Header />
       <Breadcrumb items={[{ label: "Giỏ hàng", isCurrent: true }]} />
 
-      {/* Main Content with padding bottom for fixed footer */}
       <div className="flex-1 w-full max-w-4xl mx-auto px-4 py-6 md:py-8 pb-40 md:pb-32">
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -321,7 +321,9 @@ export default function Cart() {
               return (
                 <div
                   key={item.id}
-                  className={`group relative bg-white rounded-xl border p-3 md:p-4 shadow-sm transition-all duration-200 ${
+                  // 1. Thêm sự kiện onClick vào wrapper div
+                  onClick={() => handleSelectItem(item.id)}
+                  className={`group relative bg-white rounded-xl border p-3 md:p-4 shadow-sm transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? "border-brand-primary/50 ring-1 ring-brand-primary/10"
                       : "border-gray-100 hover:border-gray-300"
@@ -331,6 +333,7 @@ export default function Cart() {
                     {/* Checkbox & Image */}
                     <div className="flex items-start gap-3">
                       <button
+                        // Checkbox giữ nguyên stopPropagation (đã có ở bản gốc)
                         onClick={(e) => {
                           e.stopPropagation();
                           handleSelectItem(item.id);
@@ -346,9 +349,11 @@ export default function Cart() {
 
                       <div
                         className="relative w-20 h-20 md:w-28 md:h-28 rounded-lg overflow-hidden border border-gray-100 bg-gray-50 cursor-pointer shrink-0"
-                        onClick={() =>
-                          navigate(`/product/${item.productId || item.id}`)
-                        }
+                        // 2. Click ảnh thì navigate (nhớ stopPropagation)
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/product/${item.productId || item.id}`);
+                        }}
                       >
                         <img
                           src={
@@ -371,14 +376,20 @@ export default function Cart() {
                       <div className="flex justify-between items-start gap-2">
                         <h3
                           className="font-medium text-gray-900 text-sm md:text-base line-clamp-2 cursor-pointer hover:text-brand-primary transition-colors"
-                          onClick={() =>
-                            navigate(`/product/${item.productId || item.id}`)
-                          }
+                          // 3. Click tên thì navigate (nhớ stopPropagation)
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/product/${item.productId || item.id}`);
+                          }}
                         >
                           {item.productName}
                         </h3>
                         <button
-                          onClick={() => handleRemoveItem(item.id)}
+                          // 4. Nút xóa (nhớ stopPropagation)
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveItem(item.id);
+                          }}
                           className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-all"
                           title="Xóa sản phẩm"
                         >
@@ -413,17 +424,29 @@ export default function Cart() {
                       <div className="mt-3 flex items-center">
                         <div className="flex items-center border border-gray-200 rounded-lg bg-gray-50 h-8 md:h-9">
                           <button
-                            onClick={() => handleQuantityChange(item.id, -1)}
+                            // 5. Nút giảm SL (nhớ stopPropagation)
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuantityChange(item.id, -1);
+                            }}
                             disabled={item.quantity <= 1}
                             className="w-8 md:w-9 h-full flex items-center justify-center hover:bg-white rounded-l-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-gray-600"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
-                          <div className="w-8 md:w-10 text-center font-medium text-sm text-gray-900 border-x border-gray-200 bg-white h-full flex items-center justify-center">
+                          {/* Vùng hiển thị số lượng click vào cũng không nên trigger select item */}
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-8 md:w-10 text-center font-medium text-sm text-gray-900 border-x border-gray-200 bg-white h-full flex items-center justify-center"
+                          >
                             {item.quantity}
                           </div>
                           <button
-                            onClick={() => handleQuantityChange(item.id, 1)}
+                            // 6. Nút tăng SL (nhớ stopPropagation)
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuantityChange(item.id, 1);
+                            }}
                             disabled={item.quantity >= item.stock}
                             className="w-8 md:w-9 h-full flex items-center justify-center hover:bg-white rounded-r-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-gray-600"
                           >
@@ -443,10 +466,10 @@ export default function Cart() {
         </div>
       </div>
 
-      {/* Fixed Checkout Footer */}
+      <Footer />
+
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 p-4 md:px-6 safe-area-pb">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
-          {/* Total Info */}
           <div className="flex flex-row md:flex-col justify-between md:justify-start items-center md:items-start">
             <div className="flex flex-col items-start">
               <span className="text-sm text-gray-500">
@@ -464,7 +487,6 @@ export default function Cart() {
               </div>
             </div>
 
-            {/* Mobile Savings (shown on right) */}
             {totalSavings > 0 && (
               <span className="md:hidden text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded">
                 - {totalSavings.toLocaleString("vi-VN")}đ
@@ -472,7 +494,6 @@ export default function Cart() {
             )}
           </div>
 
-          {/* Action Button */}
           <button
             onClick={handleCheckout}
             disabled={selectedItems.length === 0}

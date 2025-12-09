@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { getProductById } from "@/api/productAPI";
+import { getProductById, getProducts } from "@/api/productAPI";
 import axiosInstance from "@/api/axiosConfig";
 import { addToCart, getCart } from "@/api/cartAPI";
 import {
@@ -34,8 +34,10 @@ import {
   Heart,
   RotateCcw,
   Info,
+  Check,
 } from "lucide-react";
 import Breadcrumb from "@/components/Breadcrumb";
+import ProductCard from "@/components/ProductCard";
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -57,6 +59,8 @@ export default function ProductDetail() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [existingReview, setExistingReview] = useState(null);
   const [isEditingReview, setIsEditingReview] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
 
   const user = parseStoredUser();
 
@@ -74,7 +78,7 @@ export default function ProductDetail() {
       const res = await getProductById(id);
       setProduct(res);
 
-      // Fetch promotions grouped by product and compute discounted price if any active promotion
+      // Logic tính toán khuyến mãi
       try {
         const promoRes = await axiosInstance.get(`/promotions`);
         const promos = promoRes?.data?.data || [];
@@ -85,7 +89,6 @@ export default function ProductDetail() {
           prodPromo.promotions.length > 0
         ) {
           const now = new Date();
-          // Find active promotions (by date) and pick the largest discount
           const active = prodPromo.promotions
             .map((p) => ({ ...p }))
             .filter((p) => {
@@ -117,7 +120,6 @@ export default function ProductDetail() {
           }
         }
       } catch (err) {
-        // ignore promotion errors
         console.debug("Promotions fetch failed", err);
       }
 
@@ -128,6 +130,13 @@ export default function ProductDetail() {
         setSelectedImage({ imageUrl: res.primaryImageUrl, isPrimary: true });
       } else if (res?.imageUrl) {
         setSelectedImage({ imageUrl: res.imageUrl, isPrimary: true });
+      }
+
+      // Fetch related products
+      try {
+        fetchRelatedProducts(res);
+      } catch (e) {
+        /* ignore */
       }
     } catch (err) {
       console.error("Error fetching product:", err);
@@ -143,6 +152,33 @@ export default function ProductDetail() {
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     setMousePosition({ x, y });
+  };
+
+  const fetchRelatedProducts = async (prod) => {
+    if (!prod) return;
+    setRelatedLoading(true);
+    try {
+      const params = {
+        page: 0,
+        size: 4, // Lấy 4 sản phẩm liên quan
+        sortBy: "createdAt",
+        order: "desc",
+      };
+
+      if (prod.categoryName) params.category = prod.categoryName;
+      else if (prod.brand) params.brand = prod.brand;
+
+      const res = await getProducts(params);
+      const data = res?.content || res?.data?.content || res || [];
+      const items = Array.isArray(data) ? data : data.content || [];
+      const filtered = items.filter((p) => p.id !== prod.id).slice(0, 4);
+      setRelatedProducts(filtered);
+    } catch (err) {
+      console.error("Error fetching related products:", err);
+      setRelatedProducts([]);
+    } finally {
+      setRelatedLoading(false);
+    }
   };
 
   const fetchReviews = async () => {
@@ -182,7 +218,6 @@ export default function ProductDetail() {
       const hasPurchased = orders.some((order) => {
         const isCompleted = order.status === "COMPLETED";
         const hasItems = order.items && order.items.length > 0;
-
         if (isCompleted && hasItems) {
           return order.items.some((item) => item.productId === parseInt(id));
         }
@@ -403,14 +438,13 @@ export default function ProductDetail() {
 
       <div className="flex-1 py-4 md:py-8">
         <div className="max-w-7xl mx-auto px-4 md:px-6">
-          {/* Main Layout: Grid 12 Columns */}
+          {/* Main Product Section - Divided by Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* BLOCK 1: IMAGES (Chiếm 8 cột trên Desktop) */}
+            {/* BLOCK 1: IMAGES (Left - 8 Cols) */}
             <div className="lg:col-span-8 space-y-4">
               {/* Main Image */}
               <div
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 md:p-8 aspect-square md:aspect-auto md:h-[500px] flex items-center justify-center overflow-hidden relative"
-                // Zoom chỉ hoạt động trên desktop (lg)
                 onMouseMove={handleMouseMove}
                 onMouseEnter={() => setIsZoomed(true)}
                 onMouseLeave={() => setIsZoomed(false)}
@@ -440,7 +474,7 @@ export default function ProductDetail() {
 
               {/* Thumbnails */}
               {imagesToDisplay.length > 1 && (
-                <div className="flex gap-3 overflow-x-auto p-2 scrollbar-hide">
+                <div className="flex gap-3 overflow-x-auto p-1 scrollbar-hide">
                   {imagesToDisplay.map((img) => {
                     const thumbUrl = getImageUrl(img.imageUrl);
                     const isSelected = selectedImage?.id === img.id;
@@ -466,7 +500,7 @@ export default function ProductDetail() {
               )}
             </div>
 
-            {/* BLOCK 2: PURCHASE INFO (Chiếm 4 cột trên Desktop - Sticky) */}
+            {/* BLOCK 2: PURCHASE INFO (Right - 4 Cols - Sticky) */}
             <div className="lg:col-span-4 lg:row-span-2">
               <Card className="border-none shadow-md lg:sticky lg:top-24 h-fit">
                 <CardContent className="p-5 md:p-6 space-y-6">
@@ -492,14 +526,14 @@ export default function ProductDetail() {
                     </div>
                   )}
 
-                  {/* Price */}
-                  <div className="pb-4 border-b border-gray-100">
+                  {/* --- PRICE SECTION (STYLED) --- */}
+                  <div className="pb-5 border-b border-gray-100 bg-gray-50/50 -mx-6 px-6 py-4 rounded-b-lg">
                     {(() => {
                       const displayPrice =
                         product.discountedPrice ?? product.price;
                       const original = product.originalPrice ?? product.price;
 
-                      // Check if there is an actual discount
+                      // Check discount
                       const hasDiscount =
                         product.discountedPrice &&
                         Number(product.discountedPrice) < Number(original);
@@ -513,9 +547,12 @@ export default function ProductDetail() {
                         : 0;
 
                       return (
-                        <div className="space-y-1">
+                        <div className="flex flex-col gap-1">
+                          <p className="text-xs text-gray-500 font-medium">
+                            Giá bán ưu đãi:
+                          </p>
                           <div className="flex items-center gap-3">
-                            <p className="text-3xl font-bold text-red-600">
+                            <p className="text-3xl font-extrabold text-red-600 tracking-tight">
                               {displayPrice
                                 ? `${Number(displayPrice).toLocaleString(
                                     "vi-VN"
@@ -523,18 +560,20 @@ export default function ProductDetail() {
                                 : "Liên hệ"}
                             </p>
                             {hasDiscount && (
-                              <Badge
-                                variant="destructive"
-                                className="px-2 py-0.5 text-xs font-bold bg-red-100 text-red-600 hover:bg-red-200 border-none"
-                              >
+                              <span className="inline-flex items-center px-2 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-md uppercase">
                                 -{discountPercent}%
-                              </Badge>
+                              </span>
                             )}
                           </div>
                           {hasDiscount && (
-                            <p className="text-sm text-gray-500 font-medium line-through">
-                              {Number(original).toLocaleString("vi-VN")}₫
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <span className="text-sm text-gray-400 line-through">
+                                {Number(original).toLocaleString("vi-VN")}₫
+                              </span>
+                              <span className="text-xs text-gray-500">
+                                Giá gốc
+                              </span>
+                            </div>
                           )}
                         </div>
                       );
@@ -548,28 +587,29 @@ export default function ProductDetail() {
                         Số lượng
                       </span>
                       {product.stockQuantity > 0 && (
-                        <span className="text-xs text-green-600 font-medium">
-                          Còn {product.stockQuantity} sản phẩm
+                        <span className="text-xs text-green-600 font-medium flex items-center gap-1">
+                          <Check className="w-3 h-3" /> Còn{" "}
+                          {product.stockQuantity} sản phẩm
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center w-max border border-gray-300 rounded-lg">
+                    <div className="flex items-center w-max border border-gray-300 rounded-lg bg-white">
                       <button
                         onClick={decreaseQuantity}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50"
+                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors rounded-l-lg"
                         disabled={quantity <= 1}
                       >
-                        <Minus className="size-4" />
+                        <Minus className="size-4 text-gray-600" />
                       </button>
-                      <span className="px-4 py-2 font-semibold text-sm w-12 text-center border-x border-gray-300">
+                      <span className="px-4 py-2 font-semibold text-sm w-12 text-center border-x border-gray-300 min-w-12">
                         {quantity}
                       </span>
                       <button
                         onClick={increaseQuantity}
-                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50"
+                        className="px-3 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors rounded-r-lg"
                         disabled={quantity >= (product.stockQuantity || 999)}
                       >
-                        <Plus className="size-4" />
+                        <Plus className="size-4 text-gray-600" />
                       </button>
                     </div>
                   </div>
@@ -585,7 +625,7 @@ export default function ProductDetail() {
                           ? product.stockQuantity <= 0
                           : product.stock <= 0)
                       }
-                      className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-6 text-base font-semibold shadow-sm"
+                      className="w-full bg-brand-primary hover:bg-brand-primary-dark text-white py-6 text-base font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
                     >
                       {addingToCart ? (
                         <div className="flex items-center gap-2">
@@ -605,7 +645,7 @@ export default function ProductDetail() {
                       variant="outline"
                       className={`w-full py-6 border transition-colors ${
                         isFavorite
-                          ? "border-red-200 bg-red-50 text-red-500"
+                          ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
                           : "border-gray-200 hover:bg-gray-50 text-gray-700"
                       }`}
                     >
@@ -643,7 +683,7 @@ export default function ProductDetail() {
               </Card>
             </div>
 
-            {/* BLOCK 3: DETAILS & REVIEWS (Chiếm 8 cột trên Desktop - Nằm dưới Images) */}
+            {/* BLOCK 3: DETAILS & REVIEWS (Left - 8 Cols - Below Image) */}
             <div className="lg:col-span-8 space-y-6 md:space-y-8">
               {/* Description */}
               {product.description && (
@@ -667,7 +707,6 @@ export default function ProductDetail() {
                     Thông số kỹ thuật
                   </h3>
                   <div className="grid grid-cols-1 gap-y-3">
-                    {/* Basic Info */}
                     <div className="flex justify-between py-2 border-b border-gray-100">
                       <span className="text-gray-500">Thương hiệu</span>
                       <span className="font-medium text-gray-900">
@@ -680,8 +719,6 @@ export default function ProductDetail() {
                         {product.categoryName || "N/A"}
                       </span>
                     </div>
-
-                    {/* Dynamic Specs */}
                     {product.productSpecs?.map((spec) => (
                       <div
                         key={spec.id || spec.keyName}
@@ -705,7 +742,6 @@ export default function ProductDetail() {
                     Đánh giá & Nhận xét
                   </h3>
 
-                  {/* Review Form */}
                   {canReview && (
                     <div className="mb-8 bg-gray-50 rounded-xl p-4 md:p-6 border border-gray-100">
                       {!showReviewForm ? (
@@ -793,7 +829,6 @@ export default function ProductDetail() {
                     </div>
                   )}
 
-                  {/* Reviews List */}
                   {loadingReviews ? (
                     <div className="py-8 text-center text-gray-500">
                       Đang tải đánh giá...
@@ -848,7 +883,37 @@ export default function ProductDetail() {
                 </CardContent>
               </Card>
             </div>
+            {/* End Left Column (Details) */}
           </div>
+          {/* End Main Grid */}
+
+          {/* --- NEW SECTION: RELATED PRODUCTS (MOVED DOWN) --- */}
+          {relatedProducts.length > 0 && (
+            <div className="mt-16 border-t border-gray-200 pt-10">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                <Package className="size-6 text-brand-primary" />
+                Sản phẩm liên quan
+              </h3>
+
+              {relatedLoading ? (
+                <div className="flex justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-2 border-brand-primary border-t-transparent" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                  {relatedProducts.map((rp) => (
+                    <ProductCard
+                      key={rp.id}
+                      product={rp}
+                      onAddToCart={(p) => {
+                        navigate(`/product/${p.id}`);
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
