@@ -36,4 +36,8 @@ public class Category {
     @JsonManagedReference(value = "category-products")
     @JsonIgnore // Ignore products khi serialize để tránh circular reference và giảm payload
     private List<Product> products = new ArrayList<>();
+
+    @OneToMany(mappedBy = "category")
+    @JsonIgnore
+    private List<Banner> banners = new ArrayList<>();
 }

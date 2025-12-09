@@ -39,5 +39,9 @@ public class Brand {
     @JsonManagedReference(value = "brand-products")
     @JsonIgnore // Ignore products khi serialize để tránh circular reference và giảm payload
     private List<Product> products = new ArrayList<>();
+
+    @OneToMany(mappedBy = "brand")
+    @JsonIgnore
+    private List<Banner> banners = new ArrayList<>();
 }
 

@@ -48,4 +48,9 @@ public class Promotion {
 
     @Column(name = "end_date", nullable = false)
     private LocalDateTime endDate;
+
+    @OneToMany(mappedBy = "promotion")
+    @Builder.Default
+    @ToString.Exclude
+    private List<Banner> banners = new ArrayList<>();
 }
