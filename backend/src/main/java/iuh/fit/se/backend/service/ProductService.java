@@ -75,9 +75,14 @@ public class ProductService {
             spec = (spec == null ? ProductSpecification.hasPriceBetween(minPrice, maxPrice)
                     : spec.and(ProductSpecification.hasPriceBetween(minPrice, maxPrice)));
         }
+        // Default: only show ACTIVE products if status not specified
         if (status != null) {
             spec = (spec == null ? ProductSpecification.hasStatus(status)
                 : spec.and(ProductSpecification.hasStatus(status)));
+        } else {
+            // No status param -> filter ACTIVE only (for public/customer view)
+            spec = (spec == null ? ProductSpecification.hasStatus("ACTIVE")
+                : spec.and(ProductSpecification.hasStatus("ACTIVE")));
         }
 
         // Handle sorting by price specially because `price` is not a direct Product field

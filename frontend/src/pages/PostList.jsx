@@ -384,15 +384,12 @@ export default function PostList() {
                             <button
                               key={category.id}
                               onClick={() => handleCategoryChange(category)}
-                              className="shrink-0 w-28 h-28 md:w-32 md:h-32 bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
+                              className="shrink-0 w-28 h-28 md:w-32 md:h-32 bg-gradient-to-br from-brand-primary to-brand-primary-soft rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden group relative flex items-center justify-center"
                             >
-                              <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                              {/* Placeholder for category image if needed, now just gradient */}
-                              <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <span className="text-white font-bold text-sm md:text-base line-clamp-2">
-                                  #{category.name}
-                                </span>
-                              </div>
+                              <span className="text-white font-bold text-sm md:text-base text-center px-3 line-clamp-2 z-10">
+                                #{category.name}
+                              </span>
+                              <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-colors"></div>
                             </button>
                           ))}
                         </div>

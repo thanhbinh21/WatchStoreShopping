@@ -76,10 +76,15 @@ export const AdminBanner = () => {
           getBrands(),
         ]);
 
-      setProducts(productsRes?.content || []);
-      setCategories(categoriesRes || []);
+      // Filter chỉ lấy entities có trạng thái active
+      setProducts(
+        (productsRes?.content || []).filter(
+          (p) => p.status === "ACTIVE" || p.active !== false
+        )
+      );
+      setCategories((categoriesRes || []).filter((c) => c.status === "ACTIVE"));
       setPromotions(promotionsRes || []);
-      setBrands(brandsRes || []);
+      setBrands((brandsRes || []).filter((b) => b.status === "ACTIVE"));
     } catch (error) {
       console.error("Error loading entities:", error);
     }
@@ -369,7 +374,7 @@ export const AdminBanner = () => {
 
       {/* Modal Form */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="md:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-xl font-semibold">
               {editingId ? "Sửa banner" : "Tạo banner mới"}

@@ -333,13 +333,13 @@ export default function ProductCard({ product, onAddToCart }) {
         </div>
 
         {/* Rating */}
-        {product.rating && (
+        {product.rating > 0 && (
           <div className="flex items-center gap-1 mb-4">
             <span className="text-yellow-500 text-sm">★</span>
             <span className="text-sm font-medium text-gray-700">
               {product.rating.toFixed(1)}
             </span>
-            {product.numOfRating && (
+            {product.numOfRating > 0 && (
               <span className="text-xs text-gray-500 ml-1">
                 ({product.numOfRating})
               </span>
