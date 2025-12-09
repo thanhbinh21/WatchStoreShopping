@@ -95,7 +95,6 @@ export const searchProducts = async (name) => {
   return [];
 };
 
-
 // Tạo sản phẩm mới
 export const createProduct = async (productData) => {
   try {
