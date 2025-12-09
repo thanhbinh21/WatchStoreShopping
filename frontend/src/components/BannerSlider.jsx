@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { bannerAPI } from "../api/cmsAPI";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { filterBanners } from "../utils/bannerUtils";
 
 export default function BannerSlider({ startIndex = 0 }) {
   const [banners, setBanners] = useState([]);
@@ -30,7 +31,11 @@ export default function BannerSlider({ startIndex = 0 }) {
   const loadBanners = async () => {
     try {
       const response = await bannerAPI.getActive();
-      setBanners(Array.isArray(response) ? response : []);
+      const allBanners = Array.isArray(response) ? response : [];
+
+      // Filter banners for HOMEPAGE_SLIDER position with device and date checks
+      const filtered = filterBanners(allBanners, "HOMEPAGE_SLIDER");
+      setBanners(filtered);
     } catch (error) {
       console.error("Error loading banners:", error);
       setBanners([]);

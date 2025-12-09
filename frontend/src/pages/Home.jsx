@@ -10,6 +10,7 @@ import BrandSection from "@/components/BrandSection";
 import ProductList from "@/components/ProductList";
 import Footer from "@/components/Footer";
 import BannerSlider from "@/components/BannerSlider";
+import BannerDisplay from "@/components/BannerDisplay";
 import { bannerAPI } from "@/api/cmsAPI";
 import { addToCart, getCart } from "@/api/cartAPI";
 import { addToGuestCart } from "@/api/guestCart";
@@ -136,6 +137,11 @@ export const Home = () => {
 
         {/* Hero Section */}
         <HeroSection />
+
+        {/* Homepage Banners - Static position banners */}
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8">
+          <BannerDisplay position="HOMEPAGE_BANNER" />
+        </div>
 
         {/* Sale Banner - Products on Sale */}
         <SaleBanner onAddToCart={handleAddToCart} />

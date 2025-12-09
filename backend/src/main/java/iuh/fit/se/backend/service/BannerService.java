@@ -23,6 +23,13 @@ public class BannerService {
         banner.setDescription(request.getDescription());
         banner.setDisplayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0);
         banner.setActive(request.getActive() != null ? request.getActive() : true);
+        
+        // Set new fields
+        banner.setLinkType(request.getLinkType());
+        banner.setLinkId(request.getLinkId());
+        banner.setStartDate(request.getStartDate());
+        banner.setEndDate(request.getEndDate());
+        banner.setPosition(request.getPosition());
 
         return bannerRepository.save(banner);
     }
@@ -38,6 +45,19 @@ public class BannerService {
         banner.setDescription(request.getDescription());
         banner.setDisplayOrder(request.getDisplayOrder() != null ? request.getDisplayOrder() : 0);
         banner.setActive(request.getActive() != null ? request.getActive() : true);
+        
+        // Update new fields
+        if (request.getLinkType() != null) {
+            banner.setLinkType(request.getLinkType());
+        }
+        if (request.getLinkId() != null) {
+            banner.setLinkId(request.getLinkId());
+        }
+        banner.setStartDate(request.getStartDate());
+        banner.setEndDate(request.getEndDate());
+        if (request.getPosition() != null) {
+            banner.setPosition(request.getPosition());
+        }
 
         return bannerRepository.save(banner);
     }

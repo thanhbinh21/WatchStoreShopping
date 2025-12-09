@@ -1,6 +1,8 @@
 package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import iuh.fit.se.backend.entity.enums.BannerLinkType;
+import iuh.fit.se.backend.entity.enums.BannerPosition;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -38,6 +40,24 @@ public class Banner {
 
     @Column(nullable = false)
     private Boolean active = true;
+
+    // New fields for enhanced banner management
+    @Enumerated(EnumType.STRING)
+    @Column(name = "link_type", nullable = false, length = 20)
+    private BannerLinkType linkType = BannerLinkType.CUSTOM;
+
+    @Column(name = "link_id")
+    private Long linkId; // ID của entity được liên kết (product_id, category_id, etc.)
+
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
+
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "position", nullable = false, length = 30)
+    private BannerPosition position = BannerPosition.HOMEPAGE_SLIDER;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
