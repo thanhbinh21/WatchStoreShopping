@@ -20,11 +20,11 @@ export const TopBar = ({ image, name, role, setCollapsed, collapsed }) => {
           </button>
         )}
 
-        <SearchBar />
+        {/* <SearchBar /> */}
       </div>
 
       <div className="flex items-center gap-[26px]">
-        <Notification unreadNum={6} />
+        {/* <Notification unreadNum={6} /> */}
         <UserInfo name={name} image={image} role={role} />
       </div>
     </div>
