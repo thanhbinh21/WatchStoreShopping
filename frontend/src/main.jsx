@@ -11,7 +11,7 @@ createRoot(document.getElementById("root")).render(
     <HelmetProvider>
       {/* <BrowserRouter> */}
       <App />
-      <Toaster richColors position="bottom-right" />
+      <Toaster richColors position="bottom-right" closeButton />
       {/* </BrowserRouter> */}
     </HelmetProvider>
   </StrictMode>
