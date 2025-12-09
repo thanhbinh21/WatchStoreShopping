@@ -1,5 +1,6 @@
 package iuh.fit.se.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import iuh.fit.se.backend.entity.enums.BannerLinkType;
 import iuh.fit.se.backend.entity.enums.BannerPosition;
@@ -48,6 +49,27 @@ public class Banner {
 
     @Column(name = "link_id")
     private Long linkId; // ID của entity được liên kết (product_id, category_id, etc.)
+
+    // Relationships with other entities (for JPA mapping only, not serialized to JSON)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id")
+    @JsonIgnore
+    private Product product;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    @JsonIgnore
+    private Category category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "promotion_id")
+    @JsonIgnore
+    private Promotion promotion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    @JsonIgnore
+    private Brand brand;
 
     @Column(name = "start_date")
     private LocalDateTime startDate;

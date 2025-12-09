@@ -101,6 +101,11 @@ public class Product {
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
+    @OneToMany(mappedBy = "product")
+    @Builder.Default
+    @ToString.Exclude
+    private List<Banner> banners = new ArrayList<>();
+
     // Helper method to get current price
     public BigDecimal getCurrentPrice() {
         return productPrices.stream()
