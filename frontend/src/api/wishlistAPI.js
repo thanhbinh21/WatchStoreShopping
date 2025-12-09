@@ -1,104 +1,107 @@
-// Wishlist API - Quản lý danh sách yêu thích trong localStorage
-// Lưu trữ cho tất cả roles, không cần backend API
+// Wishlist API - store only product IDs in localStorage
+// This keeps wishlist lightweight and ensures product data (price/discount)
+// is loaded fresh when the user opens the wishlist page.
 
-const WISHLIST_KEY = 'wishlist';
+const WISHLIST_KEY = "wishlist";
+
+// Read stored value and normalize to array of IDs.
+// Migration: if older entries were full product objects, extract their ids
+// and overwrite storage with the id-only list.
+const readStoredIds = () => {
+  try {
+    const raw = localStorage.getItem(WISHLIST_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    // If items look like objects with `id`, migrate to ids
+    if (parsed.length > 0 && typeof parsed[0] === "object") {
+      const ids = parsed
+        .map((it) =>
+          it && (it.id || it.productId) ? Number(it.id || it.productId) : null
+        )
+        .filter((id) => id != null);
+      // persist migrated ids
+      localStorage.setItem(WISHLIST_KEY, JSON.stringify(ids));
+      return ids;
+    }
+
+    // If items are already ids
+    return parsed.map((it) => Number(it)).filter((n) => !Number.isNaN(n));
+  } catch (err) {
+    console.error("Error reading wishlist ids:", err);
+    return [];
+  }
+};
+
+const writeIds = (ids) => {
+  try {
+    localStorage.setItem(WISHLIST_KEY, JSON.stringify(ids));
+  } catch (err) {
+    console.error("Error writing wishlist ids:", err);
+  }
+};
 
 /**
- * Lấy danh sách sản phẩm yêu thích từ localStorage
- * @returns {Array} - Mảng các sản phẩm yêu thích
+ * Return array of product IDs currently in wishlist
+ * @returns {number[]}
  */
 export const getWishlist = () => {
-    try {
-        const wishlist = localStorage.getItem(WISHLIST_KEY);
-        return wishlist ? JSON.parse(wishlist) : [];
-    } catch (error) {
-        console.error('Error getting wishlist:', error);
-        return [];
-    }
+  return readStoredIds();
 };
 
 /**
- * Thêm sản phẩm vào danh sách yêu thích
- * @param {Object} product - Sản phẩm cần thêm
- * @returns {boolean} - true nếu thêm thành công, false nếu đã tồn tại
+ * Add product to wishlist by product object or id
+ * @param {Object|number} productOrId
+ * @returns {boolean} true if added, false if already present
  */
-export const addToWishlist = (product) => {
-    try {
-        const wishlist = getWishlist();
-        
-        // Kiểm tra xem sản phẩm đã tồn tại chưa
-        const exists = wishlist.some(item => item.id === product.id);
-        if (exists) {
-            return false; // Sản phẩm đã tồn tại
-        }
-        
-        // Thêm sản phẩm mới vào đầu danh sách
-        wishlist.unshift({
-            id: product.id,
-            name: product.name,
-            price: product.price || product.currentPrice,
-            currentPrice: product.currentPrice || product.price,
-            imageUrl: product.imageUrl || product.primaryImageUrl,
-            brand: product.brand,
-            brandName: product.brandName,
-            rating: product.rating,
-            numOfRating: product.numOfRating,
-            addedAt: new Date().toISOString()
-        });
-        
-        localStorage.setItem(WISHLIST_KEY, JSON.stringify(wishlist));
-        return true;
-    } catch (error) {
-        console.error('Error adding to wishlist:', error);
-        return false;
-    }
+export const addToWishlist = (productOrId) => {
+  try {
+    const id =
+      typeof productOrId === "object"
+        ? Number(productOrId.id)
+        : Number(productOrId);
+    if (!id || Number.isNaN(id)) return false;
+    const ids = readStoredIds();
+    if (ids.includes(id)) return false;
+    ids.unshift(id);
+    writeIds(ids);
+    return true;
+  } catch (err) {
+    console.error("Error adding to wishlist:", err);
+    return false;
+  }
 };
 
 /**
- * Xóa sản phẩm khỏi danh sách yêu thích
- * @param {number} productId - ID sản phẩm cần xóa
- * @returns {boolean} - true nếu xóa thành công
+ * Remove productId from wishlist
  */
 export const removeFromWishlist = (productId) => {
-    try {
-        const wishlist = getWishlist();
-        const filtered = wishlist.filter(item => item.id !== productId);
-        localStorage.setItem(WISHLIST_KEY, JSON.stringify(filtered));
-        return true;
-    } catch (error) {
-        console.error('Error removing from wishlist:', error);
-        return false;
-    }
+  try {
+    const id = Number(productId);
+    const ids = readStoredIds();
+    const filtered = ids.filter((i) => i !== id);
+    writeIds(filtered);
+    return true;
+  } catch (err) {
+    console.error("Error removing from wishlist:", err);
+    return false;
+  }
 };
 
-/**
- * Kiểm tra sản phẩm có trong danh sách yêu thích không
- * @param {number} productId - ID sản phẩm cần kiểm tra
- * @returns {boolean} - true nếu sản phẩm đã được yêu thích
- */
 export const isInWishlist = (productId) => {
-    const wishlist = getWishlist();
-    return wishlist.some(item => item.id === productId);
+  const ids = readStoredIds();
+  return ids.includes(Number(productId));
 };
 
-/**
- * Lấy số lượng sản phẩm yêu thích
- * @returns {number} - Số lượng sản phẩm
- */
-export const getWishlistCount = () => {
-    const wishlist = getWishlist();
-    return wishlist.length;
-};
+export const getWishlistCount = () => readStoredIds().length;
 
-/**
- * Xóa toàn bộ danh sách yêu thích
- */
 export const clearWishlist = () => {
-    try {
-        localStorage.removeItem(WISHLIST_KEY);
-        return true;
-    } catch (error) {
-        console.error('Error clearing wishlist:', error);
-        return false;
-    }
+  try {
+    localStorage.removeItem(WISHLIST_KEY);
+    return true;
+  } catch (err) {
+    console.error("Error clearing wishlist:", err);
+    return false;
+  }
 };

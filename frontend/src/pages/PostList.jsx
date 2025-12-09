@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Breadcrumb from "@/components/Breadcrumb";
 import Footer from "@/components/Footer";
 import PostDetailContent from "@/components/PostDetailContent";
-import { Calendar, Eye, Tag, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 import { AdminPagination } from "@/components/Pagination";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ export default function PostList() {
   const itemsPerPage = 9;
   const slideIntervalRef = useRef(null);
 
+  // --- Logic Fetch Data & Routing (Giữ nguyên) ---
   useEffect(() => {
     loadCategories();
     loadPosts();
@@ -37,7 +38,6 @@ export default function PostList() {
     async function fetchForParams() {
       setLoading(true);
 
-      // 1) Two-segment route: /posts/:categorySlug/:postSlug
       const catSlug = categorySlug;
       const pSlug = postSlug;
 
@@ -56,11 +56,9 @@ export default function PostList() {
         } finally {
           if (active) setLoading(false);
         }
-
         return;
       }
 
-      // 2) Single-segment: prefer treating `categorySlug` as category, fallback to post
       const single = categorySlug;
       if (single) {
         try {
@@ -77,17 +75,14 @@ export default function PostList() {
           if (!active) return;
         }
 
-        // fallback: try post
         try {
           await loadPostBySlug(single);
         } finally {
           if (active) setLoading(false);
         }
-
         return;
       }
 
-      // no params: clear
       if (active) {
         setSelectedPost(null);
         setSelectedCategory(null);
@@ -103,7 +98,6 @@ export default function PostList() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categorySlug, postSlug]);
 
-  // Auto-play slider
   useEffect(() => {
     if (posts.length > 1) {
       slideIntervalRef.current = setInterval(() => {
@@ -124,7 +118,6 @@ export default function PostList() {
     try {
       const response = await postCategoryAPI.getAll();
       const categoriesArray = Array.isArray(response) ? response : [];
-      // Chỉ lấy categories có status ACTIVE
       const activeCategories = categoriesArray.filter(
         (cat) => cat.status === "ACTIVE"
       );
@@ -184,11 +177,11 @@ export default function PostList() {
       month: "2-digit",
       year: "numeric",
     });
-    const timeStr = date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return `${dateStr} ${timeStr}`;
+    // const timeStr = date.toLocaleTimeString("vi-VN", {
+    //   hour: "2-digit",
+    //   minute: "2-digit",
+    // });
+    return dateStr; // Rút gọn chỉ hiện ngày cho sạch
   };
 
   const truncateText = (text, maxLength) => {
@@ -203,7 +196,6 @@ export default function PostList() {
       setLoadingPost(true);
       const response = await postAPI.getBySlug(postSlug);
       setSelectedPost(response);
-      // If post has a category, set it so breadcrumbs and category state are correct
       if (response?.postCategory) {
         setSelectedCategory(response.postCategory);
       }
@@ -227,12 +219,8 @@ export default function PostList() {
     }
   };
 
-  const handleBackToList = () => {
-    navigate("/posts");
-  };
-
   const breadcrumbItems = (() => {
-    const items = [{ label: "Tin tức & Bài viết", href: "/posts" }];
+    const items = [{ label: "Tin tức", href: "/posts" }];
     if (selectedCategory) {
       items.push({
         label: selectedCategory.name,
@@ -247,18 +235,12 @@ export default function PostList() {
     return items;
   })();
 
-  // Component wrapper for clickable post items
   const PostLink = ({ post, children, className }) => (
     <div
       onClick={(e) => handlePostClick(e, post)}
       className={`${className} cursor-pointer`}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          handlePostClick(e, post);
-        }
-      }}
     >
       {children}
     </div>
@@ -267,7 +249,11 @@ export default function PostList() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-50">
       <Helmet>
-        <title>Tin tức & Bài viết - Cửa hàng đồng hồ</title>
+        <title>
+          {selectedPost
+            ? selectedPost.title
+            : "Tin tức & Bài viết - WatchStore"}
+        </title>
         <meta
           name="description"
           content="Đọc tin tức, bài viết mới nhất về đồng hồ, xu hướng thời trang và công nghệ"
@@ -277,32 +263,36 @@ export default function PostList() {
       <Header />
       <Breadcrumb items={breadcrumbItems} />
 
-      <main className="flex-1 py-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+      <main className="flex-1 py-6 md:py-8 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 md:px-6">
+          {/* Main Title */}
+          <div className="mb-6 md:mb-8">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 md:mb-3">
               Tin tức & Bài viết
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm md:text-base text-gray-600">
               Cập nhật tin tức mới nhất về đồng hồ, thời trang và xu hướng
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Sidebar - Categories */}
-            <aside className="lg:col-span-3">
-              <div className="bg-white rounded-lg shadow-sm p-6 lg:sticky lg:top-6">
-                <h2 className="text-lg font-bold text-gray-900 mb-4 pb-3 border-b">
+          {/* Main Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* LEFT SIDEBAR: Categories */}
+            {/* Desktop: Vertical sticky list | Mobile: Horizontal scrollable list */}
+            <aside className="lg:col-span-3 order-1 lg:order-1">
+              <div className="bg-white rounded-xl shadow-sm p-4 lg:p-6 lg:sticky lg:top-24">
+                <h2 className="text-lg font-bold text-gray-900 mb-3 pb-2 border-b border-gray-100 hidden lg:block">
                   Danh mục
                 </h2>
-                <nav className="space-y-2">
+
+                {/* Desktop Menu */}
+                <nav className="hidden lg:flex flex-col space-y-1">
                   <button
                     onClick={() => handleCategoryChange(null)}
-                    className={`cursor-pointer w-full text-left px-4 py-3 rounded-lg text-md font-medium transition-colors ${
+                    className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                       !selectedCategory
-                        ? "bg-brand-accent-soft text-brand-accent"
-                        : "text-brand-ink hover:bg-gray-50"
+                        ? "bg-brand-primary/10 text-brand-primary"
+                        : "text-gray-600 hover:bg-gray-50"
                     }`}
                   >
                     Trang chủ
@@ -311,67 +301,95 @@ export default function PostList() {
                     <button
                       key={category.id}
                       onClick={() => handleCategoryChange(category)}
-                      className={`cursor-pointer w-full text-left px-4 py-3 rounded-lg text-md font-medium transition-colors ${
+                      className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                         selectedCategory?.id === category.id
-                          ? "bg-brand-accent-soft text-brand-accent"
-                          : "text-brand-ink hover:bg-gray-50"
+                          ? "bg-brand-primary/10 text-brand-primary"
+                          : "text-gray-600 hover:bg-gray-50"
                       }`}
                     >
                       {category.name}
                     </button>
                   ))}
                 </nav>
+
+                {/* Mobile Menu (Horizontal Scroll) */}
+                <div className="lg:hidden overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleCategoryChange(null)}
+                      className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                        !selectedCategory
+                          ? "bg-brand-primary text-white border-brand-primary"
+                          : "bg-white text-gray-600 border-gray-200"
+                      }`}
+                    >
+                      Tất cả
+                    </button>
+                    {categories.map((category) => (
+                      <button
+                        key={category.id}
+                        onClick={() => handleCategoryChange(category)}
+                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium border transition-colors ${
+                          selectedCategory?.id === category.id
+                            ? "bg-brand-primary text-white border-brand-primary"
+                            : "bg-white text-gray-600 border-gray-200"
+                        }`}
+                      >
+                        {category.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </aside>
 
-            {/* Right Content Area */}
-            <div className="lg:col-span-9">
-              {/* Post Detail View */}
+            {/* RIGHT CONTENT: Posts */}
+            <div className="lg:col-span-9 order-2 lg:order-2">
               {selectedPost ? (
                 <PostDetailContent
                   post={selectedPost}
                   formatDate={formatDate}
                 />
               ) : loading ? (
-                <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
+                <div className="flex justify-center items-center py-20 min-h-[400px]">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand-primary border-t-transparent"></div>
                 </div>
               ) : loadingPost ? (
-                <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-primary"></div>
-                  <p className="ml-4 text-gray-600">Đang tải bài viết...</p>
+                <div className="flex justify-center items-center py-20 min-h-[400px]">
+                  <div className="animate-spin rounded-full h-10 w-10 border-2 border-brand-primary border-t-transparent"></div>
+                  <p className="ml-4 text-gray-500">Đang tải bài viết...</p>
                 </div>
               ) : posts.length === 0 ? (
-                /* Empty State */
-                <div className="bg-white rounded-lg shadow-sm p-20 text-center">
-                  <p className="text-gray-500 text-lg">Không có bài viết nào</p>
+                <div className="bg-white rounded-xl shadow-sm p-12 text-center">
+                  <p className="text-gray-500 text-lg">
+                    Chưa có bài viết nào trong mục này
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-6">
+                <div className="space-y-10 md:space-y-12">
                   {!selectedCategory ? (
-                    /* Homepage Layout - Full Featured */
+                    /* === HOMEPAGE LAYOUT === */
                     <>
-                      {/* Section 1: Chủ đề hot - Horizontal Scroll */}
+                      {/* Section 1: Chủ đề hot */}
                       <div>
-                        <div className="flex flex-col gap-3 mb-4">
-                          <h2 className="text-2xl font-bold uppercase">
+                        <div className="flex flex-col gap-2 mb-4">
+                          <h2 className="text-xl md:text-2xl font-bold uppercase">
                             Chủ đề hot
                           </h2>
-                          <div
-                            className="h-1 bg-brand-primary"
-                            style={{ width: "100px" }}
-                          ></div>
+                          <div className="h-1 bg-brand-primary w-24 rounded-full"></div>
                         </div>
-                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+                        {/* Horizontal Scroll on Mobile */}
+                        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
                           {categories.slice(0, 8).map((category) => (
                             <button
                               key={category.id}
                               onClick={() => handleCategoryChange(category)}
-                              className="shrink-0 w-32 h-32 bg-white rounded-lg shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
+                              className="shrink-0 w-28 h-28 md:w-32 md:h-32 bg-white rounded-xl shadow-sm hover:shadow-md transition-all overflow-hidden group relative"
                             >
-                              <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent"></div>
+                              <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                              {/* Placeholder for category image if needed, now just gradient */}
                               <div className="absolute bottom-0 left-0 right-0 p-3">
-                                <span className="text-white font-bold text-sm line-clamp-2">
+                                <span className="text-white font-bold text-sm md:text-base line-clamp-2">
                                   #{category.name}
                                 </span>
                               </div>
@@ -380,516 +398,83 @@ export default function PostList() {
                         </div>
                       </div>
 
-                      {/* Section 2: Nổi bật nhất - Main Featured Post */}
+                      {/* Section 2: Nổi bật nhất */}
                       <div>
-                        <div className="flex flex-col gap-3 mb-4">
-                          <h2 className="text-2xl font-bold uppercase">
+                        <div className="flex flex-col gap-2 mb-4">
+                          <h2 className="text-xl md:text-2xl font-bold uppercase">
                             Nổi bật nhất
                           </h2>
-                          <div
-                            className="h-1 bg-brand-primary"
-                            style={{ width: "120px" }}
-                          ></div>
+                          <div className="h-1 bg-brand-primary w-24 rounded-full"></div>
                         </div>
 
-                        <div className="grid lg:grid-cols-2 gap-6">
-                          <div className="">
-                            {posts
-                              .slice()
-                              .sort(
-                                (a, b) =>
-                                  (b.viewCount || 0) - (a.viewCount || 0)
-                              )[0] && (
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Main Highlight Post */}
+                          {posts.length > 0 && (
+                            <div className="">
                               <PostLink
-                                post={
-                                  posts
-                                    .slice()
-                                    .sort(
-                                      (a, b) =>
-                                        (b.viewCount || 0) - (a.viewCount || 0)
-                                    )[0]
-                                }
-                                className="block bg-white rounded-lg shadow-sm hover:shadow-xl transition-shadow overflow-hidden group relative"
+                                post={posts[0]}
+                                className=" bg-white rounded-xl shadow-sm hover:shadow-lg transition-all overflow-hidden group h-full flex flex-col"
                               >
-                                {posts
-                                  .slice()
-                                  .sort(
-                                    (a, b) =>
-                                      (b.viewCount || 0) - (a.viewCount || 0)
-                                  )[0].coverImageUrl && (
-                                  <div className="aspect-video overflow-hidden">
-                                    <img
-                                      src={
-                                        posts
-                                          .slice()
-                                          .sort(
-                                            (a, b) =>
-                                              (b.viewCount || 0) -
-                                              (a.viewCount || 0)
-                                          )[0].coverImageUrl
-                                      }
-                                      alt={
-                                        posts
-                                          .slice()
-                                          .sort(
-                                            (a, b) =>
-                                              (b.viewCount || 0) -
-                                              (a.viewCount || 0)
-                                          )[0].title
-                                      }
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  </div>
-                                )}
-                                <div className="absolute top-4 left-4">
-                                  <span className="bg-brand-primary text-white px-3 py-1 rounded text-xs font-bold uppercase">
-                                    Đánh giá
+                                <div className="aspect-video w-full overflow-hidden relative">
+                                  <img
+                                    src={
+                                      posts[0].coverImageUrl ||
+                                      "/placeholder.jpg"
+                                    }
+                                    alt={posts[0].title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                  />
+                                  <span className="absolute top-3 left-3 bg-brand-primary text-white px-2 py-1 rounded text-xs font-bold uppercase shadow-sm">
+                                    Mới
                                   </span>
                                 </div>
-                                <div className="p-6">
-                                  <h2 className="text-2xl font-bold text-gray-900 mb-3 group-hover:text-brand-primary transition-colors line-clamp-2">
-                                    {
-                                      posts
-                                        .slice()
-                                        .sort(
-                                          (a, b) =>
-                                            (b.viewCount || 0) -
-                                            (a.viewCount || 0)
-                                        )[0].title
-                                    }
+                                <div className="p-5 flex flex-col flex-1">
+                                  <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-3 group-hover:text-brand-primary transition-colors line-clamp-2">
+                                    {posts[0].title}
                                   </h2>
-                                  {posts
-                                    .slice()
-                                    .sort(
-                                      (a, b) =>
-                                        (b.viewCount || 0) - (a.viewCount || 0)
-                                    )[0].summary && (
-                                    <p className="text-gray-600 mb-4 line-clamp-2">
-                                      {truncateText(
-                                        posts
-                                          .slice()
-                                          .sort(
-                                            (a, b) =>
-                                              (b.viewCount || 0) -
-                                              (a.viewCount || 0)
-                                          )[0].summary,
-                                        200
-                                      )}
-                                    </p>
-                                  )}
-                                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                                    <span className="flex items-center gap-1">
-                                      <Calendar className="w-4 h-4" />
-                                      {formatDate(
-                                        posts
-                                          .slice()
-                                          .sort(
-                                            (a, b) =>
-                                              (b.viewCount || 0) -
-                                              (a.viewCount || 0)
-                                          )[0].publishedAt ||
-                                          posts
-                                            .slice()
-                                            .sort(
-                                              (a, b) =>
-                                                (b.viewCount || 0) -
-                                                (a.viewCount || 0)
-                                            )[0].createdAt
-                                      )}
-                                    </span>
-                                    <span className="flex items-center gap-1">
-                                      <Eye className="w-4 h-4" />
-                                      {posts
-                                        .slice()
-                                        .sort(
-                                          (a, b) =>
-                                            (b.viewCount || 0) -
-                                            (a.viewCount || 0)
-                                        )[0].viewCount || 0}
-                                    </span>
-                                  </div>
-                                </div>
-                              </PostLink>
-                            )}
-                          </div>
-                          <div className="">
-                            {posts
-                              .slice()
-                              .sort(
-                                (a, b) =>
-                                  (b.viewCount || 0) - (a.viewCount || 0)
-                              )
-                              .slice(1, 6)
-                              .map((post) => (
-                                <PostLink
-                                  key={post.id}
-                                  post={post}
-                                  className="flex gap-4 bg-white rounded-lg p-4 hover:shadow-md transition-shadow group"
-                                >
-                                  {post.coverImageUrl && (
-                                    <div className="shrink-0 w-32 h-24 rounded overflow-hidden">
-                                      <img
-                                        src={post.coverImageUrl}
-                                        alt={post.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                      {post.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                                      {truncateText(post.summary, 80)}
-                                    </p>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                                      <span className="flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {formatDate(
-                                          post.publishedAt || post.createdAt
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </PostLink>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Section 3: Tin tức mới nhất & Góc Chọn & Mua */}
-                      <div className="grid lg:grid-cols-2 gap-6">
-                        {/* Left: Tin tức mới nhất */}
-                        <div>
-                          <div className="flex flex-col gap-3 mb-4">
-                            <h2 className="text-2xl font-bold uppercase">
-                              Tin tức mới nhất
-                            </h2>
-                            <div
-                              className="h-1 bg-brand-primary"
-                              style={{ width: "150px" }}
-                            ></div>
-                          </div>
-
-                          <div className="space-y-4">
-                            {posts
-                              .slice()
-                              .sort(
-                                (a, b) =>
-                                  new Date(b.createdAt) - new Date(a.createdAt)
-                              )
-                              .slice(1, 6)
-                              .map((post) => (
-                                <PostLink
-                                  key={post.id}
-                                  post={post}
-                                  className="flex gap-4 bg-white rounded-lg p-4 hover:shadow-md transition-shadow group"
-                                >
-                                  {post.coverImageUrl && (
-                                    <div className="shrink-0 w-32 h-24 rounded overflow-hidden">
-                                      <img
-                                        src={post.coverImageUrl}
-                                        alt={post.title}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      />
-                                    </div>
-                                  )}
-                                  <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                      {post.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600 mb-2 line-clamp-2">
-                                      {truncateText(post.summary, 80)}
-                                    </p>
-                                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                                      <span className="flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {formatDate(
-                                          post.publishedAt || post.createdAt
-                                        )}
-                                      </span>
-                                    </div>
-                                  </div>
-                                </PostLink>
-                              ))}
-                          </div>
-                        </div>
-
-                        {/* Right: Góc Chọn & Mua */}
-                        <div>
-                          <div className="flex flex-col gap-3 mb-4">
-                            <h2 className="text-2xl font-bold">
-                              Góc Chọn & Mua
-                            </h2>
-                            <div
-                              className="h-1 bg-brand-primary"
-                              style={{ width: "130px" }}
-                            ></div>
-                          </div>
-
-                          <div className="space-y-4">
-                            {posts
-                              .filter((post) =>
-                                post.postCategory?.name
-                                  ?.toLowerCase()
-                                  .includes("công nghệ")
-                              )
-                              .slice(0, 4)
-                              .map((post, index) => (
-                                <PostLink
-                                  key={post.id}
-                                  post={post}
-                                  className="block group"
-                                >
-                                  {index === 0 ? (
-                                    <div className="bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow">
-                                      {post.coverImageUrl && (
-                                        <div className="aspect-video overflow-hidden">
-                                          <img
-                                            src={post.coverImageUrl}
-                                            alt={post.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                          />
-                                        </div>
-                                      )}
-                                      <div className="p-4">
-                                        <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                          {post.title}
-                                        </h3>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="flex gap-3 bg-white rounded-lg p-3 hover:shadow-md transition-shadow">
-                                      {post.coverImageUrl && (
-                                        <div className="shrink-0 w-24 h-20 rounded overflow-hidden">
-                                          <img
-                                            src={post.coverImageUrl}
-                                            alt={post.title}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                          />
-                                        </div>
-                                      )}
-                                      <div className="flex-1 min-w-0">
-                                        <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                          {post.title}
-                                        </h3>
-                                      </div>
-                                    </div>
-                                  )}
-                                </PostLink>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Section 4: Xem nhiều tuần qua - Grid */}
-                      <div>
-                        <div className="flex flex-col gap-3 mb-4">
-                          <h2 className="text-2xl font-bold uppercase">
-                            Xem nhiều tuần qua
-                          </h2>
-                          <div
-                            className="h-1 bg-brand-primary"
-                            style={{ width: "180px" }}
-                          ></div>
-                        </div>
-
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                          {posts
-                            .slice()
-                            .sort(
-                              (a, b) => (b.viewCount || 0) - (a.viewCount || 0)
-                            )
-                            .slice(0, 5)
-                            .map((post) => (
-                              <PostLink
-                                key={post.id}
-                                post={post}
-                                className="block bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow group"
-                              >
-                                {post.coverImageUrl && (
-                                  <div className="aspect-video overflow-hidden">
-                                    <img
-                                      src={post.coverImageUrl}
-                                      alt={post.title}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  </div>
-                                )}
-                                <div className="p-3">
-                                  <h3 className="font-bold text-sm text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                    {post.title}
-                                  </h3>
-                                  <p className="text-xs text-gray-500 mt-2">
-                                    {formatDate(
-                                      post.publishedAt || post.createdAt
-                                    )}
+                                  <p className="text-gray-600 mb-4 line-clamp-3 text-sm md:text-base flex-1">
+                                    {truncateText(posts[0].summary, 120)}
                                   </p>
+                                  <div className="flex items-center gap-4 text-xs text-gray-500 mt-auto pt-4 border-t border-gray-100">
+                                    <span className="flex items-center gap-1">
+                                      <Calendar className="w-3.5 h-3.5" />
+                                      {formatDate(
+                                        posts[0].publishedAt ||
+                                          posts[0].createdAt
+                                      )}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                      <Eye className="w-3.5 h-3.5" />
+                                      {posts[0].viewCount || 0}
+                                    </span>
+                                  </div>
                                 </div>
                               </PostLink>
-                            ))}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    /* Category Layout - Simplified */
-                    <>
-                      {/* Section 1: Nổi bật nhất - Slider */}
-                      <div>
-                        <div className="flex flex-col gap-3 mb-4">
-                          <h2 className="text-2xl font-bold">NỔI BẬT NHẤT</h2>
-                          <div
-                            className="h-1 bg-brand-primary"
-                            style={{
-                              width: `${selectedCategory.name.length * 16}px`,
-                            }}
-                          ></div>
-                        </div>
-
-                        <div className="relative bg-white rounded-lg shadow-sm overflow-hidden group">
-                          <div className="relative overflow-hidden">
-                            <div
-                              className="flex transition-transform duration-500 ease-in-out"
-                              style={{
-                                transform: `translateX(-${
-                                  currentSlide * 100
-                                }%)`,
-                              }}
-                            >
-                              {posts
-                                .slice()
-                                .sort(
-                                  (a, b) =>
-                                    (b.viewCount || 0) - (a.viewCount || 0)
-                                )
-                                .slice(0, Math.min(3, posts.length))
-                                .map((post) => (
-                                  <div key={post.id} className="min-w-full">
-                                    <PostLink post={post} className="block">
-                                      <div className="grid md:grid-cols-2 gap-0">
-                                        {post.coverImageUrl && (
-                                          <div className="aspect-video md:aspect-auto overflow-hidden">
-                                            <img
-                                              src={post.coverImageUrl}
-                                              alt={post.title}
-                                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            />
-                                          </div>
-                                        )}
-                                        <div className="p-6 flex flex-col justify-center">
-                                          <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 hover:text-brand-primary transition-colors line-clamp-3">
-                                            {post.title}
-                                          </h2>
-                                          {post.summary && (
-                                            <p className="text-gray-600 mb-4 line-clamp-3">
-                                              {truncateText(post.summary, 150)}
-                                            </p>
-                                          )}
-                                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                                            <span className="flex items-center gap-1">
-                                              <Calendar className="w-4 h-4" />
-                                              {formatDate(
-                                                post.publishedAt ||
-                                                  post.createdAt
-                                              )}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                              <Eye className="w-4 h-4" />
-                                              {post.viewCount || 0}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </PostLink>
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-
-                          {posts.length > 1 && (
-                            <>
-                              <button
-                                onClick={() =>
-                                  setCurrentSlide((prev) =>
-                                    prev === 0
-                                      ? Math.min(3, posts.length) - 1
-                                      : prev - 1
-                                  )
-                                }
-                                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"
-                              >
-                                <ChevronLeft className="w-6 h-6" />
-                              </button>
-                              <button
-                                onClick={() =>
-                                  setCurrentSlide((prev) =>
-                                    prev === Math.min(3, posts.length) - 1
-                                      ? 0
-                                      : prev + 1
-                                  )
-                                }
-                                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100 z-10"
-                              >
-                                <ChevronRight className="w-6 h-6" />
-                              </button>
-                            </>
-                          )}
-
-                          {posts.length > 1 && (
-                            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                              {posts
-                                .slice(0, Math.min(3, posts.length))
-                                .map((_, index) => (
-                                  <button
-                                    key={index}
-                                    onClick={() => setCurrentSlide(index)}
-                                    className={`w-2 h-2 rounded-full transition-all ${
-                                      currentSlide === index
-                                        ? "bg-brand-primary w-8"
-                                        : "bg-white/60 hover:bg-white/80"
-                                    }`}
-                                  />
-                                ))}
                             </div>
                           )}
-                        </div>
-                      </div>
 
-                      {/* Section 2: Two Column Layout */}
-                      <div className="grid md:grid-cols-12 gap-6">
-                        {/* Left: Tin tức cập nhật */}
-                        <div className="md:col-span-7">
-                          <div className="flex flex-col gap-3 mb-4">
-                            <h2 className="text-2xl font-bold uppercase">
-                              Tin tức cập nhật
-                            </h2>
-                            <div
-                              className="h-1 bg-brand-primary"
-                              style={{ width: "140px" }}
-                            ></div>
-                          </div>
-
-                          <div className="space-y-4">
-                            {posts.slice(3, 6).map((post) => (
+                          {/* Side List */}
+                          <div className="flex flex-col gap-4">
+                            {posts.slice(1, 5).map((post) => (
                               <PostLink
                                 key={post.id}
                                 post={post}
-                                className="flex gap-4 bg-white rounded-lg p-4 hover:shadow-md transition-shadow group"
+                                className="flex gap-4 bg-white p-3 rounded-xl border border-gray-100 hover:shadow-md transition-all group"
                               >
-                                {post.coverImageUrl && (
-                                  <div className="shrink-0 w-28 h-20 rounded overflow-hidden">
-                                    <img
-                                      src={post.coverImageUrl}
-                                      alt={post.title}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                    />
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors">
+                                <div className="shrink-0 w-24 h-20 md:w-32 md:h-24 rounded-lg overflow-hidden bg-gray-100">
+                                  <img
+                                    src={
+                                      post.coverImageUrl || "/placeholder.jpg"
+                                    }
+                                    alt={post.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+                                  <h3 className="font-bold text-gray-900 line-clamp-2 text-sm md:text-base group-hover:text-brand-primary transition-colors">
                                     {post.title}
                                   </h3>
-                                  <div className="flex items-center gap-3 text-xs text-gray-500">
+                                  <div className="flex items-center gap-3 text-xs text-gray-500 mt-2">
                                     <span className="flex items-center gap-1">
                                       <Calendar className="w-3 h-3" />
                                       {formatDate(
@@ -902,46 +487,87 @@ export default function PostList() {
                             ))}
                           </div>
                         </div>
+                      </div>
 
-                        {/* Right: Xem nhiều tuần qua */}
-                        <div className="md:col-span-5">
-                          <div className="flex flex-col gap-3 mb-4">
-                            <h2 className="text-2xl font-bold">
-                              Xem nhiều tuần qua
+                      {/* Section 3: Two Columns Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        {/* Left: Tin tức mới nhất */}
+                        <div>
+                          <div className="flex flex-col gap-2 mb-4">
+                            <h2 className="text-xl font-bold uppercase">
+                              Tin tức cập nhật
                             </h2>
-                            <div
-                              className="h-1 bg-brand-primary"
-                              style={{ width: "160px" }}
-                            ></div>
+                            <div className="h-1 bg-brand-primary w-24 rounded-full"></div>
                           </div>
-
                           <div className="space-y-4">
+                            {posts.slice(5, 9).map((post) => (
+                              <PostLink
+                                key={post.id}
+                                post={post}
+                                className="flex gap-4 group items-start"
+                              >
+                                <div className="shrink-0 w-28 h-20 rounded-lg overflow-hidden bg-gray-100">
+                                  <img
+                                    src={
+                                      post.coverImageUrl || "/placeholder.jpg"
+                                    }
+                                    alt={post.title}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  />
+                                </div>
+                                <div>
+                                  <h3 className="font-bold text-sm md:text-base text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors mb-1">
+                                    {post.title}
+                                  </h3>
+                                  <span className="text-xs text-gray-500">
+                                    {formatDate(
+                                      post.publishedAt || post.createdAt
+                                    )}
+                                  </span>
+                                </div>
+                              </PostLink>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Right: Góc Chọn & Mua */}
+                        <div>
+                          <div className="flex flex-col gap-2 mb-4">
+                            <h2 className="text-xl font-bold">
+                              Góc Chọn & Mua
+                            </h2>
+                            <div className="h-1 bg-brand-primary w-24 rounded-full"></div>
+                          </div>
+                          <div className="grid grid-cols-1 gap-4">
                             {posts
-                              .slice()
-                              .sort(
-                                (a, b) =>
-                                  (b.viewCount || 0) - (a.viewCount || 0)
+                              .filter((post) =>
+                                post.postCategory?.name
+                                  ?.toLowerCase()
+                                  .includes("công nghệ")
                               )
                               .slice(0, 3)
                               .map((post) => (
                                 <PostLink
                                   key={post.id}
                                   post={post}
-                                  className="block bg-white rounded-lg overflow-hidden hover:shadow-md transition-shadow group"
+                                  className="group"
                                 >
-                                  {post.coverImageUrl && (
-                                    <div className="aspect-video overflow-hidden">
+                                  <div className="bg-white rounded-lg border border-gray-100 overflow-hidden hover:shadow-md transition-all">
+                                    <div className="aspect-2/1 overflow-hidden">
                                       <img
-                                        src={post.coverImageUrl}
+                                        src={
+                                          post.coverImageUrl ||
+                                          "/placeholder.jpg"
+                                        }
                                         alt={post.title}
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                       />
                                     </div>
-                                  )}
-                                  <div className="p-4">
-                                    <h3 className="font-bold text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
-                                      {post.title}
-                                    </h3>
+                                    <div className="p-3">
+                                      <h3 className="font-bold text-sm md:text-base text-gray-900 line-clamp-2 group-hover:text-brand-primary transition-colors">
+                                        {post.title}
+                                      </h3>
+                                    </div>
                                   </div>
                                 </PostLink>
                               ))}
@@ -949,21 +575,160 @@ export default function PostList() {
                         </div>
                       </div>
                     </>
-                  )}
+                  ) : (
+                    /* === CATEGORY LAYOUT === */
+                    <>
+                      {/* Section 1: Slider Featured */}
+                      <div className="relative bg-white rounded-xl shadow-sm overflow-hidden group">
+                        <div className="relative overflow-hidden">
+                          <div
+                            className="flex transition-transform duration-500 ease-in-out"
+                            style={{
+                              transform: `translateX(-${currentSlide * 100}%)`,
+                            }}
+                          >
+                            {posts
+                              .slice(0, Math.min(3, posts.length))
+                              .map((post) => (
+                                <div key={post.id} className="min-w-full">
+                                  <PostLink post={post} className="block">
+                                    <div className="grid grid-cols-1 md:grid-cols-2">
+                                      {/* Image */}
+                                      <div className="aspect-video md:aspect-auto md:h-[350px] overflow-hidden relative">
+                                        <img
+                                          src={post.coverImageUrl}
+                                          alt={post.title}
+                                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                        />
+                                        <div className="absolute inset-0 bg-linear-to-t from-black/50 to-transparent md:hidden"></div>
+                                      </div>
+                                      {/* Content */}
+                                      <div className="p-5 md:p-8 flex flex-col justify-center bg-white">
+                                        <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 hover:text-brand-primary transition-colors line-clamp-3">
+                                          {post.title}
+                                        </h2>
+                                        {post.summary && (
+                                          <p className="text-gray-600 mb-4 line-clamp-3 text-sm md:text-base leading-relaxed">
+                                            {truncateText(post.summary, 150)}
+                                          </p>
+                                        )}
+                                        <div className="flex items-center gap-4 text-xs md:text-sm text-gray-500 mt-auto">
+                                          <span className="flex items-center gap-1">
+                                            <Calendar className="w-4 h-4" />{" "}
+                                            {formatDate(
+                                              post.publishedAt || post.createdAt
+                                            )}
+                                          </span>
+                                          <span className="flex items-center gap-1">
+                                            <Eye className="w-4 h-4" />{" "}
+                                            {post.viewCount || 0}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </PostLink>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                        {/* Slider Controls */}
+                        {posts.length > 1 && (
+                          <>
+                            <button
+                              onClick={() =>
+                                setCurrentSlide((prev) =>
+                                  prev === 0
+                                    ? Math.min(3, posts.length) - 1
+                                    : prev - 1
+                                )
+                              }
+                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-md z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                            >
+                              <ChevronLeft className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                setCurrentSlide((prev) =>
+                                  prev === Math.min(3, posts.length) - 1
+                                    ? 0
+                                    : prev + 1
+                                )
+                              }
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 p-1.5 rounded-full shadow-md z-10 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
 
-                  {/* Pagination */}
-                  {totalPages > 1 && (
-                    <AdminPagination
-                      page={currentPage}
-                      totalPages={totalPages}
-                      handlePageChange={setCurrentPage}
-                      handlePrev={() =>
-                        setCurrentPage((prev) => Math.max(1, prev - 1))
-                      }
-                      handleNext={() =>
-                        setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                      }
-                    />
+                      {/* Section 2: Post Grid */}
+                      <div>
+                        <div className="flex flex-col gap-2 mb-6">
+                          <h2 className="text-xl font-bold uppercase">
+                            Bài viết mới nhất
+                          </h2>
+                          <div className="h-1 bg-brand-primary w-24 rounded-full"></div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {posts.slice(3).map((post) => (
+                            <PostLink
+                              key={post.id}
+                              post={post}
+                              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-all group flex flex-col h-full"
+                            >
+                              <div className="aspect-video w-full overflow-hidden relative">
+                                <img
+                                  src={post.coverImageUrl || "/placeholder.jpg"}
+                                  alt={post.title}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              </div>
+                              <div className="p-4 flex flex-col flex-1">
+                                <h3 className="font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-brand-primary transition-colors text-base">
+                                  {post.title}
+                                </h3>
+                                <p className="text-gray-600 text-xs md:text-sm line-clamp-3 mb-4 flex-1">
+                                  {truncateText(post.summary, 100)}
+                                </p>
+                                <div className="flex items-center justify-between text-xs text-gray-400 mt-auto pt-3 border-t border-gray-50">
+                                  <span className="flex items-center gap-1">
+                                    <Calendar className="w-3.5 h-3.5" />{" "}
+                                    {formatDate(
+                                      post.publishedAt || post.createdAt
+                                    )}
+                                  </span>
+                                  <span className="flex items-center gap-1">
+                                    <Eye className="w-3.5 h-3.5" />{" "}
+                                    {post.viewCount || 0}
+                                  </span>
+                                </div>
+                              </div>
+                            </PostLink>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Pagination */}
+                      {totalPages > 1 && (
+                        <div className="mt-8">
+                          <AdminPagination
+                            page={currentPage}
+                            totalPages={totalPages}
+                            handlePageChange={setCurrentPage}
+                            handlePrev={() =>
+                              setCurrentPage((prev) => Math.max(1, prev - 1))
+                            }
+                            handleNext={() =>
+                              setCurrentPage((prev) =>
+                                Math.min(totalPages, prev + 1)
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}
