@@ -171,7 +171,10 @@ export default function ProductDetail() {
       const res = await getProducts(params);
       const data = res?.content || res?.data?.content || res || [];
       const items = Array.isArray(data) ? data : data.content || [];
-      const filtered = items.filter((p) => p.id !== prod.id).slice(0, 4);
+      const filtered = items
+        .filter((p) => p.id !== prod.id)
+        .filter((p) => p.status === "ACTIVE")
+        .slice(0, 4);
       setRelatedProducts(filtered);
     } catch (err) {
       console.error("Error fetching related products:", err);

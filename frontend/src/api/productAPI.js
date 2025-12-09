@@ -61,9 +61,9 @@ export const searchProducts = async (name) => {
   if (!term) return [];
 
   try {
-    // thử search endpoint riêng
+    // thử search endpoint riêng - chỉ lấy sản phẩm ACTIVE
     const resSearch = await axiosInstance.get(`${PRODUCT_URL}/search`, {
-      params: { name: term },
+      params: { name: term, status: "ACTIVE" },
     });
 
     const listSearch = resSearch?.data;
@@ -74,12 +74,13 @@ export const searchProducts = async (name) => {
     console.warn("Search endpoint failed, fallback to getProducts", err);
   }
 
-  // fallback sang getProducts
+  // fallback sang getProducts - chỉ lấy sản phẩm ACTIVE
   try {
     const res = await getProducts({
       page: 0,
       size: 50,
       name: term,
+      status: "ACTIVE",
       sortBy: "createdAt",
       order: "desc",
     });
@@ -93,7 +94,6 @@ export const searchProducts = async (name) => {
 
   return [];
 };
-
 
 // Tạo sản phẩm mới
 export const createProduct = async (productData) => {
