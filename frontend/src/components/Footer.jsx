@@ -1,6 +1,7 @@
 // Footer.jsx
 import React, { useState, useEffect } from "react";
 import { getGeneralSettings } from "@/api/settingsAPI";
+import BannerDisplay from "@/components/BannerDisplay";
 import {
   Youtube,
   Facebook,
@@ -87,6 +88,11 @@ export default function Footer() {
 
   return (
     <footer className="bg-gray-100 text-gray-800 mt-16 w-full border-t border-gray-200">
+      {/* Footer Banners */}
+      <div className="container mx-auto px-4 md:px-8 py-6">
+        <BannerDisplay position="FOOTER" />
+      </div>
+
       <div className="container mx-auto px-4 md:px-8 py-10">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8 border-b border-gray-300 mb-8">

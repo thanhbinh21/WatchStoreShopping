@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import { parseStoredUser } from "@/utils/storage";
 import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
+import BannerDisplay from "@/components/BannerDisplay";
 import { getProducts } from "@/api/productAPI";
 import { getCategories } from "@/api/categoryAPI";
 import { getBrands } from "@/api/brandAPI";
@@ -368,6 +369,11 @@ export default function ProductList() {
       />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+        {/* Product Page Banners */}
+        <div className="mb-6">
+          <BannerDisplay position="PRODUCT_PAGE" />
+        </div>
+
         {/* Page Title & Mobile Filter Toggle */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
           <div>
