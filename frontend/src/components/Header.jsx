@@ -13,16 +13,15 @@ import {
   LifeBuoy,
   Menu,
   X,
-  ChevronRight,
-  Package,
   Clock,
-  Hash,
   Gift,
   FileText,
+  Hash,
+  Package,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getCategories } from "../api/categoryAPI.js";
-import { getBrands } from "../api/brandAPI.js";
+import { getCategories } from "@/api/categoryAPI.js"; // Đảm bảo đường dẫn import đúng
+import { getBrands } from "@/api/brandAPI.js"; // Đảm bảo đường dẫn import đúng
 import {
   getNotificationsByUser,
   markNotificationAsRead,
@@ -88,11 +87,9 @@ export default function Header() {
   const role = localStorage.getItem("role");
   const [userState, setUserState] = useState(parseStoredUser() || {});
 
-  // --- FIX 1: Khai báo hàm format date ở đây ---
   const formatNotificationDate = (value) =>
     value ? new Date(value).toLocaleString("vi-VN") : "--";
 
-  // --- FIX 2: Đưa các hàm xử lý notification ra ngoài useEffect ---
   const getNotificationType = (notification) => {
     const title = notification.title?.toLowerCase() || "";
     const message = notification.message?.toLowerCase() || "";
@@ -178,21 +175,9 @@ export default function Header() {
   // Xử lý tìm kiếm realtime
   useEffect(() => {
     const delayDebounceFn = setTimeout(async () => {
-      if (!isSearchInputFocused) {
-        return;
-      }
+      // Logic: Chỉ search khi có input. Nếu rỗng thì chỉ mở dropdown (để hiện history)
       if (searchTerm.trim() === "") {
         setSearchSuggestions(null);
-        if (isSearchInputFocused) {
-          setIsSearchDropdownOpen(true);
-        }
-        return;
-      }
-      if (searchTerm.trim().length < 1) {
-        setSearchSuggestions({
-          exactMatches: [],
-          suggestedProducts: [],
-        });
         return;
       }
       setIsLoading(true);
@@ -204,10 +189,6 @@ export default function Header() {
           suggestedProducts: results.slice(5, 10),
         };
         setSearchSuggestions(suggestions);
-
-        if (isSearchInputFocused) {
-          setIsSearchDropdownOpen(true);
-        }
       } catch (error) {
         setSearchSuggestions({
           exactMatches: [],
@@ -221,7 +202,7 @@ export default function Header() {
     return () => {
       clearTimeout(delayDebounceFn);
     };
-  }, [searchTerm, isSearchInputFocused]);
+  }, [searchTerm]);
 
   // Load notifications callback
   const loadNotifications = useCallback(async () => {
@@ -390,6 +371,7 @@ export default function Header() {
         searchInputRef.current &&
         !searchInputRef.current.contains(event.target)
       ) {
+        // Chỉ đóng desktop dropdown khi click ra ngoài, mobile xử lý riêng
         setIsSearchDropdownOpen(false);
         setIsSearchInputFocused(false);
       }
@@ -421,8 +403,8 @@ export default function Header() {
     localStorage.setItem("searchHistory", JSON.stringify(newHistory));
 
     setIsSearchDropdownOpen(false);
+    setIsMobileSearchOpen(false); // Close mobile search
     navigate(`/products?name=${encodeURIComponent(term)}`);
-    setIsMobileSearchOpen(false);
   };
 
   const handleKeyDown = (e) => {
@@ -463,6 +445,7 @@ export default function Header() {
 
   const handleSuggestionClick = (product) => {
     setIsSearchDropdownOpen(false);
+    setIsMobileSearchOpen(false); // Close mobile search
     setSearchTerm("");
     navigate(`/product/${product.productId || product.id}`);
   };
@@ -499,6 +482,204 @@ export default function Header() {
   const toggleSubmenu = (menu) => {
     setMobileSubmenu(mobileSubmenu === menu ? "" : menu);
   };
+
+  // --- REUSABLE CONTENT: Search Dropdown Content ---
+  // Tách phần render nội dung dropdown ra để dùng chung cho cả Mobile và Desktop
+  const searchDropdownContent = (
+    <div className="bg-white rounded-lg">
+      {!searchTerm.trim() && (
+        <div className="p-4">
+          {searchHistory.length > 0 && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+                  <Clock size={16} /> Lịch sử tìm kiếm
+                </h3>
+                <button
+                  onClick={handleClearSearchHistory}
+                  className="text-sm text-gray-500 hover:text-red-500 transition-colors"
+                >
+                  Xóa tất cả
+                </button>
+              </div>
+              <div className="space-y-2">
+                {searchHistory.slice(0, 5).map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer group"
+                    onClick={() => {
+                      setSearchTerm(item);
+                      // Chạy tìm kiếm
+                      const newHistory = [
+                        item,
+                        ...searchHistory.filter((i) => i !== item),
+                      ].slice(0, 10);
+                      setSearchHistory(newHistory);
+                      localStorage.setItem(
+                        "searchHistory",
+                        JSON.stringify(newHistory)
+                      );
+                      setIsSearchDropdownOpen(false);
+                      setIsMobileSearchOpen(false);
+                      setIsSearchInputFocused(false);
+                      navigate(`/products?name=${encodeURIComponent(item)}`);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Clock size={16} className="text-gray-400" />
+                      <span className="text-gray-700">{item}</span>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveSearchHistoryItem(index);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <MdTrendingUp className="text-xl text-blue-500" /> Xu hướng tìm
+              kiếm
+            </h3>
+            <div className="grid grid-cols-1 gap-2">
+              {trendingProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                  onClick={() => {
+                    handleSuggestionClick(product);
+                  }}
+                >
+                  <img
+                    src={getPrimaryImage(product)}
+                    alt={product.name}
+                    className="w-10 h-10 object-cover rounded"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-700 truncate">
+                      {product.name}
+                    </p>
+                    <p className="text-sm font-semibold text-brand-primary">
+                      {formatPrice(product)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {searchTerm.trim() && (
+        <div className="p-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
+              <span className="ml-3 text-gray-500">Đang tìm kiếm...</span>
+            </div>
+          ) : searchSuggestions ? (
+            <>
+              <div className="mb-2 text-xs text-gray-400">
+                Tìm thấy{" "}
+                {searchSuggestions.exactMatches?.length +
+                  searchSuggestions.suggestedProducts?.length}{" "}
+                kết quả
+              </div>
+
+              {searchSuggestions.exactMatches?.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="font-semibold text-gray-700 mb-3">
+                    Có phải bạn muốn tìm
+                  </h3>
+                  <div className="space-y-3">
+                    {searchSuggestions.exactMatches.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        onClick={() => {
+                          setIsSearchInputFocused(false);
+                          handleSuggestionClick(product);
+                        }}
+                      >
+                        <img
+                          src={getPrimaryImage(product)}
+                          alt={product.name}
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-800 line-clamp-2">
+                            {product.name}
+                          </p>
+                          <p className="text-sm font-semibold text-brand-primary mt-1">
+                            {formatPrice(product)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchSuggestions.suggestedProducts?.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-700 mb-3">
+                    Sản phẩm gợi ý
+                  </h3>
+                  <div className="grid grid-cols-1 gap-3">
+                    {searchSuggestions.suggestedProducts.map((product) => (
+                      <div
+                        key={product.id}
+                        className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
+                        onClick={() => {
+                          setIsSearchInputFocused(false);
+                          handleSuggestionClick(product);
+                        }}
+                      >
+                        <img
+                          src={getPrimaryImage(product)}
+                          alt={product.name}
+                          className="w-10 h-10 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm text-gray-700 truncate">
+                            {product.name}
+                          </p>
+                          <p className="text-sm font-semibold text-brand-primary">
+                            {formatPrice(product)}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {searchSuggestions.exactMatches?.length === 0 &&
+                searchSuggestions.suggestedProducts?.length === 0 && (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      Không tìm thấy sản phẩm phù hợp
+                    </p>
+                  </div>
+                )}
+            </>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Nhập từ khóa để tìm kiếm</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <header className="sticky top-0 z-50 w-full bg-brand-primary text-brand-primary-foreground shadow-lg">
@@ -582,200 +763,10 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Search Dropdown */}
+            {/* Desktop Search Dropdown */}
             {isSearchDropdownOpen && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 max-h-[70vh] overflow-y-auto z-50 hidden lg:block">
-                {!searchTerm.trim() && (
-                  <div className="p-4">
-                    {searchHistory.length > 0 && (
-                      <div className="mb-6">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-                            <Clock size={16} /> Lịch sử tìm kiếm
-                          </h3>
-                          <button
-                            onClick={handleClearSearchHistory}
-                            className="text-sm text-gray-500 hover:text-red-500 transition-colors"
-                          >
-                            Xóa tất cả
-                          </button>
-                        </div>
-                        <div className="space-y-2">
-                          {searchHistory.slice(0, 5).map((item, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between p-2 hover:bg-gray-50 rounded cursor-pointer group"
-                              onClick={() => {
-                                setSearchTerm(item);
-                                setIsSearchDropdownOpen(false);
-                                setIsSearchInputFocused(false);
-                                navigate(
-                                  `/products?name=${encodeURIComponent(item)}`
-                                );
-                              }}
-                            >
-                              <div className="flex items-center gap-3">
-                                <Clock size={16} className="text-gray-400" />
-                                <span className="text-gray-700">{item}</span>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSearchHistoryItem(index);
-                                }}
-                                className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
-                              >
-                                <X size={16} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div>
-                      <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                        <MdTrendingUp className="text-xl text-blue-500" /> Xu
-                        hướng tìm kiếm
-                      </h3>
-                      <div className="grid grid-cols-1 gap-2">
-                        {trendingProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                            onClick={() => {
-                              setIsSearchDropdownOpen(false);
-                              handleSuggestionClick(product);
-                            }}
-                          >
-                            <img
-                              src={getPrimaryImage(product)}
-                              alt={product.name}
-                              className="w-10 h-10 object-cover rounded"
-                            />
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-700 truncate">
-                                {product.name}
-                              </p>
-                              <p className="text-sm font-semibold text-brand-primary">
-                                {formatPrice(product)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {searchTerm.trim() && (
-                  <div className="p-4">
-                    {isLoading ? (
-                      <div className="flex justify-center items-center py-8">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-primary"></div>
-                        <span className="ml-3 text-gray-500">
-                          Đang tìm kiếm...
-                        </span>
-                      </div>
-                    ) : searchSuggestions ? (
-                      <>
-                        <div className="mb-2 text-xs text-gray-400">
-                          Tìm thấy{" "}
-                          {searchSuggestions.exactMatches?.length +
-                            searchSuggestions.suggestedProducts?.length}{" "}
-                          kết quả
-                        </div>
-
-                        {searchSuggestions.exactMatches?.length > 0 && (
-                          <div className="mb-6">
-                            <h3 className="font-semibold text-gray-700 mb-3">
-                              Có phải bạn muốn tìm
-                            </h3>
-                            <div className="space-y-3">
-                              {searchSuggestions.exactMatches.map((product) => (
-                                <div
-                                  key={product.id}
-                                  className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                                  onClick={() => {
-                                    setIsSearchDropdownOpen(false);
-                                    setIsSearchInputFocused(false);
-                                    handleSuggestionClick(product);
-                                  }}
-                                >
-                                  <img
-                                    src={getPrimaryImage(product)}
-                                    alt={product.name}
-                                    className="w-12 h-12 object-cover rounded"
-                                  />
-                                  <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
-                                      {product.name}
-                                    </p>
-                                    <p className="text-sm font-semibold text-brand-primary mt-1">
-                                      {formatPrice(product)}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-
-                        {searchSuggestions.suggestedProducts?.length > 0 && (
-                          <div>
-                            <h3 className="font-semibold text-gray-700 mb-3">
-                              Sản phẩm gợi ý
-                            </h3>
-                            <div className="grid grid-cols-1 gap-3">
-                              {searchSuggestions.suggestedProducts.map(
-                                (product) => (
-                                  <div
-                                    key={product.id}
-                                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer"
-                                    onClick={() => {
-                                      setIsSearchDropdownOpen(false);
-                                      setIsSearchInputFocused(false);
-                                      handleSuggestionClick(product);
-                                    }}
-                                  >
-                                    <img
-                                      src={getPrimaryImage(product)}
-                                      alt={product.name}
-                                      className="w-10 h-10 object-cover rounded"
-                                    />
-                                    <div className="flex-1">
-                                      <p className="text-sm text-gray-700 truncate">
-                                        {product.name}
-                                      </p>
-                                      <p className="text-sm font-semibold text-brand-primary">
-                                        {formatPrice(product)}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {searchSuggestions.exactMatches?.length === 0 &&
-                          searchSuggestions.suggestedProducts?.length === 0 && (
-                            <div className="text-center py-8">
-                              <p className="text-gray-500">
-                                Không tìm thấy sản phẩm phù hợp
-                              </p>
-                            </div>
-                          )}
-                      </>
-                    ) : (
-                      <div className="text-center py-8">
-                        <p className="text-gray-500">
-                          Nhập từ khóa để tìm kiếm
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {searchDropdownContent}
               </div>
             )}
           </div>
@@ -787,7 +778,7 @@ export default function Header() {
               onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
               className="lg:hidden cursor-pointer p-2 text-brand-primary-foreground hover:bg-brand-primary-foreground/20 rounded-lg"
             >
-              <Search size={20} />
+              {isMobileSearchOpen ? <X size={20} /> : <Search size={20} />}
             </button>
 
             {/* Wishlist */}
@@ -1000,26 +991,30 @@ export default function Header() {
           </div>
         </div>
 
-        {/* --- MOBILE SEARCH BAR --- */}
+        {/* --- MOBILE SEARCH OVERLAY (UPDATED) --- */}
         {isMobileSearchOpen && (
-          <div className="pb-3 lg:hidden">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
-                autoFocus
-                placeholder="Bạn muốn mua gì?"
-                className="bg-brand-primary-foreground w-full px-4 py-2.5 pr-12 rounded-lg border-0 focus:outline-none text-brand-ink text-sm shadow-inner"
-              />
-              <button
-                onClick={handleSearch}
-                className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-2 text-brand-primary"
-              >
-                <Search size={18} />
-              </button>
+          <div className="absolute top-16 left-0 w-full bg-white shadow-xl z-50 border-t border-gray-200 lg:hidden max-h-[calc(100vh-64px)] overflow-y-auto">
+            <div className="p-4 border-b border-gray-100 bg-brand-primary/5 sticky top-0 z-10">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoFocus
+                  placeholder="Bạn muốn mua gì?"
+                  className="w-full px-4 py-3 pr-12 rounded-lg border border-gray-300 focus:outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-gray-800 text-sm shadow-sm"
+                />
+                <button
+                  onClick={handleSearch}
+                  className="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 p-2 text-brand-primary"
+                >
+                  <Search size={20} />
+                </button>
+              </div>
             </div>
+            {/* Render nội dung gợi ý/lịch sử/xu hướng */}
+            {searchDropdownContent}
           </div>
         )}
       </div>
