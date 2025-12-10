@@ -322,12 +322,6 @@ Chúng tôi luôn hoan nghênh mọi đóng góp! Nếu bạn muốn đóng góp
 - Function names: camelCase
 - Viết comments cho logic phức tạp
 
-## 👥 Tác giả
-
-**Nhóm 08 - WWW Java**
-
-- **Tân Duy** - [@TanDuy274](https://github.com/TanDuy274) - Project Lead
-- **Thành viên khác** - [Liên kết GitHub]
 
 ## 📄 License
 
