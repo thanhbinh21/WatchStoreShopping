@@ -26,7 +26,7 @@ export default function HeroSection() {
               {/* Image container */}
               <div className="relative rounded-4xl overflow-hidden shadow-2xl transform -rotate-2 hover:rotate-0 transition-transform duration-700 bg-gray-900">
                 <img
-                  src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80"
+                  src="https://img.pikbest.com/origin/06/43/44/88JpIkbEsTsAQ.jpg!w700wp"
                   alt="Đồng Hồ Cao Cấp"
                   className="w-full h-auto object-cover aspect-square hover:scale-105 transition-transform duration-700"
                   onError={(e) => {
