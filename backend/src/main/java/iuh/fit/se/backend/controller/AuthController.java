@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.security.Principal;
 import iuh.fit.se.backend.service.PasswordResetService;
 import iuh.fit.se.backend.service.EmailService;
-import iuh.fit.se.backend.repository.UserRepository;
 import iuh.fit.se.backend.dto.response.LoginResponse;
 import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.entity.enums.Role;
@@ -225,7 +224,6 @@ public class AuthController {
             Map<String, Object> fbInfo = objectMapper.readValue(resp.body(), Map.class);
             String email = (String) fbInfo.get("email");
             String name = (String) fbInfo.get("name");
-            String fbId = (String) fbInfo.get("id");
             String pictureUrl = null;
             Object pictureObj = fbInfo.get("picture");
             if (pictureObj instanceof Map) {

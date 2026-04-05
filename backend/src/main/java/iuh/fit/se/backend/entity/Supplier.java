@@ -1,7 +1,6 @@
 package iuh.fit.se.backend.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import iuh.fit.se.backend.entity.enums.Status;
 import jakarta.persistence.*;
 import lombok.*;

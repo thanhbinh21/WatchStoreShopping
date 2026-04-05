@@ -22,7 +22,6 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -160,7 +159,7 @@ public class VNPayService {
             
             // Verify signature
             String signValue = VNPayUtil.hashAllFields(verifyParams, vnPayConfig.getHashSecret());
-            boolean signatureValid = signValue.equals(vnp_SecureHash);
+            log.debug("VNPay signature check bypassed in sandbox. expected={}, actual={}", signValue, vnp_SecureHash);
             
             // TODO: VNPay sandbox has signature mismatch issue. Uncomment this in production!
             // if (!signatureValid) {
@@ -170,94 +169,87 @@ public class VNPayService {
             //     return result;
             // }
             
-            if (true) { // Always proceed for sandbox testing
-                String vnp_ResponseCode = params.get("vnp_ResponseCode");
-                String vnp_TxnRef = params.get("vnp_TxnRef");
-                String vnp_Amount = params.get("vnp_Amount");
-                String vnp_OrderInfo = params.get("vnp_OrderInfo");
-                String vnp_TransactionNo = params.get("vnp_TransactionNo");
-                String vnp_BankCode = params.get("vnp_BankCode");
-                
-                // Extract orderId from vnp_OrderInfo (format: "Thanh toan don hang {orderId}")
-                Long extractedOrderId = null;
-                try {
-                    String[] parts = vnp_OrderInfo.split(" ");
-                    extractedOrderId = Long.parseLong(parts[parts.length - 1]);
-                } catch (Exception e) {
-                    log.error("Cannot extract orderId from vnp_OrderInfo: {}", vnp_OrderInfo);
-                }
-                
-                // Find order by ID or transaction reference
-                Order order = null;
-                if (extractedOrderId != null) {
-                    order = orderRepository.findById(extractedOrderId).orElse(null);
-                }
-                if (order == null) {
-                    final Long finalOrderId = extractedOrderId;
-                    order = orderRepository.findByTransactionId(vnp_TxnRef)
-                            .orElseThrow(() -> new RuntimeException("Order not found with ID: " + finalOrderId + " or transaction ID: " + vnp_TxnRef));
-                }
-                
-                log.info("Found order {} for VNPay transaction {}", order.getId(), vnp_TxnRef);
-                
-                if ("00".equals(vnp_ResponseCode)) {
-                    // Check if payment already processed (avoid duplicate)
-                    if (order.getStatus() == OrderStatus.PAID) {
-                        log.warn("Order {} already paid, skipping duplicate payment processing", order.getId());
-                        result.put("code", "00");
-                        result.put("message", "Payment already processed");
-                        result.put("orderId", order.getId().toString());
-                        result.put("vnp_TxnRef", vnp_TxnRef);
-                        result.put("vnp_Amount", vnp_Amount);
-                        result.put("vnp_BankCode", vnp_BankCode);
-                        result.put("vnp_TransactionNo", vnp_TransactionNo);
-                        return result;
-                    }
-                    
-                    // Payment successful - use OrderService to handle all post-payment logic
-                    order.setStatus(OrderStatus.PAID);
-                    order.setTransactionId(vnp_TransactionNo);
-                    orderRepository.save(order);
-                    
-                    // Create payment record (only if not exists)
-                    BigDecimal amount = new BigDecimal(vnp_Amount).divide(new BigDecimal(100));
-                    Payment payment = Payment.builder()
-                            .method(PaymentMethod.VNPAY)
-                            .amount(amount)
-                            .order(order)
-                            .build();
-                    paymentRepository.save(payment);
-                    
-                    // Trigger post-payment logic (clear cart, send email)
-                    orderService.updatePaymentStatus(order.getId(), iuh.fit.se.backend.entity.enums.PaymentStatus.PAID, vnp_TransactionNo);
-                    
-                    result.put("code", "00");
-                    result.put("message", "Payment successful");
-                    result.put("orderId", order.getId().toString());
-                    
-                    log.info("VNPay payment successful for order {}, transaction: {}", order.getId(), vnp_TransactionNo);
-                } else {
-                    // Payment failed
-                    order.setStatus(OrderStatus.CANCELLED);
-                    orderRepository.save(order);
-                    
-                    result.put("code", vnp_ResponseCode);
-                    result.put("message", "Payment failed");
-                    result.put("orderId", order.getId().toString());
-                    
-                    log.warn("VNPay payment failed for order {}, response code: {}", order.getId(), vnp_ResponseCode);
-                }
-                
-                result.put("vnp_TxnRef", vnp_TxnRef);
-                result.put("vnp_Amount", vnp_Amount);
-                result.put("vnp_BankCode", vnp_BankCode);
-                result.put("vnp_TransactionNo", vnp_TransactionNo);
-                
-            } else {
-                result.put("code", "97");
-                result.put("message", "Invalid signature");
-                log.error("Invalid VNPay signature");
+            String vnp_ResponseCode = params.get("vnp_ResponseCode");
+            String vnp_TxnRef = params.get("vnp_TxnRef");
+            String vnp_Amount = params.get("vnp_Amount");
+            String vnp_OrderInfo = params.get("vnp_OrderInfo");
+            String vnp_TransactionNo = params.get("vnp_TransactionNo");
+            String vnp_BankCode = params.get("vnp_BankCode");
+            
+            // Extract orderId from vnp_OrderInfo (format: "Thanh toan don hang {orderId}")
+            Long extractedOrderId = null;
+            try {
+                String[] parts = vnp_OrderInfo.split(" ");
+                extractedOrderId = Long.parseLong(parts[parts.length - 1]);
+            } catch (Exception e) {
+                log.error("Cannot extract orderId from vnp_OrderInfo: {}", vnp_OrderInfo);
             }
+            
+            // Find order by ID or transaction reference
+            Order order = null;
+            if (extractedOrderId != null) {
+                order = orderRepository.findById(extractedOrderId).orElse(null);
+            }
+            if (order == null) {
+                final Long finalOrderId = extractedOrderId;
+                order = orderRepository.findByTransactionId(vnp_TxnRef)
+                        .orElseThrow(() -> new RuntimeException("Order not found with ID: " + finalOrderId + " or transaction ID: " + vnp_TxnRef));
+            }
+            
+            log.info("Found order {} for VNPay transaction {}", order.getId(), vnp_TxnRef);
+            
+            if ("00".equals(vnp_ResponseCode)) {
+                // Check if payment already processed (avoid duplicate)
+                if (order.getStatus() == OrderStatus.PAID) {
+                    log.warn("Order {} already paid, skipping duplicate payment processing", order.getId());
+                    result.put("code", "00");
+                    result.put("message", "Payment already processed");
+                    result.put("orderId", order.getId().toString());
+                    result.put("vnp_TxnRef", vnp_TxnRef);
+                    result.put("vnp_Amount", vnp_Amount);
+                    result.put("vnp_BankCode", vnp_BankCode);
+                    result.put("vnp_TransactionNo", vnp_TransactionNo);
+                    return result;
+                }
+                
+                // Payment successful - use OrderService to handle all post-payment logic
+                order.setStatus(OrderStatus.PAID);
+                order.setTransactionId(vnp_TransactionNo);
+                orderRepository.save(order);
+                
+                // Create payment record (only if not exists)
+                BigDecimal amount = new BigDecimal(vnp_Amount).divide(new BigDecimal(100));
+                Payment payment = Payment.builder()
+                        .method(PaymentMethod.VNPAY)
+                        .amount(amount)
+                        .order(order)
+                        .build();
+                paymentRepository.save(payment);
+                
+                // Trigger post-payment logic (clear cart, send email)
+                orderService.updatePaymentStatus(order.getId(), iuh.fit.se.backend.entity.enums.PaymentStatus.PAID, vnp_TransactionNo);
+                
+                result.put("code", "00");
+                result.put("message", "Payment successful");
+                result.put("orderId", order.getId().toString());
+                
+                log.info("VNPay payment successful for order {}, transaction: {}", order.getId(), vnp_TransactionNo);
+            } else {
+                // Payment failed
+                order.setStatus(OrderStatus.CANCELLED);
+                orderRepository.save(order);
+                
+                result.put("code", vnp_ResponseCode);
+                result.put("message", "Payment failed");
+                result.put("orderId", order.getId().toString());
+                
+                log.warn("VNPay payment failed for order {}, response code: {}", order.getId(), vnp_ResponseCode);
+            }
+            
+            result.put("vnp_TxnRef", vnp_TxnRef);
+            result.put("vnp_Amount", vnp_Amount);
+            result.put("vnp_BankCode", vnp_BankCode);
+            result.put("vnp_TransactionNo", vnp_TransactionNo);
             
         } catch (Exception e) {
             log.error("Error handling VNPay payment return", e);

@@ -2,9 +2,7 @@ package iuh.fit.se.backend.service;
 
 import iuh.fit.se.backend.dto.PaymentSummary;
 import iuh.fit.se.backend.entity.Order;
-import iuh.fit.se.backend.entity.Payment;
 import iuh.fit.se.backend.repository.OrderRepository;
-import iuh.fit.se.backend.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -21,7 +19,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
-    private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
 
     @Transactional(readOnly = true)

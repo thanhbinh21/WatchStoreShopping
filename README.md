@@ -1,130 +1,166 @@
-# 🕐 Watch Store - E-Commerce Platform
+# Watch Store E-Commerce Platform
 
-> Hệ thống thương mại điện tử bán đồng hồ chính hãng với quản trị toàn diện
+Watch Store is an e-commerce platform for selling authentic watches with customer-facing shopping features and a complete administration system.
 
-[![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=flat&logo=react)](https://reactjs.org/)
-[![Vite](https://img.shields.io/badge/Vite-7.1.7-646CFF?style=flat&logo=vite)](https://vitejs.dev/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind-4.1.13-38B2AC?style=flat&logo=tailwind-css)](https://tailwindcss.com/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+## Table of Contents
 
-## 📋 Mục lục
+- [Overview](#overview)
+- [Main Features](#main-features)
+- [Technology Stack](#technology-stack)
+- [Project Structure](#project-structure)
+- [System Requirements](#system-requirements)
+- [Setup and Run](#setup-and-run)
+- [API Overview](#api-overview)
+- [Development Commands](#development-commands)
+- [Contribution Guide](#contribution-guide)
+- [License](#license)
 
-- [Giới thiệu](#-giới-thiệu)
-- [Tính năng chính](#-tính-năng-chính)
-- [Công nghệ sử dụng](#-công-nghệ-sử-dụng)
-- [Cài đặt](#-cài-đặt)
-- [Sử dụng](#-sử-dụng)
-- [Cấu trúc dự án](#-cấu-trúc-dự-án)
-- [API Documentation](#-api-documentation)
-- [Screenshots](#-screenshots)
-- [Đóng góp](#-đóng-góp)
-- [Tác giả](#-tác-giả)
+## Overview
 
-## 🎯 Giới thiệu
+- Course: Web Programming with Java
+- Team: 08
+- Term: 2024-2025
+- Scope: Full-stack web application (Java Spring Boot backend and React frontend)
 
-**Watch Store** là một nền tảng thương mại điện tử hiện đại chuyên bán đồng hồ cao cấp chính hãng (Rolex, Omega, Casio, G-Shock, v.v.). Dự án được xây dựng với mục tiêu cung cấp trải nghiệm mua sắm tuyệt vời cho khách hàng và công cụ quản lý mạnh mẽ cho quản trị viên.
+The project supports two user groups:
 
-### 🎓 Dự án môn học
-- **Môn học**: Lập trình WWW với Java
-- **Nhóm**: 08
-- **Học kỳ**: 7
-- **Năm học**: 2024-2025
+- Customers: browse products, add to cart, checkout, track orders, review products, chat support, and manage wishlist.
+- Administrators: manage products, categories, brands, suppliers, orders, promotions, users, content, reports, and notifications.
 
-## ✨ Tính năng chính
+## Main Features
 
-### 👥 Dành cho Khách hàng
-- 🛍️ **Mua sắm trực tuyến**: Duyệt và tìm kiếm sản phẩm với bộ lọc nâng cao
-- 🛒 **Giỏ hàng thông minh**: Hỗ trợ cả user đã đăng nhập và khách
-- 💳 **Thanh toán linh hoạt**: COD và VNPay gateway
-- ⭐ **Đánh giá sản phẩm**: Review và rating từ người dùng thực
-- 💬 **Chat real-time**: Hỗ trợ trực tiếp với admin
-- 🤖 **AI Chatbot**: Trợ lý ảo hỗ trợ 24/7
-- ❤️ **Wishlist**: Lưu sản phẩm yêu thích
-- 📦 **Theo dõi đơn hàng**: Cập nhật trạng thái real-time
-- 🎁 **Khuyến mãi**: Tự động áp dụng giảm giá
-- 📱 **Responsive**: Tối ưu cho mọi thiết bị
+### Customer Features
 
-### 👨‍💼 Dành cho Quản trị viên
-- 📊 **Dashboard tổng quan**: Biểu đồ doanh thu, đơn hàng, khách hàng
-- 📈 **Báo cáo chi tiết**: Theo ngày, tháng, năm
-- 📦 **Quản lý sản phẩm**: CRUD với upload hình ảnh
-- 🏷️ **Quản lý danh mục**: Categories, brands, suppliers
-- 🎁 **Quản lý khuyến mãi**: Tạo và theo dõi chương trình giảm giá
-- 👥 **Quản lý người dùng**: Phân quyền và theo dõi hoạt động
-- 🛍️ **Quản lý đơn hàng**: Xử lý và cập nhật trạng thái
-- 💬 **Admin Chat**: Trả lời tin nhắn từ khách hàng
-- 📝 **CMS**: Quản lý bài viết, banner, nội dung
-- 💰 **Quản lý thanh toán**: Theo dõi giao dịch VNPay
-- 📊 **Quản lý kho**: Inventory tracking
-- ⭐ **Quản lý review**: Duyệt và phản hồi đánh giá
-- 🔔 **Thông báo**: Real-time notifications
+- Account registration and login (JWT based)
+- Google and Facebook OAuth login
+- Product listing, filtering, searching, and detail pages
+- Shopping cart for authenticated users and guests
+- Checkout with COD and VNPay payment gateway
+- Order tracking and order history
+- Product review and rating
+- Real-time chat with admin and AI assistant chat
+- Wishlist management
 
-### 🔐 Xác thực & Bảo mật
-- 🔑 **JWT Authentication**: Token-based security
-- 🌐 **OAuth 2.0**: Đăng nhập Google & Facebook
-- 🔒 **Role-based access**: ADMIN, USER roles
-- 🔐 **Password reset**: Quên mật khẩu qua email
-- 🔄 **Session management**: Auto refresh token
+### Admin Features
 
-## 🛠️ Công nghệ sử dụng
+- Dashboard for sales and operational overview
+- Product CRUD with image upload
+- Category, brand, and supplier management
+- Promotion and banner management
+- Order processing and status update
+- User and role management
+- Report and analytics views
+- CMS for posts and content blocks
+- Review moderation
+- Inventory tracking
+- Payment monitoring
 
-### Core Technologies
-- **React 19.1.1** - UI Library
-- **Vite 7.1.7** - Build tool & dev server
-- **React Router 7.9.2** - Client-side routing
-- **Axios 1.12.2** - HTTP client
+### Security and Access
 
-### UI/UX
-- **TailwindCSS 4.1.13** - Utility-first CSS
-- **Radix UI** - Headless UI components
-- **Lucide React** - Icon library
-- **React Icons** - Additional icons
-- **Recharts 3.5.1** - Data visualization
-- **Sonner** - Toast notifications
+- JWT authentication and token refresh flow
+- Role-based access control (ADMIN, USER)
+- Password reset flow through email
 
-### Real-time & Chat
-- **@stomp/stompjs** - WebSocket messaging
-- **SockJS Client** - WebSocket fallback
+## Technology Stack
 
-### Others
-- **React Helmet Async** - SEO management
-- **React Quill New** - Rich text editor
-- **date-fns** - Date utilities
-- **clsx & tailwind-merge** - Conditional styling
+### Frontend
 
-### Development Tools
-- **ESLint** - Code linting
-- **Vite Plugin React** - Fast refresh
+- React 19
+- Vite 7
+- React Router 7
+- Axios
+- Tailwind CSS 4
+- Radix UI
+- Recharts
+- Sonner
+- STOMP and SockJS for real-time messaging
 
-## 📦 Cài đặt
+### Backend
 
-### Yêu cầu hệ thống
-- Node.js >= 18.0.0
-- npm >= 9.0.0 hoặc yarn >= 1.22.0
+- Java
+- Spring Boot
+- Spring Security
+- Spring Data JPA
+- WebSocket
+- Maven
+
+### Integrations
+
+- VNPay payment gateway
+- Cloudinary media upload
+- Google OAuth
+- Facebook OAuth
+
+## Project Structure
+
+```text
+WatchStoreShopping/
+├── backend/                # Spring Boot backend
+│   ├── src/main/java/
+│   ├── src/main/resources/
+│   └── pom.xml
+├── frontend/               # React + Vite frontend
+│   ├── src/
+│   ├── public/
+│   └── package.json
+└── README.md
+```
+
+## System Requirements
+
+- Java 17 or newer
+- Maven 3.8 or newer
+- Node.js 18 or newer
+- npm 9 or newer
 - Git
 
-### Các bước cài đặt
+## Setup and Run
 
-1. **Clone repository**
+## 1. Clone Repository
+
 ```bash
 git clone https://github.com/TanDuy274/WWW_JAVA_Nhom08.git
-cd WWW_JAVA_Nhom08/frontend
+cd WWW_JAVA_Nhom08
 ```
 
-2. **Cài đặt dependencies**
+## 2. Run Backend
+
 ```bash
+cd backend
+./mvnw spring-boot:run
+```
+
+For Windows:
+
+```bash
+cd backend
+mvnw.cmd spring-boot:run
+```
+
+Default backend base URL:
+
+```text
+http://localhost:8080/api
+```
+
+## 3. Run Frontend
+
+```bash
+cd frontend
 npm install
-# hoặc
-yarn install
+npm run dev
 ```
 
-3. **Cấu hình môi trường**
-```bash
-# Tạo file .env trong thư mục frontend
-cp .env.example .env
+Default frontend URL:
+
+```text
+http://localhost:5173
 ```
 
-Cấu hình file `.env`:
+## 4. Frontend Environment Variables
+
+Create file `frontend/.env` and configure:
+
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api
 VITE_VNPAY_RETURN_URL=http://localhost:5173/vnpay-return
@@ -132,217 +168,69 @@ VITE_GOOGLE_CLIENT_ID=your_google_client_id
 VITE_FACEBOOK_APP_ID=your_facebook_app_id
 ```
 
-4. **Chạy development server**
-```bash
-npm run dev
-# hoặc
-yarn dev
-```
+## API Overview
 
-Ứng dụng sẽ chạy tại: `http://localhost:5173`
+Base URL:
 
-## 🚀 Sử dụng
-
-### Development Mode
-```bash
-npm run dev
-```
-- Hot Module Replacement (HMR)
-- Fast refresh
-- Development tools enabled
-
-### Production Build
-```bash
-npm run build
-```
-- Optimized bundle
-- Tree shaking
-- Code splitting
-- Minification
-
-### Preview Production Build
-```bash
-npm run preview
-```
-
-### Linting
-```bash
-npm run lint
-```
-
-## 📁 Cấu trúc dự án
-
-```
-frontend/
-├── public/                      # Static assets
-│   └── images/                  # Public images
-│       ├── avatars/
-│       ├── banners/
-│       ├── brands/
-│       ├── products/
-│       └── ...
-├── src/
-│   ├── api/                     # API service layer
-│   │   ├── axiosConfig.js       # Axios configuration
-│   │   ├── authAPI.js           # Authentication APIs
-│   │   ├── productAPI.js        # Product APIs
-│   │   ├── cartAPI.js           # Cart APIs
-│   │   ├── orderAPI.js          # Order APIs
-│   │   ├── paymentAPI.js        # Payment APIs
-│   │   ├── chatAPI.js           # Chat APIs
-│   │   └── ...
-│   ├── assets/                  # Asset files
-│   │   ├── fonts/
-│   │   └── images/
-│   ├── components/              # Reusable components
-│   │   ├── Header.jsx
-│   │   ├── Footer.jsx
-│   │   ├── ProductCard.jsx
-│   │   ├── ChatWidget.jsx
-│   │   ├── Admin/               # Admin components
-│   │   │   ├── Sidebar.jsx
-│   │   │   ├── TopBar.jsx
-│   │   │   └── ...
-│   │   └── ui/                  # UI primitives
-│   │       ├── button.jsx
-│   │       ├── dialog.jsx
-│   │       ├── input.jsx
-│   │       └── ...
-│   ├── contexts/                # React contexts
-│   │   └── ChatContext.jsx
-│   ├── lib/                     # Utility libraries
-│   │   ├── utils.js
-│   │   ├── data.js
-│   │   └── payment.js
-│   ├── pages/                   # Page components
-│   │   ├── Home.jsx
-│   │   ├── ProductList.jsx
-│   │   ├── ProductDetail.jsx
-│   │   ├── Cart.jsx
-│   │   ├── Checkout.jsx
-│   │   ├── Orders.jsx
-│   │   ├── Login.jsx
-│   │   ├── Admin.jsx
-│   │   └── Admin/               # Admin pages
-│   │       ├── AdminDashboard.jsx
-│   │       ├── AdminProduct.jsx
-│   │       ├── AdminOrders.jsx
-│   │       └── ...
-│   ├── routes/                  # Route guards
-│   │   ├── PrivateRoute.jsx
-│   │   └── PublicRoute.jsx
-│   ├── utils/                   # Utility functions
-│   │   ├── storage.js
-│   │   └── bannerUtils.js
-│   ├── App.jsx                  # Main app component
-│   ├── main.jsx                 # Entry point
-│   └── index.css                # Global styles
-├── .gitignore
-├── components.json              # shadcn/ui config
-├── eslint.config.js             # ESLint configuration
-├── index.html                   # HTML template
-├── jsconfig.json                # JavaScript config
-├── package.json                 # Dependencies
-├── tailwind.config.js           # Tailwind configuration
-├── vite.config.js               # Vite configuration
-└── README.md
-```
-
-## 🔌 API Documentation
-
-### Base URL
-```
+```text
 http://localhost:8080/api
 ```
 
-### Authentication Endpoints
-```
-POST   /auth/register          # Đăng ký tài khoản
-POST   /auth/login             # Đăng nhập
-POST   /auth/refresh           # Refresh token
-POST   /auth/google            # Google OAuth
-POST   /auth/facebook          # Facebook OAuth
-POST   /auth/reset-password    # Reset mật khẩu
-```
+Sample endpoint groups:
 
-### Product Endpoints
-```
-GET    /products               # Lấy danh sách sản phẩm
-GET    /products/{id}          # Chi tiết sản phẩm
-POST   /products               # Tạo sản phẩm (ADMIN)
-PUT    /products/{id}          # Cập nhật sản phẩm (ADMIN)
-DELETE /products/{id}          # Xóa sản phẩm (ADMIN)
-```
+- Authentication: `/auth/*`
+- Products: `/products/*`
+- Orders: `/orders/*`
+- Payments: `/payments/*`
+- Uploads: `/upload/*`
+- Notifications: `/notifications/*`
 
-### Order Endpoints
-```
-GET    /orders                 # Lịch sử đơn hàng
-GET    /orders/{id}            # Chi tiết đơn hàng
-POST   /orders                 # Tạo đơn hàng
-PUT    /orders/{id}/status     # Cập nhật trạng thái (ADMIN)
+Refer to backend controller classes for complete endpoint details.
+
+## Development Commands
+
+### Frontend
+
+```bash
+cd frontend
+npm run dev
+npm run build
+npm run preview
+npm run lint
 ```
 
-### Payment Endpoints
+### Backend
+
+```bash
+cd backend
+./mvnw test
+./mvnw spring-boot:run
 ```
-POST   /payment/vnpay/create   # Tạo thanh toán VNPay
-GET    /payment/vnpay/return   # VNPay callback
+
+For Windows:
+
+```bash
+cd backend
+mvnw.cmd test
+mvnw.cmd spring-boot:run
 ```
 
-Xem chi tiết API documentation tại backend repository.
+## Contribution Guide
 
-## 📸 Screenshots
+1. Fork the repository.
+2. Create a feature branch.
+3. Commit your changes with clear commit messages.
+4. Push the branch to your fork.
+5. Open a pull request.
 
-### Customer Interface
-- Trang chủ với banner slider và sản phẩm nổi bật
-- Danh sách sản phẩm với bộ lọc nâng cao
-- Chi tiết sản phẩm với review và rating
-- Giỏ hàng và checkout
-- Theo dõi đơn hàng
+Coding standards:
 
-### Admin Dashboard
-- Tổng quan doanh thu với biểu đồ
-- Quản lý sản phẩm
-- Quản lý đơn hàng
-- Báo cáo chi tiết
+- Follow ESLint rules for frontend.
+- Follow Java and Spring Boot conventions for backend.
+- Use PascalCase for React component names.
+- Use camelCase for function and variable names.
+- Add comments only for non-obvious business logic.
 
-## 🤝 Đóng góp
+## License
 
-Chúng tôi luôn hoan nghênh mọi đóng góp! Nếu bạn muốn đóng góp:
-
-1. Fork repository
-2. Tạo branch mới (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Mở Pull Request
-
-### Coding Standards
-- Sử dụng ESLint configuration có sẵn
-- Tuân thủ React best practices
-- Component names: PascalCase
-- Function names: camelCase
-- Viết comments cho logic phức tạp
-
-
-## 📄 License
-
-Dự án này được phân phối dưới giấy phép MIT. Xem file [LICENSE](LICENSE) để biết thêm chi tiết.
-
-## 📞 Liên hệ
-
-- 📧 Email: your-email@example.com
-- 🌐 Website: [Watch Store](https://watchstore.com)
-- 📱 Facebook: [Watch Store Official](https://facebook.com/watchstore)
-
-## 🙏 Lời cảm ơn
-
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Radix UI](https://www.radix-ui.com/)
-- [Lucide Icons](https://lucide.dev/)
-- [VNPay](https://vnpay.vn/)
-
----
-
-<p align="center">Made with ❤️ by Nhóm 08</p>
-<p align="center">© 2024-2025 Watch Store. All rights reserved.</p>
+This project is released under the MIT License.

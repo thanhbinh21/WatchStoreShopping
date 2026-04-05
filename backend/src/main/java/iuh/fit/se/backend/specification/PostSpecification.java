@@ -1,7 +1,6 @@
 package iuh.fit.se.backend.specification;
 
 import iuh.fit.se.backend.entity.Post;
-import iuh.fit.se.backend.entity.PostCategory;
 import iuh.fit.se.backend.entity.enums.PostStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;

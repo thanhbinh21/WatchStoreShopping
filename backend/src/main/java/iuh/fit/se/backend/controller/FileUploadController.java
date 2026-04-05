@@ -67,7 +67,7 @@ public class FileUploadController {
             }
 
             // Upload to Cloudinary
-            Map uploadResult = cloudinaryService.uploadImage(file, "avatars");
+            Map<String, Object> uploadResult = cloudinaryService.uploadImage(file, "avatars");
             String imageUrl = (String) uploadResult.get("url");
 
             Map<String, Object> resp = new HashMap<>();
@@ -102,7 +102,7 @@ public class FileUploadController {
                 }
 
                 // Upload to Cloudinary
-                Map uploadResult = cloudinaryService.uploadImage(file, folder);
+                Map<String, Object> uploadResult = cloudinaryService.uploadImage(file, folder);
                 String imageUrl = (String) uploadResult.get("url");
                 fileNames.add(imageUrl);
             }

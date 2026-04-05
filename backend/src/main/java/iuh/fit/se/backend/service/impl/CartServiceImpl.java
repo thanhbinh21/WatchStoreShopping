@@ -5,7 +5,6 @@ import iuh.fit.se.backend.dto.response.CartResponse;
 import iuh.fit.se.backend.entity.Cart;
 import iuh.fit.se.backend.entity.CartItem;
 import iuh.fit.se.backend.entity.Product;
-import iuh.fit.se.backend.entity.User;
 import iuh.fit.se.backend.repository.CartItemRepository;
 import iuh.fit.se.backend.repository.CartRepository;
 import iuh.fit.se.backend.repository.ProductRepository;
@@ -79,7 +78,7 @@ public class CartServiceImpl implements CartService {
 
     @Override
     public CartResponse addToCart(Long userId, Long productId, Integer quantity) {
-        CartResponse response = getUserCart(userId);
+        getUserCart(userId);
         Cart cart = cartRepository.findByUserId(userId).get();
 
         Product product = productRepository.findById(productId)

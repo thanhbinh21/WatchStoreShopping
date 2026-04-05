@@ -5,8 +5,6 @@ import iuh.fit.se.backend.dto.request.VNPayPaymentRequest;
 import iuh.fit.se.backend.dto.response.VNPayPaymentResponse;
 import iuh.fit.se.backend.dto.PaymentSummary;
 import iuh.fit.se.backend.entity.enums.PaymentMethod;
-import iuh.fit.se.backend.entity.enums.PaymentStatus;
-import iuh.fit.se.backend.service.OrderService;
 import iuh.fit.se.backend.service.PaymentService;
 import iuh.fit.se.backend.service.VNPayService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +24,6 @@ import java.util.Map;
 public class PaymentController {
     private final PaymentService paymentService;
     private final VNPayService vnPayService;
-    private final OrderService orderService;
 
     @PostMapping("/create-payment")
     public ResponseEntity<ApiResponse<VNPayPaymentResponse>> createPayment(
